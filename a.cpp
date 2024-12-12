@@ -7,68 +7,76 @@ using namespace std;
 	#define debug(x)
 #endif
 
-inline bool isConnected(pair<int,int> a,pair<int,int> b,int mid)
-{
-    if(a.first>b.first)
-    {
-        swap(a,b);
-    }
-    if(a.first==b.first)
-    {
-        return (abs(a.second-b.second)<=(mid<<1));
-    }
-    if(a.second==b.second)
-    {
-        return (abs(a.first-b.first)<=(mid<<1));
-    }
-    if(b.second<a.second)
-    {
-        return (a.first+mid>=b.first&&b.second+mid>=a.second);
-    }
-    return (a.first+mid>=b.first&&a.second+mid>=b.second);
-}
+map<string,int> mp={{"DR",0},{"DL",1},{"UR",2},{"UL",3}};
 
-void dfs(int node,vector<bool> &vis,vector<int> adj[])
+inline pair<pair<int,int>,int> get(int i,int j,int n,int m,int d)
 {
-	vis[node]=1;
-	for(auto &v:adj[node])
+	if(d==0)
 	{
-		if(!vis[v])
+		int x=i+1,y=j+1;
+		if(x<n&&y<m)
 		{
-			dfs(v,vis,adj);
+			return {{x,y},0};
 		}
+		if(x>=n&&y>=m)
+		{
+			return {{i-1,j-1},3};
+		}
+		if(x<n&&y>=m)
+		{
+			return {{x,j-1},1};
+		}
+		return {{i-1,y},2};
 	}
-}
-
-int check(vector<pair<int,int>> &a,int mid)
-{
-	int n=a.size(),cnt=0;
-	vector<int> adj[n];
-	vector<bool> vis(n,0);
-	for(int i=0;i<n-1;++i)
+	if(d==1)
 	{
-		for(int j=i+1;j<n;++j)
+		int x=i+1,y=j-1;
+		if(x<n&&y>=0)
 		{
-			if(isConnected(a[i],a[j],mid))
-			{
-				adj[i].push_back(j);
-				adj[j].push_back(i);
-			}
+			return {{x,y},1};
 		}
+		if(x>=n&&y<0)
+		{
+			return {{i-1,j+1},2};
+		}
+		if(x<n&&y<0)
+		{
+			return {{x,j+1},0};
+		}
+		return {{i-1,y},3};
 	}
-	for(int i=0;i<n;++i)
+	if(d==2)
 	{
-		if(!vis[i])
+		int x=i-1,y=j+1;
+		if(x>=0&&y<m)
 		{
-			cnt++;
-			if(cnt>=2)
-			{
-				return 0;
-			}
-			dfs(i,vis,adj);
+			return {{x,y},2};
 		}
+		if(x<0&&y>=m)
+		{
+			return {{i+1,j-1},1};
+		}
+		if(x>=0&&y>=m)
+		{
+			return {{x,j-1},3};
+		}
+		return {{i+1,y},0};
 	}
-	return 1;
+	// d==3
+	int x=i-1,y=j-1;
+	if(x>=0&&y>=0)
+	{
+		return {{x,y},3};
+	}
+	if(x<0&&y<0)
+	{
+		return {{i+1,j+1},0};
+	}
+	if(x>=0&&y<0)
+	{
+		return {{x,j+1},2};
+	}
+	return {{i+1,y},1};
 }
 
 int main()
@@ -80,24 +88,31 @@ int main()
 	cin>>tc;
 	while(tc--)
 	{
-		int n,lo=0,hi=5e8,ans=5e8;
-		cin>>n;
-		vector<pair<int,int>> a(n);
-		for(auto &v:a)
+		int n,m,i1,j1,i2,j2,ans=-1;
+		string d;
+		queue<pair<pair<int,int>,pair<int,int>>> q;
+		cin>>n>>m>>i1>>j1>>i2>>j2>>d;
+		i1--;
+		j1--;
+		i2--;
+		j2--;
+		vector<vector<vector<bool>>> vis(n,vector<vector<bool>>(m,vector<bool>(4,0)));
+		q.push({{i1,j1},{mp[d],0}});
+		vis[i1][j1][mp[d]]=1;
+		while(q.size())
 		{
-			cin>>v.first>>v.second;
-		}
-		while(lo<=hi)
-		{
-			int mid=lo+(hi-lo)/2;
-			if(check(a,mid))
+			int i=q.front().first.first,j=q.front().first.second,dir=q.front().second.first,dist=q.front().second.second;
+			q.pop();
+			if(i==i2&&j==j2)
 			{
-				ans=mid;
-				hi=mid-1;
+				ans=dist;
+				break;
 			}
-			else
+			pair<pair<int,int>,int> p=get(i,j,n,m,dir);
+			if(!vis[p.first.first][p.first.second][p.second])
 			{
-				lo=mid+1;
+				vis[p.first.first][p.first.second][p.second]=1;
+				q.push({{p.first.first,p.first.second},{p.second,dist+(dir!=p.second)}});
 			}
 		}
 		cout<<ans<<'\n';
