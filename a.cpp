@@ -7,23 +7,18 @@ using namespace std;
 	#define debug(x)
 #endif
 
-typedef long long ll;
-
-ll solve(ll lo,ll hi,ll a,ll b,vector<ll> &pos)
+void dfs(int node,vector<bool> &vis,vector<int> adj[],vector<int> &vis_pos,vector<int> &a,vector<int> &vis_elements)
 {
-	if(lo==hi)
+	vis[node]=1;
+	vis_elements.push_back(a[node]);
+	vis_pos.push_back(node);
+	for(auto &v:adj[node])
 	{
-		ll cnt=upper_bound(pos.begin(),pos.end(),hi)-lower_bound(pos.begin(),pos.end(),lo);
-		return ((cnt==0)?a:b*cnt);
+		if(!vis[v])
+		{
+			dfs(v,vis,adj,vis_pos,a,vis_elements);
+		}
 	}
-	ll len=hi-lo+1; 
-	ll cnt=upper_bound(pos.begin(),pos.end(),hi)-lower_bound(pos.begin(),pos.end(),lo);
-	if(cnt==0)
-	{
-		return a;
-	}
-	ll ans1=solve(lo,lo+(len>>1)-1,a,b,pos)+solve(lo+(len>>1),hi,a,b,pos),ans2=b*cnt*len;
-	return min(ans1,ans2);
 }
 
 int main()
@@ -31,15 +26,44 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	ll n,k,a,b;
-	cin>>n>>k>>a>>b;
-	vector<ll> pos(k);
-	for(auto &v:pos)
+	int n,m;
+	cin>>n>>m;
+	vector<int> a(n),adj[n];
+	vector<bool> vis(n,0);
+	for(int i=0;i<n;++i)
 	{
-		cin>>v;
-		v--;
+		cin>>a[i];
+		a[i]--;
 	}
-	sort(pos.begin(),pos.end());
-	cout<<solve(0,(1LL<<n)-1,a,b,pos)<<'\n';
+	for(int i=0;i<m;++i)
+	{
+		int u,v;
+		cin>>u>>v;
+		u--;
+		v--;
+		adj[u].push_back(v);
+		adj[v].push_back(u);
+	}
+	for(int i=0;i<n;++i)
+	{
+		if(!vis[i])
+		{
+			int len=0;
+			vector<int> vis_pos,vis_elements;
+			dfs(i,vis,adj,vis_pos,a,vis_elements);
+			len=vis_pos.size();
+			sort(vis_elements.rbegin(),vis_elements.rend());
+			sort(vis_pos.begin(),vis_pos.end());
+			for(int j=0;j<len;++j)
+			{
+				a[vis_pos[j]]=vis_elements[j];
+			}
+		}
+	}
+	for(auto &v:a)
+	{
+		cout<<v+1<<' ';
+	}
+	cout<<'\n';
 	return 0;
 }
