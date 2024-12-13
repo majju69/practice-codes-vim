@@ -7,18 +7,18 @@ using namespace std;
 	#define debug(x)
 #endif
 
-void dfs(int node,vector<bool> &vis,vector<int> adj[],vector<int> &vis_pos,vector<int> &a,vector<int> &vis_elements)
+typedef long long ll;
+
+vector<long long> getPrefix(vector<long long> &a)
 {
-	vis[node]=1;
-	vis_elements.push_back(a[node]);
-	vis_pos.push_back(node);
-	for(auto &v:adj[node])
+	long long n=a.size();
+	vector<long long> prefix;
+	prefix.push_back(a[0]);
+	for(long long i=1;i<n;++i)
 	{
-		if(!vis[v])
-		{
-			dfs(v,vis,adj,vis_pos,a,vis_elements);
-		}
+		prefix.push_back(a[i]+prefix.back());
 	}
+	return prefix;
 }
 
 int main()
@@ -26,44 +26,52 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n,m;
-	cin>>n>>m;
-	vector<int> a(n),adj[n];
-	vector<bool> vis(n,0);
-	for(int i=0;i<n;++i)
+	ll tc;
+	cin>>tc;
+	while(tc--)
 	{
-		cin>>a[i];
-		a[i]--;
-	}
-	for(int i=0;i<m;++i)
-	{
-		int u,v;
-		cin>>u>>v;
-		u--;
-		v--;
-		adj[u].push_back(v);
-		adj[v].push_back(u);
-	}
-	for(int i=0;i<n;++i)
-	{
-		if(!vis[i])
+		ll n,q,mx_h=0,mx_w=0;
+		cin>>n>>q;
+		vector<pair<ll,ll>> rect(n);
+		for(auto &v:rect)
 		{
-			int len=0;
-			vector<int> vis_pos,vis_elements;
-			dfs(i,vis,adj,vis_pos,a,vis_elements);
-			len=vis_pos.size();
-			sort(vis_elements.rbegin(),vis_elements.rend());
-			sort(vis_pos.begin(),vis_pos.end());
-			for(int j=0;j<len;++j)
+			cin>>v.first>>v.second;
+			mx_h=max(mx_h,v.first);
+			mx_w=max(mx_w,v.second);
+		}
+		vector<vector<ll>> a(mx_h+1,vector<ll>(mx_w+1,0)),pre(mx_h+1,vector<ll>(mx_w+1,0));
+		for(auto &v:rect)
+		{
+			a[v.first][v.second]+=v.first*v.second;
+		}
+		pre[0]=getPrefix(a[0]);
+		for(ll i=1;i<=mx_h;++i)
+		{
+			pre[i]=getPrefix(a[i]);
+			for(ll j=0;j<=mx_w;++j)
 			{
-				a[vis_pos[j]]=vis_elements[j];
+				pre[i][j]+=pre[i-1][j];
+			}
+		}
+		while(q--)
+		{
+			ll hs,ws,hb,wb;
+			cin>>hs>>ws>>hb>>wb;
+			hs++;
+			ws++;
+			hb--;
+			wb--;
+			wb=min(wb,mx_w);
+			hb=min(hb,mx_h);
+			if(hs>hb||ws>wb)
+			{
+				cout<<0<<'\n';
+			}
+			else
+			{
+				cout<<pre[hb][wb]-pre[hb][ws-1]-pre[hs-1][wb]+pre[hs-1][ws-1]<<'\n';
 			}
 		}
 	}
-	for(auto &v:a)
-	{
-		cout<<v+1<<' ';
-	}
-	cout<<'\n';
 	return 0;
 }
