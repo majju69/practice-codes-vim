@@ -7,70 +7,89 @@ using namespace std;
 	#define debug(x)
 #endif
 
-typedef long long ll;
-
-vector<long long> getPrefix(vector<long long> &a)
-{
-	long long n=a.size();
-	vector<long long> prefix;
-	prefix.push_back(a[0]);
-	for(long long i=1;i<n;++i)
-	{
-		prefix.push_back(a[i]+prefix.back());
-	}
-	return prefix;
-}
-
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	ll tc;
+	int tc;
 	cin>>tc;
 	while(tc--)
 	{
-		ll n,q,mx_h=0,mx_w=0;
-		cin>>n>>q;
-		vector<pair<ll,ll>> rect(n);
-		for(auto &v:rect)
+		int n,zero=0;
+		deque<int> pos,neg;
+		cin>>n;
+		for(int i=0;i<n;++i)
 		{
-			cin>>v.first>>v.second;
-			mx_h=max(mx_h,v.first);
-			mx_w=max(mx_w,v.second);
-		}
-		vector<vector<ll>> a(mx_h+1,vector<ll>(mx_w+1,0)),pre(mx_h+1,vector<ll>(mx_w+1,0));
-		for(auto &v:rect)
-		{
-			a[v.first][v.second]+=v.first*v.second;
-		}
-		pre[0]=getPrefix(a[0]);
-		for(ll i=1;i<=mx_h;++i)
-		{
-			pre[i]=getPrefix(a[i]);
-			for(ll j=0;j<=mx_w;++j)
+			int x;
+			cin>>x;
+			if(x<0)
 			{
-				pre[i][j]+=pre[i-1][j];
+				neg.push_back(x);
 			}
-		}
-		while(q--)
-		{
-			ll hs,ws,hb,wb;
-			cin>>hs>>ws>>hb>>wb;
-			hs++;
-			ws++;
-			hb--;
-			wb--;
-			wb=min(wb,mx_w);
-			hb=min(hb,mx_h);
-			if(hs>hb||ws>wb)
+			else if(x>0)
 			{
-				cout<<0<<'\n';
+				pos.push_back(x);
 			}
 			else
 			{
-				cout<<pre[hb][wb]-pre[hb][ws-1]-pre[hs-1][wb]+pre[hs-1][ws-1]<<'\n';
+				zero++;
 			}
+		}
+		if(zero==n)
+		{
+			cout<<"No\n";
+		}
+		else
+		{
+			cout<<"Yes\n";
+			for(int i=0;i<zero;++i)
+			{
+				cout<<0<<' ';
+			}
+			int ptr=0,sum=0;
+			while((int)pos.size()>0||(int)neg.size()>0)
+			{
+				if(ptr==0)
+				{
+					if((int)pos.size()>0)
+					{
+						cout<<pos[0]<<' ';
+						sum+=pos[0];
+						pos.pop_front();
+					}
+					else
+					{
+						cout<<neg[0]<<' ';
+						sum+=neg[0];
+						neg.pop_front();
+					}
+					if(sum>0)
+					{
+						ptr=1;
+					}
+				}
+				else
+				{
+					if((int)neg.size()>0)
+					{
+						cout<<neg[0]<<' ';
+						sum+=neg[0];
+						neg.pop_front();
+					}
+					else
+					{
+						cout<<pos[0]<<' ';
+						sum+=pos[0];
+						pos.pop_front();
+					}
+					if(sum<=0)
+					{
+						ptr=0;
+					}
+				}
+			}
+			cout<<'\n';
 		}
 	}
 	return 0;
