@@ -7,100 +7,178 @@ using namespace std;
 	#define debug(x)
 #endif
 
-inline int get(int l,int r)
+inline int get(int n)
 {
-	int n=r-l+1;
 	return ((n*(n-1))>>1);
 }
 
-class SegmentTree
+void dfs(int node,vector<bool> &vis,vector<int> adj[],vector<char> &label,char curLabel)
 {
-
-private:
-
-	vector<int> seg;
-
-public:
-
-	SegmentTree(int n)
+	vis[node]=1;
+	label[node]=curLabel;
+	for(auto &v:adj[node])
 	{
-		seg.resize(4*n+1);
+		if(!vis[v])
+		{
+			dfs(v,vis,adj,label,curLabel);
+		}
 	}
+}
 
-	void update(int ind,int lo,int hi,int i)
+bool check(vector<bool> &taken,vector<pair<int,int>> &edges)
+{
+	int n=taken.size(),len=0;
+	char curLabel='0';
+	map<int,int> mp;
+	for(int i=0;i<n;++i)
 	{
-		if(lo==hi)
+		if(taken[i])
 		{
-			seg[ind]++;
-			return;
+			mp[i]=len++;
 		}
-		int mid=lo+(hi-lo)/2;
-		if(i<=mid)
-		{
-			update(2*ind+1,lo,mid,i);
-		}
-		else
-		{
-			update(2*ind+2,mid+1,hi,i);
-		}
-		seg[ind]=seg[2*ind+1]+seg[2*ind+2];
 	}
-
-	int query(int ind,int lo,int hi,int l,int r)
+	vector<int> adj[len];
+	vector<bool> vis(len,0);
+	vector<char> label(len);
+	for(auto &edge:edges)
 	{
-		if(l>hi||lo>r)
+		int u=edge.first,v=edge.second;
+		if(taken[u]&&taken[v])
+		{
+			adj[mp[u]].push_back(mp[v]);
+			adj[mp[v]].push_back(mp[u]);
+		}
+	}
+	for(int i=0;i<len;++i)
+	{
+		if(!vis[i])
+		{
+			dfs(i,vis,adj,label,curLabel);
+			curLabel++;
+		}
+	}
+	if(curLabel>'2')
+	{
+		return 0;
+	}
+	for(int i=0;i<curLabel-'0';++i)
+	{
+		int nodeCount=0,edgeCount=0;
+		for(int u=0;u<len;++u)
+		{
+			if(label[u]==(char)(i+'0'))
+			{
+				nodeCount++;
+				for(auto &v:adj[u])
+				{
+					if(label[v]==(char)(i+'0'))
+					{
+						edgeCount++;
+					}
+					else
+					{
+						return 0;
+					}
+				}
+			}
+		}
+		if(edgeCount&1)
 		{
 			return 0;
 		}
-		if(l<=lo&&hi<=r)
+		edgeCount>>=1;
+		if(get(nodeCount)!=edgeCount)
 		{
-			return seg[ind];
+			return 0;
 		}
-		int mid=lo+(hi-lo)/2;
-		return query(2*ind+1,lo,mid,l,r)+query(2*ind+2,mid+1,hi,l,r);
 	}
-
-};
+	return 1;
+}
 
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n,q,cur_cnt=0;
-	cin>>n;
-	vector<int> a(n);
-	vector<vector<int>> cnt(n,vector<int>(n,0));
-	for(auto &v:a)
+	int n,m;
+	set<pair<int,int>> st;
+	cin>>n>>m;
+	vector<bool> taken(n,1);
+	vector<pair<int,int>> edges(m);
+	vector<char> label(n,'#');
+	for(auto &edge:edges)
 	{
-		cin>>v;
-		v--;
-	}
-	for(int i=0;i<n;++i)
-	{
-		int cur=0;
-		SegmentTree st(n);
-		for(int j=i;j<n;++j)
+		cin>>edge.first>>edge.second;
+		if(edge.first>edge.second)
 		{
-			if(a[j]!=n-1)
+			swap(edge.first,edge.second);
+		}
+		edge.first--;
+		edge.second--;
+		st.insert(edge);
+	}
+	for(int i=0;i<n-1;++i)
+	{
+		for(int j=i+1;j<n;++j)
+		{
+			if(st.count({i,j}))
 			{
-				cur+=st.query(0,0,n-1,a[j]+1,n-1);
+				continue;
 			}
-			st.update(0,0,n-1,a[j]);
-			cnt[i][j]=cur;
+			taken[i]=0;
+			taken[j]=0;
 		}
 	}
-	cur_cnt=cnt[0][n-1];
-	cin>>q;
-	while(q--)
+	if(check(taken,edges))
 	{
-		int l,r;
-		cin>>l>>r;
-		l--;
-		r--;
-		cur_cnt+=(get(l,r)-2*cnt[l][r]);
-		cnt[l][r]=get(l,r)-cnt[l][r];
-		cout<<((cur_cnt&1)?"odd":"even")<<'\n';
+		for(int i=0;i<n;++i)
+		{
+			if(taken[i])
+			{
+				label[i]='b';
+			}
+		}
+		for(int i=0;i<n;++i)
+		{
+			taken[i]=!taken[i];
+		}
+		if(check(taken,edges))
+		{
+			vector<int> adj[n];
+			vector<bool> vis(n,0);
+			char curLabel='a';
+			for(auto &edge:edges)
+			{
+				int u=edge.first,v=edge.second;
+				if(taken[u]&&taken[v])
+				{
+					adj[u].push_back(v);
+					adj[v].push_back(u);
+				}
+			}
+			for(int i=0;i<n;++i)
+			{
+				if(!vis[i]&&taken[i])
+				{
+					dfs(i,vis,adj,label,curLabel);
+					curLabel+=2;
+				}
+			}
+			cout<<"Yes\n";
+			for(auto &v:label)
+			{
+				cout<<v;
+			}
+			cout<<'\n';
+		}
+		else
+		{
+			cout<<"No\n";
+		}
+	}
+	else
+	{
+		cout<<"No\n";
 	}
 	return 0;
 }
