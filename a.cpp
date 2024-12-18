@@ -9,163 +9,94 @@ using namespace std;
 
 typedef long long ll;
 
-class DisjointSet
+vector<long long> spf(1000001,0);
+
+void smallestPrimeFactor()
 {
-
-private:
-	
-	vector<long long> ultimateParent,rank,size;
-
-public:
-	
-	DisjointSet(long long n)
-	{
-		ultimateParent.resize(n+1);
-		rank.resize(n+1,0);
-		size.resize(n+1,1);
-		for(long long i=0;i<=n;++i)
-		{
-			ultimateParent[i]=i;
-		}
-	}
-
-	long long findUltimateParent(long long node)
-	{
-		if(ultimateParent[node]==node)
-		{
-			return node;
-		}
-		return ultimateParent[node]=findUltimateParent(ultimateParent[node]);
-	}
-
-	long long getSize(long long node)
-	{
-		return size[node];
-	}
-
-	long long getRank(long long node)
-	{
-		return rank[node];
-	}
-
-	void unionByRank(long long u,long long v)
-	{
-		long long ultimateParentOfU=findUltimateParent(u),ultimateParentOfV=findUltimateParent(v);
-		if(ultimateParentOfU==ultimateParentOfV)
-		{
-			return;
-		}
-		if(rank[ultimateParentOfU]<rank[ultimateParentOfV])
-		{
-			ultimateParent[ultimateParentOfU]=ultimateParentOfV;
-		}
-		else if(rank[ultimateParentOfU]>rank[ultimateParentOfV])
-		{
-			ultimateParent[ultimateParentOfV]=ultimateParentOfU;
-		}
-		else
-		{
-			ultimateParent[ultimateParentOfV]=ultimateParentOfU;
-			rank[ultimateParentOfU]++;
-		}
-	}
-
-	void unionBySize(long long u,long long v)
-	{
-		long long ultimateParentOfU=findUltimateParent(u),ultimateParentOfV=findUltimateParent(v);
-		if(ultimateParentOfU==ultimateParentOfV)
-		{
-			return;
-		}
-		if(size[ultimateParentOfU]<size[ultimateParentOfV])
-		{
-			ultimateParent[ultimateParentOfU]=ultimateParentOfV;
-			size[ultimateParentOfV]+=size[ultimateParentOfU];
-		}
-		else
-		{
-			ultimateParent[ultimateParentOfV]=ultimateParentOfU;
-			size[ultimateParentOfU]+=size[ultimateParentOfV];
-		}
-	}
-
-};
+    long long n=spf.size();
+    for(long long i=1;i<n;++i)
+    {
+        spf[i]=i;
+    }
+    for(long long i=4;i<n;i+=2)
+    {
+        spf[i]=2;
+    }
+    for(long long i=3;i*i<n;++i)
+    {
+        if(spf[i]==i)
+        {
+            for(long long j=i*i;j<n;j+=i)
+            {
+                if(spf[j]==j)
+                {
+                    spf[j]=i;
+                }
+            }
+        }
+    }
+}
 
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
+	smallestPrimeFactor();
 	ll tc;
 	cin>>tc;
 	while(tc--)
 	{
-		ll n,m,k,ans=0,mn_big=1e18,mx_small=-1e18;
-		bool taken=0;
-		vector<pair<ll,pair<ll,ll>>> equalEdges,bigEdges,smallEdges;
-		cin>>n>>m>>k;
-		DisjointSet ds(n);
-		for(ll i=0;i<m;++i)
+		ll n,q;
+		map<ll,ll> mp_n,mp_x;
+		cin>>n>>q;
+		while(n>1)
 		{
-			ll u,v,w;
-			cin>>u>>v>>w;
-			u--;
-			v--;
-			if(w<k)
+			mp_n[spf[n]]++;
+			n/=spf[n];
+		}
+		while(q--)
+		{
+			ll k;
+			cin>>k;
+			if(k==1)
 			{
-				smallEdges.push_back({w,{u,v}});
-			}
-			else if(w>k)
-			{
-				bigEdges.push_back({w,{u,v}});
+				ll x;
+				bool ok=1;
+				cin>>x;
+				while(x>1)
+				{
+					mp_x[spf[x]]++;
+					x/=spf[x];
+				}
+				map<ll,ll> mp_cur=mp_n,mp_prod;
+				for(auto &v:mp_x)
+				{
+					mp_cur[v.first]+=v.second;
+				}
+				for(auto &v:mp_cur)
+				{
+					ll num=v.second+1;
+					while(num>1)
+					{
+						mp_prod[spf[num]]++;
+						num/=spf[num];
+					}
+				}
+				for(auto &v:mp_prod)
+				{
+					if(mp_cur.find(v.first)==mp_cur.end()||mp_cur[v.first]<v.second)
+					{
+						ok=0;
+						break;
+					}
+				}
+				cout<<(ok?"YES":"NO")<<'\n';
 			}
 			else
 			{
-				equalEdges.push_back({w,{u,v}});
+				mp_x.clear();
 			}
-		}
-		for(auto &edge:equalEdges)
-		{
-			ll u=edge.second.first,v=edge.second.second;
-			if(ds.findUltimateParent(u)!=ds.findUltimateParent(v))
-			{
-				taken=1;
-				ds.unionByRank(u,v);
-			}
-		}
-		sort(smallEdges.rbegin(),smallEdges.rend());
-		for(auto &edge:smallEdges)
-		{
-			ll u=edge.second.first,v=edge.second.second,w=edge.first;
-			if(ds.findUltimateParent(u)!=ds.findUltimateParent(v))
-			{
-				mx_small=max(mx_small,w);
-				ds.unionByRank(u,v);
-			}
-		}
-		sort(bigEdges.begin(),bigEdges.end());
-		for(auto &edge:bigEdges)
-		{
-			ll u=edge.second.first,v=edge.second.second,w=edge.first;
-			if(ds.findUltimateParent(u)!=ds.findUltimateParent(v))
-			{
-				taken=1;
-				ans+=(w-k);
-				ds.unionByRank(u,v);
-			}
-			else
-			{
-				mn_big=min(mn_big,w);
-			}
-
-		}
-		if(taken)
-		{
-			cout<<ans<<'\n';
-		}
-		else
-		{
-			cout<<ans+min(mn_big-k,k-mx_small)<<'\n';
 		}
 	}
 	return 0;
