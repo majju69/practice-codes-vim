@@ -7,142 +7,59 @@ using namespace std;
 	#define debug(x)
 #endif
 
-class DisjointSet
+vector<vector<int>> divisors(30001);
+
+void fillDivisors()
 {
-
-private:
-	
-	vector<int> ultimateParent,rank,size;
-
-public:
-	
-	DisjointSet(int n)
+	int n=divisors.size();
+	divisors[0].push_back(0);
+	divisors[1].push_back(1);
+	for(int i=2;i<n;i++)
 	{
-		ultimateParent.resize(n+1);
-		rank.resize(n+1,0);
-		size.resize(n+1,1);
-		for(int i=0;i<=n;++i)
+		divisors[i].push_back(1);
+	}
+	for(int i=2;i<n;i++)
+	{
+		for(int j=i;j<n;j+=i)
 		{
-			ultimateParent[i]=i;
+			divisors[j].push_back(i);
 		}
 	}
-
-	int findUltimateParent(int node)
-	{
-		if(ultimateParent[node]==node)
-		{
-			return node;
-		}
-		return ultimateParent[node]=findUltimateParent(ultimateParent[node]);
-	}
-
-	int getSize(int node)
-	{
-		return size[node];
-	}
-
-	int getRank(int node)
-	{
-		return rank[node];
-	}
-
-	void unionByRank(int u,int v)
-	{
-		int ultimateParentOfU=findUltimateParent(u),ultimateParentOfV=findUltimateParent(v);
-		if(ultimateParentOfU==ultimateParentOfV)
-		{
-			return;
-		}
-		if(rank[ultimateParentOfU]<rank[ultimateParentOfV])
-		{
-			ultimateParent[ultimateParentOfU]=ultimateParentOfV;
-		}
-		else if(rank[ultimateParentOfU]>rank[ultimateParentOfV])
-		{
-			ultimateParent[ultimateParentOfV]=ultimateParentOfU;
-		}
-		else
-		{
-			ultimateParent[ultimateParentOfV]=ultimateParentOfU;
-			rank[ultimateParentOfU]++;
-		}
-	}
-
-	void unionBySize(int u,int v)
-	{
-		int ultimateParentOfU=findUltimateParent(u),ultimateParentOfV=findUltimateParent(v);
-		if(ultimateParentOfU==ultimateParentOfV)
-		{
-			return;
-		}
-		if(size[ultimateParentOfU]<size[ultimateParentOfV])
-		{
-			ultimateParent[ultimateParentOfU]=ultimateParentOfV;
-			size[ultimateParentOfV]+=size[ultimateParentOfU];
-		}
-		else
-		{
-			ultimateParent[ultimateParentOfV]=ultimateParentOfU;
-			size[ultimateParentOfU]+=size[ultimateParentOfV];
-		}
-	}
-
-};
+}
 
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n;
-	vector<pair<int,int>> unused;
-	vector<pair<pair<int,int>,pair<int,int>>> ans;
-	cin>>n;
-	DisjointSet ds(n);
-	for(int i=1;i<n;++i)
+	fillDivisors();
+	int tc;
+	cin>>tc;
+	while(tc--)
 	{
-		int u,v;
-		cin>>u>>v;
-		u--;
-		v--;
-		if(u>v)
+		int a,b,c,ans_a=-1,ans_b=-1,ans_c=-1,ans=1e9;
+		cin>>a>>b>>c;
+		for(int i=1;i<=30000;++i)
 		{
-			swap(u,v);
-		}
-		if(ds.findUltimateParent(u)!=ds.findUltimateParent(v))
-		{
-			ds.unionByRank(u,v);
-		}
-		else
-		{
-			unused.push_back({u,v});
-		}
-	}
-	while((int)unused.size()>0)
-	{
-		pair<int,int> rem_edge=unused.back(),add_edge={-1,-1};
-		vector<bool> bad(n,0);
-		for(auto &edge:unused)
-		{
-			bad[ds.findUltimateParent(edge.first)]=1;
-		}
-		for(int i=0;i<n;++i)
-		{
-			if(!bad[ds.findUltimateParent(i)])
+			int cur_c=i,cur1=abs(c-i);
+			for(auto &d1:divisors[i])
 			{
-				add_edge.first=i;
-				break;
+				int cur_b=d1,cur2=abs(b-d1);
+				for(auto d2:divisors[d1])
+				{
+					int cur_a=d2,cur3=abs(a-d2);
+					if(cur1+cur2+cur3<ans)
+					{
+						ans=cur1+cur2+cur3;
+						ans_a=cur_a;
+						ans_b=cur_b;
+						ans_c=cur_c;
+					}
+				}
 			}
 		}
-		add_edge.second=rem_edge.second;
-		unused.pop_back();
-		ds.unionByRank(add_edge.first,add_edge.second);
-		ans.push_back({rem_edge,add_edge});
-	}
-	cout<<(int)ans.size()<<'\n';
-	for(auto &v:ans)
-	{
-		cout<<v.first.first+1<<' '<<v.first.second+1<<' '<<v.second.first+1<<' '<<v.second.second+1<<'\n';
+		cout<<ans<<'\n';
+		cout<<ans_a<<' '<<ans_b<<' '<<ans_c<<'\n';
 	}
 	return 0;
 }
