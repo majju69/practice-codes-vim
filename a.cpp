@@ -7,97 +7,142 @@ using namespace std;
 	#define debug(x)
 #endif
 
-typedef long long ll;
-
-vector<long long> spf(1000001,0);
-
-void smallestPrimeFactor()
+class DisjointSet
 {
-    long long n=spf.size();
-    for(long long i=1;i<n;++i)
-    {
-        spf[i]=i;
-    }
-    for(long long i=4;i<n;i+=2)
-    {
-        spf[i]=2;
-    }
-    for(long long i=3;i*i<n;++i)
-    {
-        if(spf[i]==i)
-        {
-            for(long long j=i*i;j<n;j+=i)
-            {
-                if(spf[j]==j)
-                {
-                    spf[j]=i;
-                }
-            }
-        }
-    }
-}
+
+private:
+	
+	vector<int> ultimateParent,rank,size;
+
+public:
+	
+	DisjointSet(int n)
+	{
+		ultimateParent.resize(n+1);
+		rank.resize(n+1,0);
+		size.resize(n+1,1);
+		for(int i=0;i<=n;++i)
+		{
+			ultimateParent[i]=i;
+		}
+	}
+
+	int findUltimateParent(int node)
+	{
+		if(ultimateParent[node]==node)
+		{
+			return node;
+		}
+		return ultimateParent[node]=findUltimateParent(ultimateParent[node]);
+	}
+
+	int getSize(int node)
+	{
+		return size[node];
+	}
+
+	int getRank(int node)
+	{
+		return rank[node];
+	}
+
+	void unionByRank(int u,int v)
+	{
+		int ultimateParentOfU=findUltimateParent(u),ultimateParentOfV=findUltimateParent(v);
+		if(ultimateParentOfU==ultimateParentOfV)
+		{
+			return;
+		}
+		if(rank[ultimateParentOfU]<rank[ultimateParentOfV])
+		{
+			ultimateParent[ultimateParentOfU]=ultimateParentOfV;
+		}
+		else if(rank[ultimateParentOfU]>rank[ultimateParentOfV])
+		{
+			ultimateParent[ultimateParentOfV]=ultimateParentOfU;
+		}
+		else
+		{
+			ultimateParent[ultimateParentOfV]=ultimateParentOfU;
+			rank[ultimateParentOfU]++;
+		}
+	}
+
+	void unionBySize(int u,int v)
+	{
+		int ultimateParentOfU=findUltimateParent(u),ultimateParentOfV=findUltimateParent(v);
+		if(ultimateParentOfU==ultimateParentOfV)
+		{
+			return;
+		}
+		if(size[ultimateParentOfU]<size[ultimateParentOfV])
+		{
+			ultimateParent[ultimateParentOfU]=ultimateParentOfV;
+			size[ultimateParentOfV]+=size[ultimateParentOfU];
+		}
+		else
+		{
+			ultimateParent[ultimateParentOfV]=ultimateParentOfU;
+			size[ultimateParentOfU]+=size[ultimateParentOfV];
+		}
+	}
+
+};
 
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	smallestPrimeFactor();
-	ll tc;
-	cin>>tc;
-	while(tc--)
+	int n;
+	vector<pair<int,int>> unused;
+	vector<pair<pair<int,int>,pair<int,int>>> ans;
+	cin>>n;
+	DisjointSet ds(n);
+	for(int i=1;i<n;++i)
 	{
-		ll n,q;
-		map<ll,ll> mp_n,mp_x;
-		cin>>n>>q;
-		while(n>1)
+		int u,v;
+		cin>>u>>v;
+		u--;
+		v--;
+		if(u>v)
 		{
-			mp_n[spf[n]]++;
-			n/=spf[n];
+			swap(u,v);
 		}
-		while(q--)
+		if(ds.findUltimateParent(u)!=ds.findUltimateParent(v))
 		{
-			ll k;
-			cin>>k;
-			if(k==1)
+			ds.unionByRank(u,v);
+		}
+		else
+		{
+			unused.push_back({u,v});
+		}
+	}
+	while((int)unused.size()>0)
+	{
+		pair<int,int> rem_edge=unused.back(),add_edge={-1,-1};
+		vector<bool> bad(n,0);
+		for(auto &edge:unused)
+		{
+			bad[ds.findUltimateParent(edge.first)]=1;
+		}
+		for(int i=0;i<n;++i)
+		{
+			if(!bad[ds.findUltimateParent(i)])
 			{
-				ll x;
-				bool ok=1;
-				cin>>x;
-				while(x>1)
-				{
-					mp_x[spf[x]]++;
-					x/=spf[x];
-				}
-				map<ll,ll> mp_cur=mp_n,mp_prod;
-				for(auto &v:mp_x)
-				{
-					mp_cur[v.first]+=v.second;
-				}
-				for(auto &v:mp_cur)
-				{
-					ll num=v.second+1;
-					while(num>1)
-					{
-						mp_prod[spf[num]]++;
-						num/=spf[num];
-					}
-				}
-				for(auto &v:mp_prod)
-				{
-					if(mp_cur.find(v.first)==mp_cur.end()||mp_cur[v.first]<v.second)
-					{
-						ok=0;
-						break;
-					}
-				}
-				cout<<(ok?"YES":"NO")<<'\n';
-			}
-			else
-			{
-				mp_x.clear();
+				add_edge.first=i;
+				break;
 			}
 		}
+		add_edge.second=rem_edge.second;
+		unused.pop_back();
+		ds.unionByRank(add_edge.first,add_edge.second);
+		ans.push_back({rem_edge,add_edge});
+	}
+	cout<<(int)ans.size()<<'\n';
+	for(auto &v:ans)
+	{
+		cout<<v.first.first+1<<' '<<v.first.second+1<<' '<<v.second.first+1<<' '<<v.second.second+1<<'\n';
 	}
 	return 0;
 }
