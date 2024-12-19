@@ -7,32 +7,12 @@ using namespace std;
 	#define debug(x)
 #endif
 
-vector<int> spf(400001,0);
+typedef long long ll;
 
-void smallestPrimeFactor()
+inline void shift(deque<ll> &a)
 {
-    int n=spf.size();
-    for(int i=1;i<n;++i)
-    {
-        spf[i]=i;
-    }
-    for(int i=4;i<n;i+=2)
-    {
-        spf[i]=2;
-    }
-    for(int i=3;i*i<n;++i)
-    {
-        if(spf[i]==i)
-        {
-            for(int j=i*i;j<n;j+=i)
-            {
-                if(spf[j]==j)
-                {
-                    spf[j]=i;
-                }
-            }
-        }
-    }
+	a.push_back(a[0]);
+	a.pop_front();
 }
 
 int main()
@@ -40,70 +20,57 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	smallestPrimeFactor();
-	int tc;
-	cin>>tc;
-	while(tc--)
+	ll n,a,b,cnt[]={0,0};
+	cin>>n>>a>>b;
+	for(ll i=0;i<=n;++i)
 	{
-		int n;
-		set<int> primes;
-		cin>>n;
-		vector<int> a(n);
-		for(auto &v:a)
+		if(i*a>n)
 		{
-			cin>>v;
+			break;
 		}
-		for(auto &v:a)
+		if((n-a*i)%b==0)
 		{
-			if(spf[v]==v)
+			cnt[0]=i;
+			cnt[1]=(n-a*i)/b;
+		}
+	}
+	if(cnt[0]==0&&cnt[1]==0)
+	{
+		cout<<-1<<'\n';
+	}
+	else
+	{
+		deque<ll> arr(n);
+		iota(arr.begin(),arr.end(),1);
+		while(cnt[0]--)
+		{
+			deque<ll> tmp;
+			for(ll i=0;i<a;++i)
 			{
-				primes.insert(v);
+				tmp.push_back(arr[0]);
+				arr.pop_front();
 			}
-			if((int)primes.size()>=2)
+			shift(tmp);
+			for(auto &v:tmp)
 			{
-				break;
+				cout<<v<<' ';
 			}
 		}
-		if((int)primes.size()>=2)
+		while(cnt[1]--)
 		{
-			cout<<-1<<'\n';
-		}
-		else if((int)primes.size()==1)
-		{
-			int p=*primes.begin();
-			bool ok=1;
-			for(auto &v:a)
+			deque<ll> tmp;
+			for(ll i=0;i<b;++i)
 			{
-				if(v<p)
-				{
-					ok=0;
-					break;
-				}
-				if(v>p&&v<2*p)
-				{
-					ok=0;
-					break;
-				}
-				if(v==p)
-				{
-					continue;
-				}
-				if(v%2==0)
-				{
-					continue;
-				}
-				if(v-spf[v]<2*p)
-				{
-					ok=0;
-					break;
-				}
+				tmp.push_back(arr[0]);
+				arr.pop_front();
 			}
-			cout<<(ok?p:-1)<<'\n';
+			shift(tmp);
+			for(auto &v:tmp)
+			{
+				cout<<v<<' ';
+			}
 		}
-		else
-		{
-			cout<<2<<'\n';
-		}
+		cout<<'\n';
 	}
 	return 0;
 }
