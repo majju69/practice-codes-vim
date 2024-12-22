@@ -7,48 +7,41 @@ using namespace std;
 	#define debug(x)
 #endif
 
-vector<vector<int>> bfs(char src,vector<string> &a)
+typedef long long ll;
+
+void dijkstra(ll src,vector<pair<ll,ll>> adj[],vector<ll> &dist,vector<pair<ll,bool>> &par)
 {
-	int n=a.size(),m=a[0].size(),dx[]={-1,1,0,0},dy[]={0,0,-1,1};
-	vector<vector<int>> dist(n,vector<int>(m,1e8));
-	deque<pair<int,int>> q;
-	for(int i=0;i<n;++i)
+	set<pair<ll,ll>> st;
+	dist[src]=0;
+	st.insert({0,src});
+	while(st.size())
 	{
-		for(int j=0;j<m;++j)
+		auto it=st.begin();
+		ll node=it->second,dis=it->first;
+		st.erase(*it);
+		for(auto &v:adj[node])
 		{
-			if(a[i][j]==src)
+			ll curNode=v.first,curDist=abs(v.second);
+			bool neg=(v.second<0);
+			if(dist[curNode]>dis+curDist)
 			{
-				q.push_front({i,j});
-				dist[i][j]=0;
-			}
-		}
-	}
-	while(q.size())
-	{
-		int x=q[0].first,y=q[0].second,dis=dist[x][y];
-		q.pop_front();
-		for(int i=0;i<4;++i)
-		{
-			int r=x+dx[i],c=y+dy[i];
-			if(r>=0&&r<n&&c>=0&&c<m&&a[r][c]!='#')
-			{
-				int w=(a[r][c]=='.');
-				if(dist[r][c]>dis+w)
+				if(dist[curNode]!=1e18)
 				{
-					dist[r][c]=dis+w;
-					if(w==1)
-					{
-						q.push_back({r,c});
-					}
-					else
-					{
-						q.push_front({r,c});
-					}
+					st.erase({dist[curNode],curNode});
+				}
+				dist[curNode]=dis+curDist;
+				st.insert({dist[curNode],curNode});
+				par[curNode]={node,neg};
+			}
+			if(dist[curNode]==dis+curDist)
+			{
+				if(!neg)
+				{
+					par[curNode]={node,neg};
 				}
 			}
 		}
 	}
-	return dist;
 }
 
 int main()
@@ -56,28 +49,52 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n,m,ans=1e8;
-	vector<vector<int>> dist1,dist2,dist3;
-	cin>>n>>m;
-	vector<string> a(n);
-	for(auto &v:a)
+	ll n,m,k,cnt=0;
+	cin>>n>>m>>k;
+	vector<pair<ll,ll>> adj[n];
+	vector<ll> dist(n,1e18),t_dist(n,1e18);
+	vector<pair<ll,bool>> par(n,{-1,0});
+	vector<bool> vis(n,0);
+	for(ll i=0;i<m;++i)
 	{
-		cin>>v;
+		ll u,v,w;
+		cin>>u>>v>>w;
+		u--;
+		v--;
+		adj[u].push_back({v,w});
+		adj[v].push_back({u,w});
 	}
-	dist1=bfs('1',a);
-	dist2=bfs('2',a);
-	dist3=bfs('3',a);
+	for(ll i=0;i<k;++i)
+	{
+		ll u,w;
+		cin>>u>>w;
+		u--;
+		t_dist[u]=min(t_dist[u],w);
+	}
+	dijkstra(0,adj,dist,par);
 	for(int i=0;i<n;++i)
 	{
-		for(int j=0;j<m;++j)
+		par[i]={-1,0};
+		if(t_dist[i]!=1e18)
 		{
-			ans=min(ans,dist1[i][j]+dist2[i][j]+dist3[i][j]-2*(a[i][j]=='.'));
+			adj[0].push_back({i,-t_dist[i]});
+			adj[i].push_back({0,-t_dist[i]});
 		}
 	}
-	if(ans>=1e8)
+	dijkstra(0,adj,dist,par);
+	for(ll i=n-1;i>=0;--i)
 	{
-		ans=-1;
+		if(!vis[i])
+		{
+			ll cur=i;
+			while(cur!=-1&&!vis[i])
+			{
+				cnt+=par[cur].second;
+				vis[cur]=1;
+				cur=par[cur].first;
+			}
+		}
 	}
-	cout<<ans<<'\n';
+	cout<<k-cnt<<'\n';
 	return 0;
 }
