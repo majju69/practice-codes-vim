@@ -9,39 +9,33 @@ using namespace std;
 
 typedef long long ll;
 
-void dijkstra(ll src,vector<pair<ll,ll>> adj[],vector<ll> &dist,vector<pair<ll,bool>> &par)
+ll gcd(ll a,ll b)
 {
-	set<pair<ll,ll>> st;
-	dist[src]=0;
-	st.insert({0,src});
-	while(st.size())
-	{
-		auto it=st.begin();
-		ll node=it->second,dis=it->first;
-		st.erase(*it);
-		for(auto &v:adj[node])
-		{
-			ll curNode=v.first,curDist=abs(v.second);
-			bool neg=(v.second<0);
-			if(dist[curNode]>dis+curDist)
-			{
-				if(dist[curNode]!=1e18)
-				{
-					st.erase({dist[curNode],curNode});
-				}
-				dist[curNode]=dis+curDist;
-				st.insert({dist[curNode],curNode});
-				par[curNode]={node,neg};
-			}
-			if(dist[curNode]==dis+curDist)
-			{
-				if(!neg)
-				{
-					par[curNode]={node,neg};
-				}
-			}
-		}
-	}
+	return ((b==0)?a:gcd(b,a%b));
+}
+
+vector<long long> lpf(200001,0);
+vector<long long> primes;
+
+void leastPrimeFactor()
+{
+    long long n=lpf.size();
+    for(long long i=2;i<n;++i)
+    {
+        if(lpf[i]==0)
+        {
+            lpf[i]=i;
+            primes.push_back(i);
+        }
+        for(long long j=0;i*primes[j]<n;++j)
+        {
+            lpf[i*primes[j]]=primes[j];
+            if(primes[j]==lpf[i])
+            {
+                break;
+            }
+        }
+    }
 }
 
 int main()
@@ -49,52 +43,92 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	ll n,m,k,cnt=0;
-	cin>>n>>m>>k;
-	vector<pair<ll,ll>> adj[n];
-	vector<ll> dist(n,1e18),t_dist(n,1e18);
-	vector<pair<ll,bool>> par(n,{-1,0});
-	vector<bool> vis(n,0);
-	for(ll i=0;i<m;++i)
+	leastPrimeFactor();
+	ll n,cnt1=0,g=0;
+	map<ll,map<ll,ll>> mp;
+	cin>>n;
+	for(ll i=0;i<n;++i)
 	{
-		ll u,v,w;
-		cin>>u>>v>>w;
-		u--;
-		v--;
-		adj[u].push_back({v,w});
-		adj[v].push_back({u,w});
-	}
-	for(ll i=0;i<k;++i)
-	{
-		ll u,w;
-		cin>>u>>w;
-		u--;
-		t_dist[u]=min(t_dist[u],w);
-	}
-	dijkstra(0,adj,dist,par);
-	for(int i=0;i<n;++i)
-	{
-		par[i]={-1,0};
-		if(t_dist[i]!=1e18)
+		ll x;
+		cin>>x;
+		if(x==1)
 		{
-			adj[0].push_back({i,-t_dist[i]});
-			adj[i].push_back({0,-t_dist[i]});
+			cnt1++;
+			continue;
+		}
+		g=gcd(g,x);
+		while(x>1)
+		{
+			ll cur_prime=lpf[x],cnt=0;
+			while(x%cur_prime==0)
+			{
+				cnt++;
+				x/=cur_prime;
+			}
+			mp[cur_prime][cnt]++;
 		}
 	}
-	dijkstra(0,adj,dist,par);
-	for(ll i=n-1;i>=0;--i)
+	if(cnt1>=2)
 	{
-		if(!vis[i])
+		cout<<1<<'\n';
+	}
+	else if(cnt1==1)
+	{
+		cout<<g<<'\n';
+	}
+	else
+	{
+		ll ans=1;
+		for(auto &v:mp)
 		{
-			ll cur=i;
-			while(cur!=-1&&!vis[i])
+			ll tot_cnt=0;
+			for(auto &v1:v.second)
 			{
-				cnt+=par[cur].second;
-				vis[cur]=1;
-				cur=par[cur].first;
+				tot_cnt+=v1.second;
+			}
+			if(n-tot_cnt>=2)
+			{
+				continue;
+			}
+			else if(n-tot_cnt==1)
+			{
+				auto it=v.second.begin();
+				ll cur_cnt=it->first;
+				while(cur_cnt--)
+				{
+					ans*=v.first;
+				}
+			}
+			else
+			{
+				auto it=v.second.begin();
+				ll cur_cnt=it->second,cur_mn=it->first;
+				if(cur_cnt>1)
+				{
+					while(cur_mn--)
+					{
+						ans*=v.first;
+					}
+				}
+				else
+				{
+					ll cur_mn_sec=1e18;
+					for(auto &v1:v.second)
+					{
+						if(v1.first!=cur_mn)
+						{
+							cur_mn_sec=v1.first;
+							break;
+						}
+					}
+					while(cur_mn_sec--)
+					{
+						ans*=v.first;
+					}
+				}
 			}
 		}
+		cout<<ans<<'\n';
 	}
-	cout<<k-cnt<<'\n';
 	return 0;
 }
