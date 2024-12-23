@@ -7,11 +7,33 @@ using namespace std;
 	#define debug(x)
 #endif
 
-typedef long long ll;
-
-ll gcd(ll a,ll b)
+pair<int,int> check(int mid,vector<vector<int>> &a)
 {
-	return ((b==0)?a:gcd(b,a%b));
+	int n=a.size(),m=a[0].size();
+	vector<int> mask_idx((1<<m),-1);
+	for(int i=0;i<n;++i)
+	{
+		int mask=0;
+		for(int j=0;j<m;++j)
+		{
+			if(a[i][j]>=mid)
+			{
+				mask+=(1<<j);
+			}
+		}
+		mask_idx[mask]=i;
+	}
+	for(int i=0;i<(1<<m);++i)
+	{
+		for(int j=i;j<(1<<m);++j)
+		{
+			if(mask_idx[i]!=-1&&mask_idx[j]!=-1&&((i|j)==(1<<m)-1))
+			{
+				return {mask_idx[i],mask_idx[j]};
+			}
+		}
+	}
+	return {-1,-1};
 }
 
 int main()
@@ -19,50 +41,33 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	ll n,p,w,d,g=0;
-	cin>>n>>p>>w>>d;
-	g=gcd(d,w);
-	if(p%g)
+	int n,m,lo=1e9,hi=-1e9;
+	pair<int,int> ans={-1,-1};
+	cin>>n>>m;
+	vector<vector<int>> a(n,vector<int>(m,0));
+	for(auto &vec:a)
 	{
-		cout<<-1<<'\n';
+		for(auto &v:vec)
+		{
+			cin>>v;
+			lo=min(lo,v);
+			hi=max(hi,v);
+		}
 	}
-	else
+	while(hi>=lo)
 	{
-		d/=g;
-		p/=g;
-		w/=g;
-		ll x=-1,y=-1;
-		for(ll i=0;i<d;++i)
+		int mid=lo+(hi-lo)/2;
+		pair<int,int> p=check(mid,a);
+		if(p.first!=-1)
 		{
-			ll num=p-w*i;
-			if(num%d==0)
-			{
-				x=i;
-				y=num/d;
-				break;
-			}
-		}
-		if(y<0||x+y>n)
-		{
-			ll lb=(x+y-n)/(w-d)+(((x+y-n)%(w-d))!=0),ub=y/w;
-			if(lb<=ub)
-			{
-				x+=lb*d;
-				y-=lb*w;
-			}
-			else
-			{
-				x=y=-1;
-			}
-		}
-		if(x<0)
-		{
-			cout<<-1<<'\n';
+			ans=p;
+			lo=mid+1;
 		}
 		else
 		{
-			cout<<x<<' '<<y<<' '<<n-x-y<<'\n';
+			hi=mid-1;
 		}
 	}
+	cout<<ans.first+1<<' '<<ans.second+1<<'\n';
 	return 0;
 }
