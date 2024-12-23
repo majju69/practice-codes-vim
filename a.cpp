@@ -9,25 +9,9 @@ using namespace std;
 
 typedef long long ll;
 
-ll getProfit(ll x,ll k,vector<ll> &a,vector<ll> &b)
+ll gcd(ll a,ll b)
 {
-	ll n=a.size(),neg=0;
-	ll cnt=upper_bound(b.begin(),b.end(),1e18)-lower_bound(b.begin(),b.end(),x);
-	ll profit=cnt*x;
-	ll lb1=0,ub1=upper_bound(a.begin(),a.end(),x-1)-a.begin()-1,lb2=lower_bound(b.begin(),b.end(),x)-b.begin(),ub2=n-1;
-	if(lb1<=ub1&&lb2<=ub2)
-	{
-		ll lb=max(lb1,lb2),ub=min(ub1,ub2);
-		if(lb<=ub)
-		{
-			neg=ub-lb+1;
-		}
-	}
-	if(neg>k)
-	{
-		profit=0;
-	}
-	return profit;
+	return ((b==0)?a:gcd(b,a%b));
 }
 
 int main()
@@ -35,32 +19,50 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	ll tc;
-	cin>>tc;
-	while(tc--)
+	ll n,p,w,d,g=0;
+	cin>>n>>p>>w>>d;
+	g=gcd(d,w);
+	if(p%g)
 	{
-		ll n,k,ans=0;
-		cin>>n>>k;
-		vector<ll> a(n),b(n);
-		for(auto &v:a)
+		cout<<-1<<'\n';
+	}
+	else
+	{
+		d/=g;
+		p/=g;
+		w/=g;
+		ll x=-1,y=-1;
+		for(ll i=0;i<d;++i)
 		{
-			cin>>v;
+			ll num=p-w*i;
+			if(num%d==0)
+			{
+				x=i;
+				y=num/d;
+				break;
+			}
 		}
-		for(auto &v:b)
+		if(y<0||x+y>n)
 		{
-			cin>>v;
+			ll lb=(x+y-n)/(w-d)+(((x+y-n)%(w-d))!=0),ub=y/w;
+			if(lb<=ub)
+			{
+				x+=lb*d;
+				y-=lb*w;
+			}
+			else
+			{
+				x=y=-1;
+			}
 		}
-		sort(a.begin(),a.end());
-		sort(b.begin(),b.end());
-		for(auto &v:a)
+		if(x<0)
 		{
-			ans=max(ans,getProfit(v,k,a,b));
+			cout<<-1<<'\n';
 		}
-		for(auto &v:b)
+		else
 		{
-			ans=max(ans,getProfit(v,k,a,b));
+			cout<<x<<' '<<y<<' '<<n-x-y<<'\n';
 		}
-		cout<<ans<<'\n';
 	}
 	return 0;
 }
