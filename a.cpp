@@ -7,21 +7,17 @@ using namespace std;
 	#define debug(x)
 #endif
 
-const int dx[]={-1,1,0,0},dy[]={0,0,-1,1};
-
-bool check(int x,int y,vector<string> &a)
+pair<int,int> getRange(int l,int r,vector<int> &a)
 {
-	int n=a.size(),m=a[0].size(),cnt=0;
-	if(x>=n||x<0||y>=m||y<0||a[x][y]!='.')
+	int mn=0,mx=0,mxEnd=0,mnEnd=0;
+	for(int i=l;i<=r;++i)
 	{
-		return 0;
+		mxEnd=max(mxEnd+a[i],a[i]);
+		mnEnd=min(mnEnd+a[i],a[i]);
+		mn=min(mn,mnEnd);
+		mx=max(mx,mxEnd);
 	}
-	for(int i=0;i<4;++i)
-	{
-		int r=x+dx[i],c=y+dy[i];
-		cnt+=(r>=0&&r<n&&c>=0&&c<m&&a[r][c]=='.');
-	}
-	return cnt<=1;
+	return {mn,mx};
 }
 
 int main()
@@ -33,51 +29,76 @@ int main()
 	cin>>tc;
 	while(tc--)
 	{
-		int n,m,src_i=-1,src_j=-1;
-		queue<pair<int,int>> q;
-		cin>>n>>m;
-		vector<string> a(n),tmp;
-		for(auto &s:a)
-		{
-			cin>>s;
-		}
+		int n,idx=-1;
+		cin>>n;
+		vector<int> a(n);
 		for(int i=0;i<n;++i)
 		{
-			if(src_i!=-1)
+			cin>>a[i];
+			if(abs(a[i])!=1)
 			{
-				break;
-			}
-			for(int j=0;j<m;++j)
-			{
-				if(a[i][j]=='L')
-				{
-					src_i=i;
-					src_j=j;
-				}
+				idx=i;
 			}
 		}
-		tmp=a;
-		tmp[src_i][src_j]='#';
-		q.push({src_i,src_j});
-		while(q.size())
+		if(idx==-1)
 		{
-			int x=q.front().first,y=q.front().second;
-			q.pop();
-			for(int i=0;i<4;++i)
+			pair<int,int> range=getRange(0,n-1,a);
+			cout<<range.second-range.first+1<<'\n';
+			for(int i=range.first;i<=range.second;++i)
 			{
-				int r=x+dx[i],c=y+dy[i];
-				if(check(r,c,tmp))
-				{
-					tmp[r][c]='+';
-					q.push({r,c});
-				}
+				cout<<i<<' ';
 			}
+			cout<<'\n';
 		}
-		tmp[src_i][src_j]='L';
-		for(auto &s:tmp)
+		else
 		{
-			cout<<s<<'\n';
+			int s=0,x=a[idx];
+			pair<int,int> l_exc_range=getRange(0,idx-1,a),r_exc_range=getRange(idx+1,n-1,a);
+			pair<int,int> exc_range={min(l_exc_range.first,r_exc_range.first),max(l_exc_range.second,r_exc_range.second)};
+			pair<int,int> l_inc_range={0,0},r_inc_range={0,0};
+			pair<int,int> inc_range={2e9,-2e9};
+			for(int i=idx-1;i>=0;--i)
+			{
+				s+=a[i];
+				l_inc_range.first=min(l_inc_range.first,s);
+				l_inc_range.second=max(l_inc_range.second,s);
+			}
+			s=0;
+			for(int i=idx+1;i<n;++i)
+			{
+				s+=a[i];
+				r_inc_range.first=min(r_inc_range.first,s);
+				r_inc_range.second=max(r_inc_range.second,s);
+			}
+			inc_range={min({x+l_inc_range.first,x+r_inc_range.first,x+l_inc_range.first+r_inc_range.first}),max({x+l_inc_range.second,x+r_inc_range.second,x+l_inc_range.second+r_inc_range.second})};
+			if(inc_range.first>exc_range.second||exc_range.first>inc_range.second)
+			{
+				if(inc_range>exc_range)
+				{
+					swap(inc_range,exc_range);
+				}
+				cout<<inc_range.second+exc_range.second-inc_range.first-exc_range.first+2<<'\n';
+				for(int i=inc_range.first;i<=inc_range.second;++i)
+				{
+					cout<<i<<' ';
+				}
+				for(int i=exc_range.first;i<=exc_range.second;++i)
+				{
+					cout<<i<<' ';
+				}
+				cout<<'\n';
+			}
+			else
+			{
+				pair<int,int> range={min(inc_range.first,exc_range.first),max(inc_range.second,exc_range.second)};
+				cout<<range.second-range.first+1<<'\n';
+				for(int i=range.first;i<=range.second;++i)
+				{
+					cout<<i<<' ';
+				}
+				cout<<'\n';
+			}
 		}
 	}
 	return 0;
-}	
+}
