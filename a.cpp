@@ -7,54 +7,21 @@ using namespace std;
 	#define debug(x)
 #endif
 
-typedef long long ll;
+const int dx[]={-1,1,0,0},dy[]={0,0,-1,1};
 
-const ll mod=998244353;
-
-const ll add(ll a,ll b)
+bool check(int x,int y,vector<string> &a)
 {
-	return (a%mod+b%mod)%mod;
-}
-
-vector<long long> fact(500001);
-
-void fillFact()
-{
-	long long n=fact.size();
-	fact[0]=1;
-	for(long long i=1;i<n;++i)
-	{
-		fact[i]=(i%mod*fact[i-1]%mod)%mod;
-	}
-}
-
-long long power(long long a,long long b)        // Use when mod is of order 10^9 or less
-{
-	long long ans=1;
-	a=a%mod;
-	while(b)
-	{
-		if(b&1)
-		{
-			ans=(ans*a)%mod;
-		}
-		a=(a*a)%mod;
-		b>>=1;
-	}
-	return ans%mod;
-}
-
-long long nCr(long long n,long long r)         // Ensure that fillFact() is called before this function is used
-{
-	if(n<r||n<0||r<0)
+	int n=a.size(),m=a[0].size(),cnt=0;
+	if(x>=n||x<0||y>=m||y<0||a[x][y]!='.')
 	{
 		return 0;
 	}
-	if(r==n||r==0)
+	for(int i=0;i<4;++i)
 	{
-		return 1;
+		int r=x+dx[i],c=y+dy[i];
+		cnt+=(r>=0&&r<n&&c>=0&&c<m&&a[r][c]=='.');
 	}
-	return (fact[n]*power(fact[r],mod-2)%mod*power(fact[n-r],mod-2)%mod)%mod;
+	return cnt<=1;
 }
 
 int main()
@@ -62,22 +29,55 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	ll n,k;
-	cin>>n>>k;
-	if(k>n)
+	int tc;
+	cin>>tc;
+	while(tc--)
 	{
-		cout<<0<<'\n';
-	}
-	else
-	{
-		fillFact();
-		ll ans=0;
-		for(ll i=1;i<=n;++i)
+		int n,m,src_i=-1,src_j=-1;
+		queue<pair<int,int>> q;
+		cin>>n>>m;
+		vector<string> a(n),tmp;
+		for(auto &s:a)
 		{
-			ll candidates=n/i-1;
-			ans=add(ans,nCr(candidates,k-1));
+			cin>>s;
 		}
-		cout<<ans<<'\n';
+		for(int i=0;i<n;++i)
+		{
+			if(src_i!=-1)
+			{
+				break;
+			}
+			for(int j=0;j<m;++j)
+			{
+				if(a[i][j]=='L')
+				{
+					src_i=i;
+					src_j=j;
+				}
+			}
+		}
+		tmp=a;
+		tmp[src_i][src_j]='#';
+		q.push({src_i,src_j});
+		while(q.size())
+		{
+			int x=q.front().first,y=q.front().second;
+			q.pop();
+			for(int i=0;i<4;++i)
+			{
+				int r=x+dx[i],c=y+dy[i];
+				if(check(r,c,tmp))
+				{
+					tmp[r][c]='+';
+					q.push({r,c});
+				}
+			}
+		}
+		tmp[src_i][src_j]='L';
+		for(auto &s:tmp)
+		{
+			cout<<s<<'\n';
+		}
 	}
 	return 0;
-}
+}	
