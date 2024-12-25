@@ -11,7 +11,7 @@ typedef long long ll;
 
 const ll mod=1e9+7;
 
-vector<long long> lpf(10000001,0);
+vector<long long> lpf(100001,0);
 vector<long long> primes;
 
 void leastPrimeFactor()
