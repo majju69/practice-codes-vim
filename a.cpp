@@ -7,110 +7,67 @@ using namespace std;
 	#define debug(x)
 #endif
 
-typedef long long ll;
-
-const ll mod=1e9+7;
-
-vector<long long> fact(2000001);
-
-void fillFact()
-{
-	long long n=fact.size();
-	fact[0]=1;
-	for(long long i=1;i<n;++i)
-	{
-		fact[i]=(i%mod*fact[i-1]%mod)%mod;
-	}
-}
-
-vector<long long> lpf(2000001,0);
-vector<long long> primes;
-
-void leastPrimeFactor()
-{
-    long long n=lpf.size();
-    for(long long i=2;i<n;++i)
-    {
-        if(lpf[i]==0)
-        {
-            lpf[i]=i;
-            primes.push_back(i);
-        }
-        for(long long j=0;i*primes[j]<n;++j)
-        {
-            lpf[i*primes[j]]=primes[j];
-            if(primes[j]==lpf[i])
-            {
-                break;
-            }
-        }
-    }
-}
-
-long long power(long long a,long long b)        // Use when mod is of order 10^9 or less
-{
-	long long ans=1;
-	a=a%mod;
-	while(b)
-	{
-		if(b&1)
-		{
-			ans=(ans*a)%mod;
-		}
-		a=(a*a)%mod;
-		b>>=1;
-	}
-	return ans%mod;
-}
-
-long long nCr(long long n,long long r)         // Ensure that fillFact() is called before this function is used
-{
-	if(n<r||n<0||r<0)
-	{
-		return 0;
-	}
-	if(r==n||r==0)
-	{
-		return 1;
-	}
-	return (fact[n]*power(fact[r],mod-2)%mod*power(fact[n-r],mod-2)%mod)%mod;
-}
-
-inline ll get(ll n,ll r)
-{
-	return nCr(n+r-1,r-1);
-}
-
-inline ll mul(ll a,ll b)
-{
-	return (a%mod*b%mod)%mod;
-}
-
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	fillFact();
-	leastPrimeFactor();
-	ll tc;
+	int tc;
 	cin>>tc;
 	while(tc--)
 	{
-		ll x,y,ans=1;
-		cin>>x>>y;
-		while(x>1)
+		int n;
+		string s,t;
+		cin>>n>>s>>t;
+		if(s==t)
 		{
-			ll p=lpf[x],cnt=0;
-			while(x%p==0)
-			{
-				cnt++;
-				x/=p;
-			}
-			ans=mul(ans,get(cnt,y));
+			cout<<"YES\n";
 		}
-		ans=mul(ans,power(2,y-1));
-		cout<<ans<<'\n';
+		else
+		{
+			bool ok=0;
+			vector<int> a(26,0),b(26,0);
+			for(int i=0;i<n;++i)
+			{
+				a[s[i]-'a']++;
+				b[t[i]-'a']++;
+				if(a[s[i]-'a']>=2)
+				{
+					ok=1;
+				}
+			}
+			ok=(ok&&a==b);
+			if(ok)
+			{
+				cout<<"YES\n";
+			}
+			else
+			{
+				for(int i=0;i<n-1;++i)
+				{
+					for(int j=0;j<n-i-1;++j)
+					{
+						if(s[j]>s[j+1])
+						{
+							swap(s[j],s[j+1]);
+							swap(t[0],t[1]);
+						}
+					}
+				}
+				for(int i=0;i<n-1;++i)
+				{
+					for(int j=0;j<n-i-1;++j)
+					{
+						if(t[j]>t[j+1])
+						{
+							swap(t[j],t[j+1]);
+							swap(s[0],s[1]);
+						}
+					}
+				}
+				cout<<((s==t)?"YES":"NO")<<'\n';
+			}
+		}
 	}
 	return 0;
 }
