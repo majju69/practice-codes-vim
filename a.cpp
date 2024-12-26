@@ -9,197 +9,107 @@ using namespace std;
 
 typedef long long ll;
 
-class DisjointSet
+const ll mod=1e9+7;
+
+vector<long long> fact(2000001);
+
+void fillFact()
 {
-
-private:
-	
-	vector<long long> ultimateParent,rank,size;
-
-public:
-	
-	DisjointSet(long long n)
+	long long n=fact.size();
+	fact[0]=1;
+	for(long long i=1;i<n;++i)
 	{
-		ultimateParent.resize(n+1);
-		rank.resize(n+1,0);
-		size.resize(n+1,1);
-		for(long long i=0;i<=n;++i)
-		{
-			ultimateParent[i]=i;
-		}
+		fact[i]=(i%mod*fact[i-1]%mod)%mod;
 	}
-
-	long long findUltimateParent(long long node)
-	{
-		if(ultimateParent[node]==node)
-		{
-			return node;
-		}
-		return ultimateParent[node]=findUltimateParent(ultimateParent[node]);
-	}
-
-	long long getSize(long long node)
-	{
-		return size[node];
-	}
-
-	long long getRank(long long node)
-	{
-		return rank[node];
-	}
-
-	void unionByRank(long long u,long long v)
-	{
-		long long ultimateParentOfU=findUltimateParent(u),ultimateParentOfV=findUltimateParent(v);
-		if(ultimateParentOfU==ultimateParentOfV)
-		{
-			return;
-		}
-		if(rank[ultimateParentOfU]<rank[ultimateParentOfV])
-		{
-			ultimateParent[ultimateParentOfU]=ultimateParentOfV;
-		}
-		else if(rank[ultimateParentOfU]>rank[ultimateParentOfV])
-		{
-			ultimateParent[ultimateParentOfV]=ultimateParentOfU;
-		}
-		else
-		{
-			ultimateParent[ultimateParentOfV]=ultimateParentOfU;
-			rank[ultimateParentOfU]++;
-		}
-	}
-
-	void unionBySize(long long u,long long v)
-	{
-		long long ultimateParentOfU=findUltimateParent(u),ultimateParentOfV=findUltimateParent(v);
-		if(ultimateParentOfU==ultimateParentOfV)
-		{
-			return;
-		}
-		if(size[ultimateParentOfU]<size[ultimateParentOfV])
-		{
-			ultimateParent[ultimateParentOfU]=ultimateParentOfV;
-			size[ultimateParentOfV]+=size[ultimateParentOfU];
-		}
-		else
-		{
-			ultimateParent[ultimateParentOfV]=ultimateParentOfU;
-			size[ultimateParentOfU]+=size[ultimateParentOfV];
-		}
-	}
-
-};
-
-ll gcd(ll a,ll b)
-{
-	return ((b==0)?a:gcd(b,a%b));
 }
 
-class SegmentTree
+vector<long long> lpf(2000001,0);
+vector<long long> primes;
+
+void leastPrimeFactor()
 {
+    long long n=lpf.size();
+    for(long long i=2;i<n;++i)
+    {
+        if(lpf[i]==0)
+        {
+            lpf[i]=i;
+            primes.push_back(i);
+        }
+        for(long long j=0;i*primes[j]<n;++j)
+        {
+            lpf[i*primes[j]]=primes[j];
+            if(primes[j]==lpf[i])
+            {
+                break;
+            }
+        }
+    }
+}
 
-private:
-
-	vector<ll> seg;
-
-public:
-
-	SegmentTree(ll n)
+long long power(long long a,long long b)        // Use when mod is of order 10^9 or less
+{
+	long long ans=1;
+	a=a%mod;
+	while(b)
 	{
-		seg.resize(4*n+1);
+		if(b&1)
+		{
+			ans=(ans*a)%mod;
+		}
+		a=(a*a)%mod;
+		b>>=1;
 	}
+	return ans%mod;
+}
 
-	void build(ll ind,ll lo,ll hi,vector<ll> &a)
+long long nCr(long long n,long long r)         // Ensure that fillFact() is called before this function is used
+{
+	if(n<r||n<0||r<0)
 	{
-		if(lo==hi)
-		{
-			seg[ind]=a[lo];
-			return;
-		}
-		ll mid=lo+(hi-lo)/2;
-		build(2*ind+1,lo,mid,a);
-		build(2*ind+2,mid+1,hi,a);
-		seg[ind]=gcd(seg[2*ind+1],seg[2*ind+2]);
+		return 0;
 	}
-
-	ll query(ll ind,ll lo,ll hi,ll l,ll r)
+	if(r==n||r==0)
 	{
-		if(l>hi||lo>r)
-		{
-			return 0;
-		}
-		if(l<=lo&&hi<=r)
-		{
-			return seg[ind];
-		}
-		ll mid=lo+(hi-lo)/2;
-		return gcd(query(2*ind+1,lo,mid,l,r),query(2*ind+2,mid+1,hi,l,r));
+		return 1;
 	}
+	return (fact[n]*power(fact[r],mod-2)%mod*power(fact[n-r],mod-2)%mod)%mod;
+}
 
-};
+inline ll get(ll n,ll r)
+{
+	return nCr(n+r-1,r-1);
+}
+
+inline ll mul(ll a,ll b)
+{
+	return (a%mod*b%mod)%mod;
+}
 
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
+	fillFact();
+	leastPrimeFactor();
 	ll tc;
 	cin>>tc;
 	while(tc--)
 	{
-		ll n,p,ans=0;
-		cin>>n>>p;
-		vector<ll> a(n);
-		vector<pair<ll,ll>> b(n),ranges(n,{0,-1});
-		for(ll i=0;i<n;++i)
+		ll x,y,ans=1;
+		cin>>x>>y;
+		while(x>1)
 		{
-			cin>>a[i];
-			b[i].first=a[i];
-			b[i].second=i;
-			ranges[i]={i,i};
-		}
-		sort(b.begin(),b.end());
-		SegmentTree st(n);
-		st.build(0,0,n-1,a);
-		DisjointSet ds(n);
-		for(auto &v:b)
-		{
-			if(v.first>=p)
+			ll p=lpf[x],cnt=0;
+			while(x%p==0)
 			{
-				break;
+				cnt++;
+				x/=p;
 			}
-			ll i=v.second,g=v.first;
-			ll l=i,r=i;
-			while(l>=0&&st.query(0,0,n-1,l,i)==g)
-			{
-				if(ds.findUltimateParent(l)!=ds.findUltimateParent(i))
-				{
-					ans+=g;
-					ds.unionByRank(l,i);
-				}
-				ranges[ds.findUltimateParent(i)].first=min(ranges[ds.findUltimateParent(i)].first,l);
-				l=ranges[ds.findUltimateParent(l)].first-1;
-			}
-			while(r<n&&st.query(0,0,n-1,i,r)==g)
-			{
-				if(ds.findUltimateParent(i)!=ds.findUltimateParent(r))
-				{
-					ans+=g;
-					ds.unionByRank(i,r);
-				}
-				ranges[ds.findUltimateParent(i)].second=max(ranges[ds.findUltimateParent(i)].second,r);
-				r=ranges[ds.findUltimateParent(r)].second+1;
-			}	
+			ans=mul(ans,get(cnt,y));
 		}
-		for(ll i=1;i<n;++i)
-		{
-			if(ds.findUltimateParent(i)!=ds.findUltimateParent(0))
-			{
-				ans+=p;
-				ds.unionByRank(0,i);
-			}
-		}
+		ans=mul(ans,power(2,y-1));
 		cout<<ans<<'\n';
 	}
 	return 0;
