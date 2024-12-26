@@ -7,22 +7,16 @@ using namespace std;
 	#define debug(x)
 #endif
 
-struct Query
+void dfs(int node,int c,vector<int> adj[],vector<int> &col)
 {
-	int lt,rt,blk,idx;
-};
-
-bool cmp(Query a,Query b)
-{
-	if(a.blk==b.blk)
+	col[node]=c;
+	for(auto &v:adj[node])
 	{
-		if(a.blk&1)
+		if(col[v]==-1)
 		{
-			return a.rt<b.rt;
+			dfs(v,1-c,adj,col);
 		}
-		return a.rt>b.rt;
 	}
-	return a.blk<b.blk;
 }
 
 int main()
@@ -30,32 +24,36 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n,mn=1e9,mx=-1e9,sz=1;
-	cin>>n;
-	vector<Query> qry(n);
-	for(int i=0;i<n;++i)
+	int tc;
+	cin>>tc;
+	while(tc--)
 	{
-		int x,y;
-		cin>>x>>y;
-		mn=min(mn,min(x,y));
-		mx=max(mx,max(x,y));
-		qry[i].lt=x;
-		qry[i].rt=y;
-		qry[i].idx=i+1;
+		int n;
+		cin>>n;
+		vector<int> adj[n],col(n,-1);
+		for(int i=1;i<n;++i)
+		{
+			int u,v;
+			cin>>u>>v;
+			u--;
+			v--;
+			adj[u].push_back(v);
+			adj[v].push_back(u);
+		}
+		dfs(0,0,adj,col);
+		for(int i=0;i<n;++i)
+		{
+			int d=adj[i].size();
+			if(col[i])
+			{
+				cout<<d<<' ';
+			}
+			else
+			{
+				cout<<-d<<' ';
+			}
+		}
+		cout<<'\n';
 	}
-	if(mn!=mx)
-	{
-		sz=floor(sqrtl(mx-mn));
-	}
-	for(auto &q:qry)
-	{
-		q.blk=q.lt/sz;
-	}
-	sort(qry.begin(),qry.end(),cmp);
-	for(auto &q:qry)
-	{
-		cout<<q.idx<<' ';
-	}
-	cout<<'\n';
 	return 0;
 }
