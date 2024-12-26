@@ -9,103 +9,198 @@ using namespace std;
 
 typedef long long ll;
 
-const ll mod=1e9+7;
-
-vector<long long> lpf(100001,0);
-vector<long long> primes;
-
-void leastPrimeFactor()
+class DisjointSet
 {
-    long long n=lpf.size();
-    for(long long i=2;i<n;++i)
-    {
-        if(lpf[i]==0)
-        {
-            lpf[i]=i;
-            primes.push_back(i);
-        }
-        for(long long j=0;i*primes[j]<n;++j)
-        {
-            lpf[i*primes[j]]=primes[j];
-            if(primes[j]==lpf[i])
-            {
-                break;
-            }
-        }
-    }
-}
 
-long long power(long long a,long long b)        // Use when mod is of order 10^9 or less
-{
-	long long ans=1;
-	a=a%mod;
-	while(b)
+private:
+	
+	vector<long long> ultimateParent,rank,size;
+
+public:
+	
+	DisjointSet(long long n)
 	{
-		if(b&1)
+		ultimateParent.resize(n+1);
+		rank.resize(n+1,0);
+		size.resize(n+1,1);
+		for(long long i=0;i<=n;++i)
 		{
-			ans=(ans*a)%mod;
+			ultimateParent[i]=i;
 		}
-		a=(a*a)%mod;
-		b>>=1;
 	}
-	return ans%mod;
+
+	long long findUltimateParent(long long node)
+	{
+		if(ultimateParent[node]==node)
+		{
+			return node;
+		}
+		return ultimateParent[node]=findUltimateParent(ultimateParent[node]);
+	}
+
+	long long getSize(long long node)
+	{
+		return size[node];
+	}
+
+	long long getRank(long long node)
+	{
+		return rank[node];
+	}
+
+	void unionByRank(long long u,long long v)
+	{
+		long long ultimateParentOfU=findUltimateParent(u),ultimateParentOfV=findUltimateParent(v);
+		if(ultimateParentOfU==ultimateParentOfV)
+		{
+			return;
+		}
+		if(rank[ultimateParentOfU]<rank[ultimateParentOfV])
+		{
+			ultimateParent[ultimateParentOfU]=ultimateParentOfV;
+		}
+		else if(rank[ultimateParentOfU]>rank[ultimateParentOfV])
+		{
+			ultimateParent[ultimateParentOfV]=ultimateParentOfU;
+		}
+		else
+		{
+			ultimateParent[ultimateParentOfV]=ultimateParentOfU;
+			rank[ultimateParentOfU]++;
+		}
+	}
+
+	void unionBySize(long long u,long long v)
+	{
+		long long ultimateParentOfU=findUltimateParent(u),ultimateParentOfV=findUltimateParent(v);
+		if(ultimateParentOfU==ultimateParentOfV)
+		{
+			return;
+		}
+		if(size[ultimateParentOfU]<size[ultimateParentOfV])
+		{
+			ultimateParent[ultimateParentOfU]=ultimateParentOfV;
+			size[ultimateParentOfV]+=size[ultimateParentOfU];
+		}
+		else
+		{
+			ultimateParent[ultimateParentOfV]=ultimateParentOfU;
+			size[ultimateParentOfU]+=size[ultimateParentOfV];
+		}
+	}
+
+};
+
+ll gcd(ll a,ll b)
+{
+	return ((b==0)?a:gcd(b,a%b));
 }
 
-inline ll mul(ll a,ll b)
+class SegmentTree
 {
-	return (a%mod*b%mod)%mod;
-}
 
-inline ll divide(ll a,ll b)
-{
-	return mul(a,power(b,mod-2));
-}
+private:
+
+	vector<ll> seg;
+
+public:
+
+	SegmentTree(ll n)
+	{
+		seg.resize(4*n+1);
+	}
+
+	void build(ll ind,ll lo,ll hi,vector<ll> &a)
+	{
+		if(lo==hi)
+		{
+			seg[ind]=a[lo];
+			return;
+		}
+		ll mid=lo+(hi-lo)/2;
+		build(2*ind+1,lo,mid,a);
+		build(2*ind+2,mid+1,hi,a);
+		seg[ind]=gcd(seg[2*ind+1],seg[2*ind+2]);
+	}
+
+	ll query(ll ind,ll lo,ll hi,ll l,ll r)
+	{
+		if(l>hi||lo>r)
+		{
+			return 0;
+		}
+		if(l<=lo&&hi<=r)
+		{
+			return seg[ind];
+		}
+		ll mid=lo+(hi-lo)/2;
+		return gcd(query(2*ind+1,lo,mid,l,r),query(2*ind+2,mid+1,hi,l,r));
+	}
+
+};
 
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	leastPrimeFactor();
-	ll n,m,pro=1;
-	map<ll,ll> mp_m;
-	cin>>n>>m;
-	for(auto &p:primes)
+	ll tc;
+	cin>>tc;
+	while(tc--)
 	{
-		if(m/p==0)
+		ll n,p,ans=0;
+		cin>>n>>p;
+		vector<ll> a(n);
+		vector<pair<ll,ll>> b(n),ranges(n,{0,-1});
+		for(ll i=0;i<n;++i)
 		{
-			break;
+			cin>>a[i];
+			b[i].first=a[i];
+			b[i].second=i;
+			ranges[i]={i,i};
 		}
-		ll cur=p,cnt=0;
-		while(m/cur!=0)
+		sort(b.begin(),b.end());
+		SegmentTree st(n);
+		st.build(0,0,n-1,a);
+		DisjointSet ds(n);
+		for(auto &v:b)
 		{
-			cnt+=(m/cur);
-			cur*=p;
-		}
-		mp_m[p]=cnt;
-		pro=mul(pro,1+cnt);
-	}
-	for(ll i=0;i<n;++i)
-	{
-		ll x,ans=pro;
-		cin>>x;
-		while(x>1)
-		{
-			ll p=lpf[x],cnt=0,pvs=0;
-			while(x%p==0)
+			if(v.first>=p)
 			{
-				cnt++;
-				x/=p;
+				break;
 			}
-			if(mp_m.count(p))
+			ll i=v.second,g=v.first;
+			ll l=i,r=i;
+			while(l>=0&&st.query(0,0,n-1,l,i)==g)
 			{
-				pvs=mp_m[p];
+				if(ds.findUltimateParent(l)!=ds.findUltimateParent(i))
+				{
+					ans+=g;
+					ds.unionByRank(l,i);
+				}
+				ranges[ds.findUltimateParent(i)].first=min(ranges[ds.findUltimateParent(i)].first,l);
+				l=ranges[ds.findUltimateParent(l)].first-1;
 			}
-			ans=divide(ans,pvs+1);
-			ans=mul(ans,pvs+cnt+1);
+			while(r<n&&st.query(0,0,n-1,i,r)==g)
+			{
+				if(ds.findUltimateParent(i)!=ds.findUltimateParent(r))
+				{
+					ans+=g;
+					ds.unionByRank(i,r);
+				}
+				ranges[ds.findUltimateParent(i)].second=max(ranges[ds.findUltimateParent(i)].second,r);
+				r=ranges[ds.findUltimateParent(r)].second+1;
+			}	
 		}
-		cout<<ans<<' ';
+		for(ll i=1;i<n;++i)
+		{
+			if(ds.findUltimateParent(i)!=ds.findUltimateParent(0))
+			{
+				ans+=p;
+				ds.unionByRank(0,i);
+			}
+		}
+		cout<<ans<<'\n';
 	}
-	cout<<'\n';
 	return 0;
 }
