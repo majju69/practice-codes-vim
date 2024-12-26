@@ -7,16 +7,17 @@ using namespace std;
 	#define debug(x)
 #endif
 
-void dfs(int node,int c,vector<int> adj[],vector<int> &col)
+typedef long long ll;
+
+ll get(ll n)
 {
-	col[node]=c;
-	for(auto &v:adj[node])
+	ll cnt=0;
+	while(n)
 	{
-		if(col[v]==-1)
-		{
-			dfs(v,1-c,adj,col);
-		}
+		n/=10;
+		cnt++;
 	}
+	return cnt;
 }
 
 int main()
@@ -24,36 +25,31 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int tc;
-	cin>>tc;
-	while(tc--)
+	ll n,k,ans=0;
+	vector<map<ll,ll>> mp_a(10);
+	cin>>n>>k;
+	vector<ll> a(n);
+	for(auto &v:a)
 	{
-		int n;
-		cin>>n;
-		vector<int> adj[n],col(n,-1);
-		for(int i=1;i<n;++i)
-		{
-			int u,v;
-			cin>>u>>v;
-			u--;
-			v--;
-			adj[u].push_back(v);
-			adj[v].push_back(u);
-		}
-		dfs(0,0,adj,col);
-		for(int i=0;i<n;++i)
-		{
-			int d=adj[i].size();
-			if(col[i])
-			{
-				cout<<d<<' ';
-			}
-			else
-			{
-				cout<<-d<<' ';
-			}
-		}
-		cout<<'\n';
+		cin>>v;
+		mp_a[get(v)-1][v%k]++;
 	}
+	for(auto &v:a)
+	{
+		ll cur=10;
+		mp_a[get(v)-1][v%k]--;
+		for(ll i=0;i<10;++i)
+		{
+			ll r=(cur%k*v%k)%k;
+			ll req=(k-r)%k;
+			if(mp_a[i].count(req))
+			{
+				ans+=mp_a[i][req];
+			}
+			cur*=10;
+		}
+		mp_a[get(v)-1][v%k]++;
+	}
+	cout<<ans<<'\n';
 	return 0;
 }
