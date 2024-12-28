@@ -7,13 +7,54 @@ using namespace std;
 	#define debug(x)
 #endif
 
-void pre(vector<int> &a)
+typedef long long ll;
+
+const ll mod=1e9+7;
+
+vector<long long> fact(1001);
+
+void fillFact()
 {
-	int n=a.size();
-	for(int i=1;i<n;++i)
+	long long n=fact.size();
+	fact[0]=1;
+	for(long long i=1;i<n;++i)
 	{
-		a[i]+=a[i-1];
+		fact[i]=(i%mod*fact[i-1]%mod)%mod;
 	}
+}
+
+long long power(long long a,long long b)        // Use when mod is of order 10^9 or less
+{
+	long long ans=1;
+	a=a%mod;
+	while(b)
+	{
+		if(b&1)
+		{
+			ans=(ans*a)%mod;
+		}
+		a=(a*a)%mod;
+		b>>=1;
+	}
+	return ans%mod;
+}
+
+long long nCr(long long n,long long r)         // Ensure that fillFact() is called before this function is used
+{
+	if(n<r||n<0||r<0)
+	{
+		return 0;
+	}
+	if(r==n||r==0)
+	{
+		return 1;
+	}
+	return (fact[n]*power(fact[r],mod-2)%mod*power(fact[n-r],mod-2)%mod)%mod;
+}
+
+inline ll mul(ll a,ll b)
+{
+	return (a%mod*b%mod)%mod;
 }
 
 int main()
@@ -21,48 +62,32 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n,k,mn=2e9+10;
-	vector<int> common,alice,bob;
-	cin>>n>>k;
-	for(int i=0;i<n;++i)
+	fillFact();
+	ll tc;
+	cin>>tc;
+	while(tc--)
 	{
-		int t,a,b;
-		cin>>t>>a>>b;
-		if(a==1&&b==1)
+		ll n,k,ans=1;
+		map<ll,ll> mp,mp_req;
+		set<ll> st;
+		cin>>n>>k;
+		vector<ll> a(n);
+		for(auto &v:a)
 		{
-			common.push_back(t);
+			cin>>v;
+			mp[v]++;
+			st.insert(v);
 		}
-		if(a==1&&b==0)
+		sort(a.rbegin(),a.rend());
+		for(ll i=0;i<k;++i)
 		{
-			alice.push_back(t);
+			mp_req[a[i]]++;
 		}
-		if(a==0&&b==1)
+		for(auto &v:st)
 		{
-			bob.push_back(t);
+			ans=mul(ans,nCr(mp[v],mp_req[v]));
 		}
+		cout<<ans<<'\n';
 	}
-	sort(common.begin(),common.end());
-	sort(alice.begin(),alice.end());
-	sort(bob.begin(),bob.end());
-	pre(common);
-	pre(alice);
-	pre(bob);
-	for(int i=0;i<=(int)common.size();++i)
-	{
-		if(i>k)
-		{
-			break;
-		}
-		int c_sum=((i==0)?0:common[i-1]),a_sum=((k-i<=(int)alice.size())?((k==i)?0:alice[k-i-1]):-1),b_sum=((k-i<=(int)bob.size())?((k==i)?0:bob[k-i-1]):-1);
-		if(a_sum!=-1&&b_sum!=-1)
-		{
-			mn=min(mn,c_sum+a_sum+b_sum);
-		}
-	}
-	if(mn>(int)2e9)
-	{
-		mn=-1;
-	}
-	cout<<mn<<'\n';
 	return 0;
 }
