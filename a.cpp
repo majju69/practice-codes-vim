@@ -9,6 +9,16 @@ using namespace std;
 
 typedef long long ll;
 
+ll gcd(ll a,ll b)
+{
+	return ((b==0)?a:gcd(b,a%b));
+}
+
+inline ll leastCommonMultiple(ll a,ll b)
+{
+	return (a/gcd(a,b))*b;
+}
+
 int main()
 {
 	ios_base::sync_with_stdio(false);
@@ -18,24 +28,34 @@ int main()
 	cin>>tc;
 	while(tc--)
 	{
-		ll n,ans=0,mn=1e18;
-		cin>>n;
-		vector<pair<ll,ll>> a(n);
-		for(auto &v:a)
+		ll a,b,q,lcm=1;
+		vector<ll> rem;
+		cin>>a>>b>>q;
+		lcm=leastCommonMultiple(a,b);
+		for(ll i=0;i<lcm;++i)
 		{
-			cin>>v.first>>v.second;
+			if((i%a)%b==(i%b)%a)
+			{
+				rem.push_back(i);
+			}
 		}
-		for(ll i=0;i<n;++i)
+		while(q--)
 		{
-			ll req=max(0LL,a[i].first-a[(i-1+n)%n].second);
-			ans+=req;
-			a[i].first-=req;
+			ll l,r,ans=0;
+			cin>>l>>r;
+			for(auto &v:rem)
+			{
+				ll tmp_l=l,tmp_r=r;
+				tmp_l+=(lcm+(v-tmp_l%lcm+lcm)%lcm)%lcm;
+				tmp_r-=(lcm+(tmp_r%lcm-v+lcm)%lcm)%lcm;
+				if(tmp_l<=tmp_r)
+				{
+					ans+=(tmp_r-tmp_l+lcm)/lcm;
+				}
+			}
+			cout<<r-l+1-ans<<' ';
 		}
-		for(auto &v:a)
-		{
-			mn=min(mn,v.first);
-		}
-		cout<<ans+mn<<'\n';
+		cout<<'\n';
 	}
 	return 0;
 }
