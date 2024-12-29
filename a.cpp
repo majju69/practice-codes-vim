@@ -7,11 +7,6 @@ using namespace std;
 	#define debug(x)
 #endif
 
-inline char get(char ch)
-{
-	return ((ch=='1')?'0':'1');
-}
-
 int main()
 {
 	ios_base::sync_with_stdio(false);
@@ -21,53 +16,75 @@ int main()
 	cin>>tc;
 	while(tc--)
 	{
-		int n,ptr=0,pvs=0;
-		string s,t;
-		deque<int> a;
-		cin>>n>>s>>t;
-		for(int i=n-1;i>=0;--i)
-		{
-			if(ptr==0)		// difference
-			{
-				if(s[i+pvs]!=t[i])
-				{
-					if(t[i]!=s[pvs])
-					{
-						a.push_back(i);
-					}
-					else
-					{
-						a.push_back(0);
-						a.push_back(i);
-					}
-					pvs+=i;
-					ptr=1-ptr;
-				}
-			}
-			else	// sum
-			{
-				if(get(s[pvs-i])!=t[i])
-				{
-					if(get(s[pvs])!=t[i])
-					{
-						a.push_back(i);
-					}
-					else
-					{
-						a.push_back(0);
-						a.push_back(i);
-					}
-					pvs-=i;
-					ptr=1-ptr;
-				}
-			}
-		}
-		cout<<(int)a.size()<<' ';
+		int n;
+		map<int,int> mp_init;
+		cin>>n;
+		n<<=1;
+		vector<int> a(n);
 		for(auto &v:a)
 		{
-			cout<<v+1<<' ';
+			cin>>v;
+			mp_init[v]++;
 		}
-		cout<<'\n';
+		if(n==1)
+		{
+			cout<<"NO\n";
+		}
+		else
+		{
+			sort(a.begin(),a.end());
+			int ans_x=-1;
+			vector<pair<int,int>> ans_nums={{-1,-1}};
+			for(int i=0;i<n-1;++i)
+			{
+				map<int,int> mp=mp_init;
+				int x1=a[n-1],x2=a[i],x=a[n-1];
+				vector<pair<int,int>> nums={{x1,x2}};
+				bool ok=1;
+				mp[a[i]]--;
+				mp[a[n-1]]--;
+				for(int j=n-2;j>=0;--j)
+				{
+					if(mp[a[j]]==0)
+					{
+						continue;
+					}
+					mp[a[j]]--;
+					if(mp.count(x-a[j])&&mp[x-a[j]]>0)
+					{
+						x1=a[j];
+						x2=x-a[j];
+						mp[x2]--;
+						x=a[j];
+						nums.push_back({x1,x2});
+					}
+					else
+					{
+						ok=0;
+						break;
+					}
+				}
+				if(ok)
+				{
+					ans_x=a[n-1]+a[i];
+					ans_nums=nums;
+					break;
+				}
+			}
+			if(ans_x==-1)
+			{
+				cout<<"NO\n";
+			}
+			else
+			{
+				cout<<"YES\n";
+				cout<<ans_x<<'\n';
+				for(auto &v:ans_nums)
+				{
+					cout<<v.first<<' '<<v.second<<'\n';
+				}
+			}
+		}
 	}
 	return 0;
 }
