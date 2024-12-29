@@ -7,16 +7,9 @@ using namespace std;
 	#define debug(x)
 #endif
 
-bool is_prime(int n)
+inline char get(char ch)
 {
-	for(int i=2;i*i<=n;++i)
-	{
-		if(n%i==0)
-		{
-			return 0;
-		}
-	}
-	return 1;
+	return ((ch=='1')?'0':'1');
 }
 
 int main()
@@ -24,22 +17,57 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n;
-	cin>>n;
-	if(is_prime(n))
+	int tc;
+	cin>>tc;
+	while(tc--)
 	{
-		cout<<1<<'\n';
-	}
-	else
-	{
-		if(n&1)
+		int n,ptr=0,pvs=0;
+		string s,t;
+		deque<int> a;
+		cin>>n>>s>>t;
+		for(int i=n-1;i>=0;--i)
 		{
-			cout<<((is_prime(n-2))?2:3)<<'\n';
+			if(ptr==0)		// difference
+			{
+				if(s[i+pvs]!=t[i])
+				{
+					if(t[i]!=s[pvs])
+					{
+						a.push_back(i);
+					}
+					else
+					{
+						a.push_back(0);
+						a.push_back(i);
+					}
+					pvs+=i;
+					ptr=1-ptr;
+				}
+			}
+			else	// sum
+			{
+				if(get(s[pvs-i])!=t[i])
+				{
+					if(get(s[pvs])!=t[i])
+					{
+						a.push_back(i);
+					}
+					else
+					{
+						a.push_back(0);
+						a.push_back(i);
+					}
+					pvs-=i;
+					ptr=1-ptr;
+				}
+			}
 		}
-		else
+		cout<<(int)a.size()<<' ';
+		for(auto &v:a)
 		{
-			cout<<2<<'\n';
+			cout<<v+1<<' ';
 		}
+		cout<<'\n';
 	}
 	return 0;
 }
