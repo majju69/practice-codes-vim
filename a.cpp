@@ -7,83 +7,77 @@ using namespace std;
 	#define debug(x)
 #endif
 
+typedef long long ll;
+
+vector<long long> lpf(100001,0);
+vector<long long> primes;
+
+void leastPrimeFactor()
+{
+    long long n=lpf.size();
+    for(long long i=2;i<n;++i)
+    {
+        if(lpf[i]==0)
+        {
+            lpf[i]=i;
+            primes.push_back(i);
+        }
+        for(long long j=0;i*primes[j]<n;++j)
+        {
+            lpf[i*primes[j]]=primes[j];
+            if(primes[j]==lpf[i])
+            {
+                break;
+            }
+        }
+    }
+}
+
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int tc;
+	leastPrimeFactor();
+	ll tc;
 	cin>>tc;
 	while(tc--)
 	{
-		int n;
-		map<int,int> mp_init;
-		cin>>n;
-		n<<=1;
-		vector<int> a(n);
+		ll n,m;
+		bool ok=1;
+		cin>>n>>m;
+		vector<ll> a(m),ans;
 		for(auto &v:a)
 		{
 			cin>>v;
-			mp_init[v]++;
 		}
-		if(n==1)
+		sort(a.rbegin(),a.rend());
+		for(ll i=1;i<=n;++i)
 		{
-			cout<<"NO\n";
+			ll cnt=0,x=i;
+			while(x>1)
+			{
+				x/=lpf[x];
+				cnt++;
+			}
+			if(cnt>=m)
+			{
+				ok=0;
+				break;
+			}
+			ans.push_back(a[cnt]);
+		}
+		if(ok)
+		{
+			for(auto &v:ans)
+			{
+				cout<<v<<' ';
+			}
+			cout<<'\n';
 		}
 		else
 		{
-			sort(a.begin(),a.end());
-			int ans_x=-1;
-			vector<pair<int,int>> ans_nums={{-1,-1}};
-			for(int i=0;i<n-1;++i)
-			{
-				map<int,int> mp=mp_init;
-				int x1=a[n-1],x2=a[i],x=a[n-1];
-				vector<pair<int,int>> nums={{x1,x2}};
-				bool ok=1;
-				mp[a[i]]--;
-				mp[a[n-1]]--;
-				for(int j=n-2;j>=0;--j)
-				{
-					if(mp[a[j]]==0)
-					{
-						continue;
-					}
-					mp[a[j]]--;
-					if(mp.count(x-a[j])&&mp[x-a[j]]>0)
-					{
-						x1=a[j];
-						x2=x-a[j];
-						mp[x2]--;
-						x=a[j];
-						nums.push_back({x1,x2});
-					}
-					else
-					{
-						ok=0;
-						break;
-					}
-				}
-				if(ok)
-				{
-					ans_x=a[n-1]+a[i];
-					ans_nums=nums;
-					break;
-				}
-			}
-			if(ans_x==-1)
-			{
-				cout<<"NO\n";
-			}
-			else
-			{
-				cout<<"YES\n";
-				cout<<ans_x<<'\n';
-				for(auto &v:ans_nums)
-				{
-					cout<<v.first<<' '<<v.second<<'\n';
-				}
-			}
+			cout<<-1<<'\n';
 		}
 	}
 	return 0;
