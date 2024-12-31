@@ -7,30 +7,16 @@ using namespace std;
 	#define debug(x)
 #endif
 
-typedef long long ll;
-
-vector<long long> lpf(100001,0);
-vector<long long> primes;
-
-void leastPrimeFactor()
+void dfs(int node,int p,vector<int> adj[],vector<int> &depth)
 {
-    long long n=lpf.size();
-    for(long long i=2;i<n;++i)
-    {
-        if(lpf[i]==0)
-        {
-            lpf[i]=i;
-            primes.push_back(i);
-        }
-        for(long long j=0;i*primes[j]<n;++j)
-        {
-            lpf[i*primes[j]]=primes[j];
-            if(primes[j]==lpf[i])
-            {
-                break;
-            }
-        }
-    }
+	for(auto &v:adj[node])
+	{
+		if(v!=p)
+		{
+			depth[v]=depth[node]+1;
+			dfs(v,node,adj,depth);
+		}
+	}
 }
 
 int main()
@@ -38,47 +24,69 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	leastPrimeFactor();
-	ll tc;
+	int tc;
 	cin>>tc;
 	while(tc--)
 	{
-		ll n,m;
-		bool ok=1;
-		cin>>n>>m;
-		vector<ll> a(m),ans;
-		for(auto &v:a)
+		int n,k,node0=-1,node1=-1,mn=1e9;
+		cin>>n>>k;
+		vector<bool> marked(n,0);
+		vector<int> adj[n],depth0(n,0),depth1(n,0);
+		while(k--)
 		{
-			cin>>v;
+			int x;
+			cin>>x;
+			x--;
+			marked[x]=1;
+			node0=x;
 		}
-		sort(a.rbegin(),a.rend());
-		for(ll i=1;i<=n;++i)
+		for(int i=1;i<n;++i)
 		{
-			ll cnt=0,x=i;
-			while(x>1)
+			int u,v;
+			cin>>u>>v;
+			u--;
+			v--;
+			adj[u].push_back(v);
+			adj[v].push_back(u);
+		}
+		dfs(node0,-1,adj,depth0);
+		for(int i=0;i<n;++i)
+		{
+			if(marked[i])
 			{
-				x/=lpf[x];
-				cnt++;
+				if(node1==-1||depth0[node1]<depth0[i])
+				{
+					node1=i;
+				}
 			}
-			if(cnt>=m)
-			{
-				ok=0;
-				break;
-			}
-			ans.push_back(a[cnt]);
 		}
-		if(ok)
+		dfs(node1,-1,adj,depth1);
+		node0=-1;
+		for(int i=0;i<n;++i)
 		{
-			for(auto &v:ans)
+			if(marked[i])
 			{
-				cout<<v<<' ';
+				if(node0==-1||depth1[node0]<depth1[i])
+				{
+					node0=i;
+				}
 			}
-			cout<<'\n';
 		}
-		else
+		depth0.assign(n,0);
+		depth1.assign(n,0);
+		if(node0!=-1)
 		{
-			cout<<-1<<'\n';
+			dfs(node0,-1,adj,depth0);
 		}
+		if(node1!=-1)
+		{
+			dfs(node1,-1,adj,depth1);
+		}
+		for(int i=0;i<n;++i)
+		{
+			mn=min(mn,max(depth0[i],depth1[i]));
+		}
+		cout<<mn<<'\n';
 	}
 	return 0;
 }
