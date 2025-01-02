@@ -12,64 +12,50 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n,ans=2e9;
-	cin>>n;
-	vector<int> a(n),right_inc(n),left_inc(n),left_idx(n,-1),right_idx(n,-1);
-	for(int i=0;i<n;++i)
+	int tc;
+	cin>>tc;
+	while(tc--)
 	{
-		cin>>a[i];
-		left_inc[i]=a[i]-i;
-		right_inc[i]=a[i]+i;
-	}
-	for(int i=n-2;i>=0;--i)
-	{
-		if(i==n-2)
+		int n,ans=0;
+		cin>>n;
+		vector<string> a(n);
+		vector<vector<int>> pre(n,vector<int>(n,0)),pre_left(n,vector<int>(n,0)),pre_right(n,vector<int>(n,0));
+		for(auto &v:a)
 		{
-			right_idx[i]=n-1;
+			cin>>v;
 		}
-		else
+		for(int i=0;i<n;++i)
 		{
-			if(right_inc[i+1]>right_inc[right_idx[i+1]])
+			pre[0][i]=(a[0][i]=='1');
+			pre_left[0][i]=(a[0][i]=='1');
+			pre_right[0][i]=(a[0][i]=='1');
+			ans+=(a[0][i]=='1');
+		}
+		for(int i=1;i<n;++i)
+		{
+			for(int j=0;j<n;++j)
 			{
-				right_idx[i]=i+1;
-			}
-			else
-			{
-				right_idx[i]=right_idx[i+1];
+				pre[i][j]=pre[i-1][j];
+				if(j>0)
+				{
+					pre[i][j]+=pre_left[i-1][j-1];
+					pre_left[i][j]=pre_left[i-1][j-1];
+				}
+				if(j+1<n)
+				{
+					pre[i][j]+=pre_right[i-1][j+1];
+					pre_right[i][j]=pre_right[i-1][j+1];
+				}
+				if((pre[i][j]+(a[i][j]-'0'))&1)
+				{
+					ans++;
+					pre[i][j]++;
+					pre_left[i][j]++;
+					pre_right[i][j]++;
+				}
 			}
 		}
+		cout<<ans<<'\n';
 	}
-	for(int i=1;i<n;++i)
-	{
-		if(i==1)
-		{
-			left_idx[i]=0;
-		}
-		else
-		{
-			if(left_inc[i-1]>left_inc[left_idx[i-1]])
-			{
-				left_idx[i]=i-1;
-			}
-			else
-			{
-				left_idx[i]=left_idx[i-1];
-			}
-		}
-	}
-	for(int i=0;i<n;++i)
-	{
-		int mx=a[i];
-		if(left_idx[i]!=-1)
-		{
-			mx=max(mx,n-1+a[left_idx[i]]-left_idx[i]);
-		}
-		if(right_idx[i]!=-1)
-		{
-			mx=max(mx,a[right_idx[i]]+right_idx[i]);
-		}
-		ans=min(ans,mx);
-	}
-	cout<<ans<<'\n';
 	return 0;
 }
