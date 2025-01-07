@@ -7,9 +7,87 @@ using namespace std;
 	#define debug(x)
 #endif
 
-int gcd(int a,int b)
+int dp[200001][3];
+
+int solve(int i,int pvs,vector<int> &idx)	// pvs 1 --> taken the pvs one
 {
-	return ((b==0)?a:gcd(b,a%b));
+	if(i>=(int)idx.size())
+	{
+		return 0;
+	}
+	if(dp[i][pvs]!=-1)
+	{
+		return dp[i][pvs];
+	}
+	int ans=solve(i+1,0,idx);
+	if(pvs!=1||idx[i]-idx[i-1]>1)
+	{
+		ans=max(ans,solve(i+1,1,idx)+1);
+	}
+	return dp[i][pvs]=ans;
+}
+
+int maxTakenIndices(vector<int> &idx)
+{
+	int n=idx.size();
+	if(n==0)
+	{
+		return 0;
+	}
+	for(int i=0;i<=n;++i)
+	{
+		dp[i][0]=dp[i][1]=dp[i][2]=-1;
+	}
+	return max(solve(1,0,idx),1+solve(1,1,idx));
+}
+
+bool check(int mid,int k,vector<int> &a)		// check whether the given expression can be made <= mid
+{
+	int n=a.size();
+	bool ok=0;
+	vector<int> idx;
+	for(int i=0;i<n;++i)
+	{
+		if(a[i]<=mid)
+		{
+			idx.push_back(i);
+		}
+	}
+	if(k&1)
+	{
+		vector<int> tmp=idx;
+		int req=(k>>1)+1;
+		ok=(ok||maxTakenIndices(tmp)>=req);
+		req-=1;
+		if((int)tmp.size()>0&&tmp[0]==0)
+		{
+			reverse(tmp.begin(),tmp.end());
+			tmp.pop_back();
+			reverse(tmp.begin(),tmp.end());
+		}
+		if((int)tmp.size()>0&&tmp.back()==n-1)
+		{
+			tmp.pop_back();
+		}
+		ok=(ok||maxTakenIndices(tmp)>=req);
+	}
+	else
+	{
+		vector<int> odd=idx,even=idx;
+		int req=(k>>1);
+		if((int)even.size()>0&&even[0]==0)
+		{
+			reverse(even.begin(),even.end());
+			even.pop_back();
+			reverse(even.begin(),even.end());
+		}
+		if((int)odd.size()>0&&odd.back()==n-1)
+		{
+			odd.pop_back();
+		}
+		ok=(ok||maxTakenIndices(odd)>=req||maxTakenIndices(even)>=req);
+	}
+	return ok;
 }
 
 int main()
@@ -17,44 +95,26 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n,g=0;
-	cin>>n;
+	int n,k,lo=1,hi=1e9,ans=-1;
+	cin>>n>>k;
 	vector<int> a(n);
 	for(auto &v:a)
 	{
 		cin>>v;
-		g=gcd(v,g);
 	}
-	cout<<"YES\n";
-	if(g!=1)
+	while(lo<=hi)
 	{
-		cout<<0<<'\n';
-	}
-	else
-	{
-		int cnt=0,ans=0;
-		for(auto &v:a)
+		int mid=lo+(hi-lo)/2;
+		if(check(mid,k,a))
 		{
-			if(v&1)
-			{
-				cnt++;
-			}
-			else
-			{
-				ans+=(cnt>>1);
-				if(cnt&1)
-				{
-					ans+=2;
-				}
-				cnt=0;
-			}
+			ans=mid;
+			hi=mid-1;
 		}
-		ans+=(cnt>>1);
-		if(cnt&1)
+		else
 		{
-			ans+=2;
+			lo=mid+1;
 		}
-		cout<<ans<<'\n';
 	}
+	cout<<ans<<'\n';
 	return 0;
 }
