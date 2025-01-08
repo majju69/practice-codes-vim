@@ -1,128 +1,118 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-#ifdef LOCAL
-	#include"debug.h"
-#else
-	#define debug(x)
-#endif
-
-pair<int,pair<int,int>> get(vector<string> &adjMat,char ch)
+inline int ask(int i,int j,char c)
 {
-	int n=adjMat.size();
-	vector<vector<bool>> same_ch(n,vector<bool>(n,0));
-	vector<pair<int,int>> edges;
-	for(int i=0;i<n;++i)
+	if(c=='|')
 	{
-		for(int j=0;j<n;++j)
-		{
-			if(adjMat[i][j]==ch)
-			{
-				same_ch[i][j]=1;
-				edges.push_back({i,j});
-			}
-		}
+		cout<<"OR ";
 	}
-	for(auto &edge:edges)
+	else if(c=='&')
 	{
-		int u=edge.first,v=edge.second;
-		for(int i=0;i<n;++i)
-		{
-			if(same_ch[v][i])
-			{
-				return {u,{v,i}};
-			}
-		}
+		cout<<"AND ";
 	}
-	return {-1,{-1,-1}};
+	else if(c=='^')
+	{
+		cout<<"XOR ";
+	}
+	else
+	{
+		assert(0);
+	}
+	cout<<i+1<<' '<<j+1<<endl;
+	int x;
+	cin>>x;
+	if(x==-1)
+	{
+		exit(1);
+	}
+	return x;
 }
 
-void print(int u,int v,int m)
+void reply(vector<int> &a)
 {
-	int cur=u;
-	m++;
-	while(m--)
+	cout<<"! ";
+	for(auto &v:a)
 	{
-		cout<<cur+1<<' ';
-		cur=u+v-cur;
+		cout<<v<<' ';
 	}
+	cout<<endl;
+}
+
+inline int bit(int a,int i)
+{
+	return (a>>i&1);
 }
 
 int main()
 {
-	ios_base::sync_with_stdio(false);
-	cin.tie(NULL);
-	cout.tie(NULL);
-	int tc;
-	cin>>tc;
-	while(tc--)
+	int n;
+	cin>>n;
+	vector<int> a(n,0),a0(17,-1),a1(17,-1),a2(17,-1);
+	int _and=ask(0,1,'&'),_xor=ask(0,1,'^'),_and1=ask(1,2,'&'),_and0=ask(0,2,'&'),_xor1=ask(1,2,'^');
+	for(int i=0;i<17;++i)
 	{
-		int n,m;
-		cin>>n>>m;
-		vector<string> adjMat(n);
-		for(auto &v:adjMat)
+		if(bit(_xor,i)==0)
 		{
-			cin>>v;
+			a0[i]=bit(_and,i);
+			a1[i]=a0[i];
+			if(a0[i])
+			{
+				a[0]+=(1<<i);
+				a[1]+=(1<<i);
+			}
 		}
-		if(m&1)
+	}
+	for(int i=0;i<17;++i)
+	{
+		if(a1[i]!=-1)
 		{
-			cout<<"YES\n";
-			print(0,1,m);
-			cout<<'\n';
+			a2[i]=(a1[i]^bit(_xor1,i));
+			if(a2[i])
+			{
+				a[2]+=(1<<i);
+			}
 		}
 		else
 		{
-			int i1=-1,i2=-1;
-			for(int i=0;i<n-1;++i)
+			if(bit(_xor1,i))		// bit1[i]!=bit2[i] => bit2[i]=bit0[i]
 			{
-				if(i1!=-1)
+				a2[i]=bit(_and0,i);
+				a0[i]=a2[i];
+				a1[i]=1-a0[i];
+				if(a2[i])
 				{
-					break;
-				}
-				for(int j=i+1;j<n;++j)
-				{
-					if(adjMat[i][j]==adjMat[j][i])
-					{
-						i1=i;
-						i2=j;
-						break;
-					}
-				}
-			}
-			if(i1!=-1)
-			{
-				cout<<"YES\n";
-				print(i1,i2,m);
-				cout<<'\n';
-			}
-			else
-			{
-				pair<int,pair<int,int>> p=get(adjMat,'a');
-				if(p.first==-1)
-				{
-					p=get(adjMat,'b');
-				}
-				if(p.first==-1)
-				{
-					cout<<"NO\n";
+					a[2]+=(1<<i);
+					a[0]+=(1<<i);
 				}
 				else
 				{
-					cout<<"YES\n";
-					int x=(m>>1);
-					if(x&1)
-					{
-						print(p.first,p.second.first,x);
-					}
-					else
-					{
-						print(p.second.first,p.first,x);
-					}
-					print(p.second.second,p.second.first,x-1);
-					cout<<'\n';
+					a[1]+=(1<<i);
+				}
+			}
+			else		// bit1[i]=bit2[i]
+			{
+				a2[i]=bit(_and1,i);
+				a1[i]=a2[i];
+				a0[i]=1-a1[i];
+				if(a2[i])
+				{
+					a[2]+=(1<<i);
+					a[1]+=(1<<i);
+				}
+				else
+				{
+					a[0]+=(1<<i);
 				}
 			}
 		}
 	}
+	for(int i=3;i<n;++i)
+	{
+		// a0^ai^a0=ai
+		int x=ask(0,i,'^');
+		a[i]=(x^a[0]);
+	}
+	reply(a);
 	return 0;
 }
