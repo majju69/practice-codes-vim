@@ -1,59 +1,67 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-inline int ask(int i,int j)
-{
-	cout<<"? "<<i+1<<' '<<j+1<<endl;
-	int x;
-	cin>>x;
-	if(x==-1)
-	{
-		exit(1);
-	}
-	return x;
-}
+#ifdef LOCAL
+	#include"debug.h"
+#else
+	#define debug(x)
+#endif
 
-void reply(vector<int> &a)
+vector<int> mx(100001,0);
+
+vector<int> lpf(100001,0);
+vector<int> primes;
+
+void leastPrimeFactor()
 {
-	cout<<"! ";
-	for(auto &v:a)
-	{
-		cout<<v<<' ';
-	}
-	cout<<endl;
+    int n=lpf.size();
+    for(int i=2;i<n;++i)
+    {
+        if(lpf[i]==0)
+        {
+            lpf[i]=i;
+            primes.push_back(i);
+        }
+        for(int j=0;i*primes[j]<n;++j)
+        {
+            lpf[i*primes[j]]=primes[j];
+            if(primes[j]==lpf[i])
+            {
+                break;
+            }
+        }
+    }
 }
 
 int main()
 {
-	int n;
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+	leastPrimeFactor();
+	int n,ans=0;
 	cin>>n;
-	vector<int> a(n,-1),unknown(n,-1);
-	iota(unknown.begin(),unknown.end(),0);
-	while((int)unknown.size()>1)
+	for(int i=0;i<n;++i)
 	{
-		vector<int> tmp;
-		int len=unknown.size();
-		for(int i=0;i<len-1;i+=2)
+		int x,cur=0;
+		set<int> st;
+		cin>>x;
+		while(x>1)
 		{
-			int a1=ask(unknown[i],unknown[i+1]),a2=ask(unknown[i+1],unknown[i]);
-			if(a1>a2)
-			{
-				a[unknown[i]]=a1;
-				tmp.push_back(unknown[i+1]);
-			}
-			else
-			{
-				a[unknown[i+1]]=a2;
-				tmp.push_back(unknown[i]);
-			}
+			st.insert(lpf[x]);
+			x/=lpf[x];
 		}
-		if(len&1)
+		for(auto &v:st)
 		{
-			tmp.push_back(unknown[len-1]);
+			cur=max(cur,mx[v]);
 		}
-		unknown=tmp;
+		cur++;
+		for(auto &v:st)
+		{
+			mx[v]=cur;
+		}
+		ans=max(ans,cur);
 	}
-	a[unknown[0]]=n;
-	reply(a);
+	cout<<ans<<'\n';
 	return 0;
 }
