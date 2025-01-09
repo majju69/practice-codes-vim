@@ -1,118 +1,57 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-inline int ask(int i,int j,char c)
-{
-	if(c=='|')
-	{
-		cout<<"OR ";
-	}
-	else if(c=='&')
-	{
-		cout<<"AND ";
-	}
-	else if(c=='^')
-	{
-		cout<<"XOR ";
-	}
-	else
-	{
-		assert(0);
-	}
-	cout<<i+1<<' '<<j+1<<endl;
-	int x;
-	cin>>x;
-	if(x==-1)
-	{
-		exit(1);
-	}
-	return x;
-}
+#ifdef LOCAL
+	#include"debug.h"
+#else
+	#define debug(x)
+#endif
 
-void reply(vector<int> &a)
+void dfs(int node,int p,vector<int> adj[],vector<int> &a,vector<int> &sub)
 {
-	cout<<"! ";
-	for(auto &v:a)
+	sub[node]=a[node];
+	for(auto &v:adj[node])
 	{
-		cout<<v<<' ';
+		if(v!=p)
+		{
+			dfs(v,node,adj,a,sub);
+			sub[node]+=sub[v];
+		}
 	}
-	cout<<endl;
-}
-
-inline int bit(int a,int i)
-{
-	return (a>>i&1);
 }
 
 int main()
 {
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
 	int n;
 	cin>>n;
-	vector<int> a(n,0),a0(17,-1),a1(17,-1),a2(17,-1);
-	int _and=ask(0,1,'&'),_xor=ask(0,1,'^'),_and1=ask(1,2,'&'),_and0=ask(0,2,'&'),_xor1=ask(1,2,'^');
-	for(int i=0;i<17;++i)
+	vector<int> adj[n],a(n,0),sub(n,0),ans;
+	for(int i=1;i<n;++i)
 	{
-		if(bit(_xor,i)==0)
+		int u,v,t;
+		cin>>u>>v>>t;
+		u--;
+		v--;
+		adj[u].push_back(v);
+		adj[v].push_back(u);
+		a[u]+=(t==2);
+		a[v]+=(t==2);
+	}
+	dfs(0,0,adj,a,sub);
+	for(int i=0;i<n;++i)
+	{
+		if(sub[i]==1)
 		{
-			a0[i]=bit(_and,i);
-			a1[i]=a0[i];
-			if(a0[i])
-			{
-				a[0]+=(1<<i);
-				a[1]+=(1<<i);
-			}
+			ans.push_back(i+1);
 		}
 	}
-	for(int i=0;i<17;++i)
+	cout<<(int)ans.size()<<'\n';
+	for(auto &v:ans)
 	{
-		if(a1[i]!=-1)
-		{
-			a2[i]=(a1[i]^bit(_xor1,i));
-			if(a2[i])
-			{
-				a[2]+=(1<<i);
-			}
-		}
-		else
-		{
-			if(bit(_xor1,i))		// bit1[i]!=bit2[i] => bit2[i]=bit0[i]
-			{
-				a2[i]=bit(_and0,i);
-				a0[i]=a2[i];
-				a1[i]=1-a0[i];
-				if(a2[i])
-				{
-					a[2]+=(1<<i);
-					a[0]+=(1<<i);
-				}
-				else
-				{
-					a[1]+=(1<<i);
-				}
-			}
-			else		// bit1[i]=bit2[i]
-			{
-				a2[i]=bit(_and1,i);
-				a1[i]=a2[i];
-				a0[i]=1-a1[i];
-				if(a2[i])
-				{
-					a[2]+=(1<<i);
-					a[1]+=(1<<i);
-				}
-				else
-				{
-					a[0]+=(1<<i);
-				}
-			}
-		}
+		cout<<v<<' ';
 	}
-	for(int i=3;i<n;++i)
-	{
-		// a0^ai^a0=ai
-		int x=ask(0,i,'^');
-		a[i]=(x^a[0]);
-	}
-	reply(a);
+	cout<<'\n';
 	return 0;
-}
+}	
