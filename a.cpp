@@ -7,61 +7,136 @@ using namespace std;
 	#define debug(x)
 #endif
 
-vector<int> mx(100001,0);
-
-vector<int> lpf(100001,0);
-vector<int> primes;
-
-void leastPrimeFactor()
+int gcd(int a,int b)
 {
-    int n=lpf.size();
-    for(int i=2;i<n;++i)
-    {
-        if(lpf[i]==0)
-        {
-            lpf[i]=i;
-            primes.push_back(i);
-        }
-        for(int j=0;i*primes[j]<n;++j)
-        {
-            lpf[i*primes[j]]=primes[j];
-            if(primes[j]==lpf[i])
-            {
-                break;
-            }
-        }
-    }
+	return ((b==0)?a:gcd(b,a%b));
 }
+
+class SegmentTree
+{
+
+private:
+	
+	vector<int> seg;
+
+public:
+
+	SegmentTree(int n)
+	{
+		seg.resize(4*n+1);
+	}
+
+	void build(int ind,int lo,int hi,vector<int> &a)
+	{
+		if(lo==hi)
+		{
+			seg[ind]=a[lo];
+			return;
+		}
+		int mid=lo+(hi-lo)/2;
+		build(2*ind+1,lo,mid,a);
+		build(2*ind+2,mid+1,hi,a);
+		seg[ind]=gcd(seg[2*ind+1],seg[2*ind+2]);
+	}
+
+	void update(int ind,int lo,int hi,int i,int val)
+	{
+		if(lo==hi)
+		{
+			seg[ind]=val;
+			return;
+		}
+		int mid=lo+(hi-lo)/2;
+		if(i<=mid)
+		{
+			update(2*ind+1,lo,mid,i,val);
+		}
+		else
+		{
+			update(2*ind+2,mid+1,hi,i,val);
+		}
+		seg[ind]=gcd(seg[2*ind+1],seg[2*ind+2]);
+	}
+
+	int findFirst(int ind,int lo,int hi,int l,int r,int x)
+	{
+		if(l>hi||lo>r||seg[ind]%x==0)
+		{
+			return -1;
+		}
+		if(lo==hi)
+		{
+			return lo;
+		}
+		int mid=lo+(hi-lo)/2;
+		int ans=findFirst(2*ind+1,lo,mid,l,r,x);
+		if(ans==-1)
+		{
+			ans=findFirst(2*ind+2,mid+1,hi,l,r,x);
+		}
+		return ans;
+	}
+
+};
 
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	leastPrimeFactor();
-	int n,ans=0;
+	int n,q;
 	cin>>n;
-	for(int i=0;i<n;++i)
+	vector<int> a(n);
+	for(auto &v:a)
 	{
-		int x,cur=0;
-		set<int> st;
-		cin>>x;
-		while(x>1)
-		{
-			st.insert(lpf[x]);
-			x/=lpf[x];
-		}
-		for(auto &v:st)
-		{
-			cur=max(cur,mx[v]);
-		}
-		cur++;
-		for(auto &v:st)
-		{
-			mx[v]=cur;
-		}
-		ans=max(ans,cur);
+		cin>>v;
 	}
-	cout<<ans<<'\n';
+	SegmentTree st(n);
+	st.build(0,0,n-1,a);
+	cin>>q;
+	while(q--)
+	{
+		int type;
+		cin>>type;
+		if(type==1)
+		{
+			int l,r,x;
+			cin>>l>>r>>x;
+			l--;
+			r--;
+			int idx=st.findFirst(0,0,n-1,l,r,x);
+			if(idx==-1)
+			{
+				cout<<"YES\n";
+			}
+			else
+			{
+				int left=-1,right=-1;
+				if(l<=idx-1)
+				{
+					left=st.findFirst(0,0,n-1,l,idx-1,x);
+				}
+				if(idx+1<=r)
+				{
+					right=st.findFirst(0,0,n-1,idx+1,r,x);
+				}
+				if(left!=-1||right!=-1)
+				{
+					cout<<"NO\n";
+				}
+				else
+				{
+					cout<<"YES\n";
+				}
+			}
+		}
+		else
+		{
+			int i,v;
+			cin>>i>>v;
+			i--;
+			st.update(0,0,n-1,i,v);
+		}
+	}
 	return 0;
 }
