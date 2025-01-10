@@ -7,46 +7,30 @@ using namespace std;
 	#define debug(x)
 #endif
 
-int gcd(int a,int b)
-{
-	return ((b==0)?a:gcd(b,a%b));
-}
+typedef long long ll;
 
 class SegmentTree
 {
 
 private:
-	
-	vector<int> seg;
+
+	vector<ll> seg;
 
 public:
 
-	SegmentTree(int n)
+	SegmentTree(ll n)
 	{
 		seg.resize(4*n+1);
 	}
 
-	void build(int ind,int lo,int hi,vector<int> &a)
+	void update(ll ind,ll lo,ll hi,ll i,ll val)
 	{
 		if(lo==hi)
 		{
-			seg[ind]=a[lo];
+			seg[ind]+=val;
 			return;
 		}
-		int mid=lo+(hi-lo)/2;
-		build(2*ind+1,lo,mid,a);
-		build(2*ind+2,mid+1,hi,a);
-		seg[ind]=gcd(seg[2*ind+1],seg[2*ind+2]);
-	}
-
-	void update(int ind,int lo,int hi,int i,int val)
-	{
-		if(lo==hi)
-		{
-			seg[ind]=val;
-			return;
-		}
-		int mid=lo+(hi-lo)/2;
+		ll mid=lo+(hi-lo)/2;
 		if(i<=mid)
 		{
 			update(2*ind+1,lo,mid,i,val);
@@ -55,26 +39,21 @@ public:
 		{
 			update(2*ind+2,mid+1,hi,i,val);
 		}
-		seg[ind]=gcd(seg[2*ind+1],seg[2*ind+2]);
+		seg[ind]=seg[2*ind+1]+seg[2*ind+2];
 	}
 
-	int findFirst(int ind,int lo,int hi,int l,int r,int x)
+	ll query(ll ind,ll lo,ll hi,ll l,ll r)
 	{
-		if(l>hi||lo>r||seg[ind]%x==0)
+		if(l>hi||lo>r)
 		{
-			return -1;
+			return 0;
 		}
-		if(lo==hi)
+		if(l<=lo&&hi<=r)
 		{
-			return lo;
+			return seg[ind];
 		}
-		int mid=lo+(hi-lo)/2;
-		int ans=findFirst(2*ind+1,lo,mid,l,r,x);
-		if(ans==-1)
-		{
-			ans=findFirst(2*ind+2,mid+1,hi,l,r,x);
-		}
-		return ans;
+		ll mid=lo+(hi-lo)/2;
+		return query(2*ind+1,lo,mid,l,r)+query(2*ind+2,mid+1,hi,l,r);
 	}
 
 };
@@ -84,59 +63,89 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n,q;
-	cin>>n;
-	vector<int> a(n);
+	ll n,k,_n=0,total=0;
+	map<ll,ll> mp;
+	cin>>n>>k;
+	vector<ll> a(n);
 	for(auto &v:a)
 	{
 		cin>>v;
+		mp[v]=0;
+	}
+	for(auto &v:mp)
+	{
+		v.second=_n++;
+	}
+	for(auto &v:a)
+	{
+		v=mp[v];
 	}
 	SegmentTree st(n);
-	st.build(0,0,n-1,a);
-	cin>>q;
-	while(q--)
+	for(auto &v:a)
 	{
-		int type;
-		cin>>type;
-		if(type==1)
+		if(v!=_n-1)
 		{
-			int l,r,x;
-			cin>>l>>r>>x;
-			l--;
-			r--;
-			int idx=st.findFirst(0,0,n-1,l,r,x);
-			if(idx==-1)
+			total+=(st.query(0,0,_n-1,v+1,_n-1));
+		}
+		st.update(0,0,_n-1,v,1);
+	}
+	if(total<=k)
+	{
+		cout<<n*(n-1)/2<<'\n';
+	}
+	else
+	{
+		// total-cnt<=k => cnt>=total-k => cnt>=req
+		ll i=1,j=0,cnt=0,req=total-k,ans=0;
+		SegmentTree st_left(_n),st_right(_n);
+		for(int idx=0;idx<n;++idx)
+		{
+			if(idx==0)
 			{
-				cout<<"YES\n";
+				st_left.update(0,0,_n-1,a[idx],1);
 			}
 			else
 			{
-				int left=-1,right=-1;
-				if(l<=idx-1)
+				st_right.update(0,0,_n-1,a[idx],1);
+			}
+		}
+		while(i<n-1&&j<n-1)
+		{
+			if(cnt<req)
+			{
+				while(cnt<req)
 				{
-					left=st.findFirst(0,0,n-1,l,idx-1,x);
+					j++;
+					st_right.update(0,0,_n-1,a[j],-1);
+					if(a[j]!=_n-1)
+					{
+						cnt+=st_left.query(0,0,_n-1,a[j]+1,_n-1);
+					}
+					if(a[j]!=0)
+					{
+						cnt+=st_right.query(0,0,_n-1,0,a[j]-1);
+					}
 				}
-				if(idx+1<=r)
+			}
+			else
+			{
+				while(cnt>=req)		// j....n-2   n-1-j
 				{
-					right=st.findFirst(0,0,n-1,idx+1,r,x);
-				}
-				if(left!=-1||right!=-1)
-				{
-					cout<<"NO\n";
-				}
-				else
-				{
-					cout<<"YES\n";
+					ans+=n-1-j;
+					st_left.update(0,0,_n-1,a[i],1);
+					if(a[i]!=_n-1)
+					{
+						cnt-=st_left.query(0,0,_n-1,a[i]+1,_n-1);
+					}
+					if(a[i]!=0)
+					{
+						cnt-=st_right.query(0,0,_n-1,0,a[i]-1);
+					}
+					i++;
 				}
 			}
 		}
-		else
-		{
-			int i,v;
-			cin>>i>>v;
-			i--;
-			st.update(0,0,n-1,i,v);
-		}
+		cout<<ans<<'\n';
 	}
 	return 0;
 }
