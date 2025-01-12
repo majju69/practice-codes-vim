@@ -7,54 +7,62 @@ using namespace std;
 	#define debug(x)
 #endif
 
-vector<vector<int>> divisors(200001);
+typedef long long ll;
 
-void fillDivisors()
+const ll mod=998244353;
+
+inline ll mul(ll a,ll b)
 {
-	int n=divisors.size();
-	for(int i=2;i<n;i++)
-	{
-		for(int j=i;j<n;j+=i)
-		{
-			divisors[j].push_back(i);
-		}
-	}
+	return (a%mod*b%mod)%mod;
 }
 
-int dp[200001];
-
-int solve(int i,vector<pair<int,int>> &a,vector<int> &idx)
+ll gcd(ll a,ll b)
 {
-	if(i>=(int)a.size())
-	{
-		return 0;
-	}
-	if(dp[i]!=-1)
-	{
-		return dp[i];
-	}
-	int ans=a[i].second;
-	for(auto &v:divisors[a[i].first])
-	{
-		if(v==a[i].first||idx[v]==-1)
-		{
-			continue;
-		}
-		ans=max(ans,solve(idx[v],a,idx)+a[i].second);
-	}
-	return dp[i]=ans;
+	return ((b==0)?a:gcd(b,a%b));
 }
 
-int maxTaken(vector<pair<int,int>> &a,vector<int> &idx)
+ll square_root(ll n)
 {
-	int n=a.size(),ans=0;
-	for(int i=0;i<=n;++i)
+	if(n<=1)
 	{
-		dp[i]=-1;
+		return n;
 	}
-	for(int i=0;i<n;++i)
+	ll lo=1,hi=sqrtl(n),ans=-1;
+	while(hi>=lo)
 	{
-		ans=max(ans,solve(i,a,idx));
+		ll mid=lo+(hi-lo)/2;
+		if(mid*mid>n)
+		{
+			hi=mid-1;
+		}
+		else
+		{
+			ans=mid;
+			lo=mid+1;
+		}
+	}
+	return ans;
+}
+
+ll cube_root(ll n)
+{
+	if(n<=1)
+	{
+		return n;
+	}
+	ll lo=1,hi=pow(n,0.34),ans=-1;
+	while(lo<=hi)
+	{
+		ll mid=lo+(hi-lo)/2;
+		if(mid*mid*mid>n)
+		{
+			hi=mid-1;
+		}
+		else
+		{
+			ans=mid;
+			lo=mid+1;
+		}
 	}
 	return ans;
 }
@@ -64,46 +72,79 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	fillDivisors();
-	int tc;
-	cin>>tc;
-	while(tc--)
+	ll n,ans=1;
+	map<ll,ll> mp,freq;
+	vector<pair<ll,ll>> a;
+	vector<bool> factorized;
+	cin>>n;
+	for(ll i=0;i<n;++i)
 	{
-		int n,mx=-1;
-		map<int,int> mp;
-		vector<pair<int,int>> a;
-		cin>>n;
-		for(int i=0;i<n;++i)
+		ll x;
+		cin>>x;
+		freq[x]++;
+	}
+	n=freq.size();
+	for(auto &v:freq)
+	{
+		a.push_back(v);
+		factorized.push_back(0);
+	}
+	for(ll i=0;i<n;++i)
+	{
+		ll s=square_root(a[i].first),c=cube_root(a[i].first);
+		if(s*s==a[i].first)
 		{
-			int x;
-			cin>>x;
-			mp[x]++;
-		}
-		for(auto &v:mp)
-		{
-			if(v.first!=1)
+			ll f=square_root(s);
+			if(f*f==s)
 			{
-				a.push_back(v);
-				mx=max(mx,v.first);
+				mp[f]+=4*a[i].second;
 			}
-		}
-		if(mx==-1)
-		{
-			cout<<0<<'\n';
-		}
-		else
-		{
-			int total=0;
-			vector<int> idx(mx+1,-1);
-			reverse(a.begin(),a.end());
-			n=a.size();
-			for(int i=0;i<n;++i)
+			else
 			{
-				idx[a[i].first]=i;
-				total+=a[i].second;
+				mp[s]+=2*a[i].second;
 			}
-			cout<<total-maxTaken(a,idx)<<'\n';
+			factorized[i]=1;
+		}
+		if(c*c*c==a[i].first)
+		{
+			mp[c]+=3*a[i].second;
+			factorized[i]=1;
 		}
 	}
+	for(ll i=0;i<n-1;++i)
+	{
+		for(ll j=i+1;j<n;++j)
+		{
+			ll g=gcd(a[i].first,a[j].first);
+			if(g==1)
+			{
+				continue;
+			}
+			if(!factorized[i])
+			{
+				mp[g]+=a[i].second;
+				mp[a[i].first/g]+=a[i].second;
+				factorized[i]=1;
+			}
+			if(!factorized[j])
+			{
+				mp[g]+=a[j].second;
+				mp[a[j].first/g]+=a[j].second;
+				factorized[j]=1;
+			}
+		}
+	}
+	for(ll i=0;i<n;++i)
+	{
+		if(!factorized[i])
+		{
+			ans=mul(ans,mul(1+a[i].second,1+a[i].second));
+		}
+	}
+	for(auto &v:mp)
+	{
+		ans=mul(ans,1+v.second);
+	}
+	cout<<ans<<endl;
 	return 0;
-}
+}	
