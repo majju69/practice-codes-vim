@@ -7,36 +7,74 @@ using namespace std;
 	#define debug(x)
 #endif
 
-typedef long long ll;
-
-bool check(ll mid,deque<ll> pos,deque<ll> neg)
+int gcd(int a,int b)
 {
-	ll n=(ll)pos.size()+(ll)neg.size();
-	vector<ll> dp(n,0);
-	dp[0]=pos[0];
-	pos.pop_front();
-	for(ll i=1;i<n;++i)
+	return ((b==0)?a:gcd(b,a%b));
+}
+
+inline pair<int,int> merge(pair<int,int> a,pair<int,int> b)
+{
+	return {min(a.first,b.first),gcd(a.second,b.second)};
+}
+
+class SegmentTree
+{
+
+private:
+
+	vector<pair<int,int>> seg;
+
+public:
+
+	SegmentTree(int n)
 	{
-		if((ll)pos.size()&&max(pos[0]+dp[i-1],pos[0])<=mid)
+		seg.resize(4*n+1);
+	}
+
+	void build(int ind,int lo,int hi,vector<int> &a)
+	{
+		if(lo==hi)
 		{
-			dp[i]=max(dp[i-1]+pos[0],pos[0]);
-			pos.pop_front();
+			seg[ind]={a[lo],a[lo]};
+			return;
 		}
-		else
+		int mid=lo+(hi-lo)/2;
+		build(2*ind+1,lo,mid,a);
+		build(2*ind+2,mid+1,hi,a);
+		seg[ind]=merge(seg[2*ind+1],seg[2*ind+2]);
+	}
+
+	pair<int,int> query(int ind,int lo,int hi,int l,int r)
+	{
+		if(l>hi||lo>r)
 		{
-			if((ll)neg.size())
-			{
-				dp[i]=max(dp[i-1]+neg[0],neg[0]);
-				neg.pop_front();
-			}
-			else
-			{
-				dp[i]=max(dp[i-1]+pos[0],pos[0]);
-				pos.pop_front();
-			}
+			return {1e9,0};
+		}
+		if(l<=lo&&hi<=r)
+		{
+			return seg[ind];
+		}
+		int mid=lo+(hi-lo)/2;
+		return merge(query(2*ind+1,lo,mid,l,r),query(2*ind+2,mid+1,hi,l,r));
+	}
+
+};
+
+bool check(int mid,int n,SegmentTree &st)
+{
+	for(int i=0;i<n;++i)
+	{
+		if(i+mid>=n)
+		{
+			break;
+		}
+		pair<int,int> p=st.query(0,0,n-1,i,i+mid);
+		if(p.first==p.second)
+		{
+			return 1;
 		}
 	}
-	return (*max_element(dp.begin(),dp.end())<=mid);
+	return 0;
 }
 
 int main()
@@ -44,50 +82,46 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	ll tc;
-	cin>>tc;
-	while(tc--)
+	int n,lo=0,hi=-1,ans=0;
+	cin>>n;
+	vector<int> a(n),idx;
+	for(auto &v:a)
 	{
-		ll n,lo=-1e18,hi=0;
-		deque<ll> pos,neg;
-		cin>>n;
-		for(ll i=0;i<n;++i)
+		cin>>v;
+	}
+	SegmentTree st(n);
+	st.build(0,0,n-1,a);
+	hi=n-1;
+	while(lo<=hi)
+	{
+		int mid=lo+(hi-lo)/2;
+		if(check(mid,n,st))
 		{
-			ll x;
-			cin>>x;
-			if(x>=0)
-			{
-				pos.push_back(x);
-				hi+=x;
-			}
-			else
-			{
-				neg.push_back(x);
-			}
-			lo=max(lo,x);
-		}
-		if(lo<=0)
-		{
-			cout<<0<<'\n';
+			ans=mid;
+			lo=mid+1;
 		}
 		else
 		{
-			ll ans=-1;
-			while(lo<=hi)
-			{
-				ll mid=lo+(hi-lo)/2;
-				if(check(mid,pos,neg))
-				{
-					ans=mid;
-					hi=mid-1;
-				}
-				else
-				{
-					lo=mid+1;
-				}
-			}
-			cout<<ans<<'\n';
+			hi=mid-1;
 		}
 	}
+	for(int i=0;i<n;++i)
+	{
+		if(i+ans>=n)
+		{
+			break;
+		}
+		pair<int,int> p=st.query(0,0,n-1,i,i+ans);
+		if(p.first==p.second)
+		{
+			idx.push_back(i+1);
+		}
+	}
+	cout<<(int)idx.size()<<' '<<ans<<'\n';
+	for(auto &v:idx)
+	{
+		cout<<v<<' ';
+	}
+	cout<<'\n';
 	return 0;
 }
