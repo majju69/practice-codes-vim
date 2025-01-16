@@ -9,65 +9,34 @@ using namespace std;
 
 typedef long long ll;
 
-const ll N=1e7+10;
-vector<ll> dist(N,1e18);
-
-void bfs(ll x,ll y)
+bool check(ll mid,deque<ll> pos,deque<ll> neg)
 {
-	ll mx=max(x,y);
-	deque<ll> q;
-	dist[0]=0;
-	q.push_front(0);
-	while(q.size())
+	ll n=(ll)pos.size()+(ll)neg.size();
+	vector<ll> dp(n,0);
+	dp[0]=pos[0];
+	pos.pop_front();
+	for(ll i=1;i<n;++i)
 	{
-		ll node=q.front();
-		q.pop_front();
-		if(node+1<N)
+		if((ll)pos.size()&&max(pos[0]+dp[i-1],pos[0])<=mid)
 		{
-			if(dist[node]+x<dist[node+1])
-			{
-				dist[node+1]=dist[node]+x;
-				if(x==mx)
-				{
-					q.push_back(node+1);
-				}
-				else
-				{
-					q.push_front(node+1);
-				}
-			}
+			dp[i]=max(dp[i-1]+pos[0],pos[0]);
+			pos.pop_front();
 		}
-		if(node-1>=0)
+		else
 		{
-			if(dist[node]+x<dist[node-1])
+			if((ll)neg.size())
 			{
-				dist[node-1]=dist[node]+x;
-				if(x==mx)
-				{
-					q.push_back(node-1);
-				}
-				else
-				{
-					q.push_front(node-1);
-				}
+				dp[i]=max(dp[i-1]+neg[0],neg[0]);
+				neg.pop_front();
 			}
-		}
-		if((node<<1)<N)
-		{
-			if(dist[node]+y<dist[(node<<1)])
+			else
 			{
-				dist[(node<<1)]=dist[node]+y;
-				if(y==mx)
-				{
-					q.push_back(node<<1);
-				}
-				else
-				{
-					q.push_front(node<<1);
-				}
+				dp[i]=max(dp[i-1]+pos[0],pos[0]);
+				pos.pop_front();
 			}
 		}
 	}
+	return (*max_element(dp.begin(),dp.end())<=mid);
 }
 
 int main()
@@ -75,9 +44,50 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	ll n,x,y;
-	cin>>n>>x>>y;
-	bfs(x,y);
-	cout<<dist[n]<<'\n';
+	ll tc;
+	cin>>tc;
+	while(tc--)
+	{
+		ll n,lo=-1e18,hi=0;
+		deque<ll> pos,neg;
+		cin>>n;
+		for(ll i=0;i<n;++i)
+		{
+			ll x;
+			cin>>x;
+			if(x>=0)
+			{
+				pos.push_back(x);
+				hi+=x;
+			}
+			else
+			{
+				neg.push_back(x);
+			}
+			lo=max(lo,x);
+		}
+		if(lo<=0)
+		{
+			cout<<0<<'\n';
+		}
+		else
+		{
+			ll ans=-1;
+			while(lo<=hi)
+			{
+				ll mid=lo+(hi-lo)/2;
+				if(check(mid,pos,neg))
+				{
+					ans=mid;
+					hi=mid-1;
+				}
+				else
+				{
+					lo=mid+1;
+				}
+			}
+			cout<<ans<<'\n';
+		}
+	}
 	return 0;
 }
