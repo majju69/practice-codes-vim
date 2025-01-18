@@ -7,121 +7,55 @@ using namespace std;
 	#define debug(x)
 #endif
 
-int gcd(int a,int b)
-{
-	return ((b==0)?a:gcd(b,a%b));
-}
-
-inline pair<int,int> merge(pair<int,int> a,pair<int,int> b)
-{
-	return {min(a.first,b.first),gcd(a.second,b.second)};
-}
-
-class SegmentTree
-{
-
-private:
-
-	vector<pair<int,int>> seg;
-
-public:
-
-	SegmentTree(int n)
-	{
-		seg.resize(4*n+1);
-	}
-
-	void build(int ind,int lo,int hi,vector<int> &a)
-	{
-		if(lo==hi)
-		{
-			seg[ind]={a[lo],a[lo]};
-			return;
-		}
-		int mid=lo+(hi-lo)/2;
-		build(2*ind+1,lo,mid,a);
-		build(2*ind+2,mid+1,hi,a);
-		seg[ind]=merge(seg[2*ind+1],seg[2*ind+2]);
-	}
-
-	pair<int,int> query(int ind,int lo,int hi,int l,int r)
-	{
-		if(l>hi||lo>r)
-		{
-			return {1e9,0};
-		}
-		if(l<=lo&&hi<=r)
-		{
-			return seg[ind];
-		}
-		int mid=lo+(hi-lo)/2;
-		return merge(query(2*ind+1,lo,mid,l,r),query(2*ind+2,mid+1,hi,l,r));
-	}
-
-};
-
-bool check(int mid,int n,SegmentTree &st)
-{
-	for(int i=0;i<n;++i)
-	{
-		if(i+mid>=n)
-		{
-			break;
-		}
-		pair<int,int> p=st.query(0,0,n-1,i,i+mid);
-		if(p.first==p.second)
-		{
-			return 1;
-		}
-	}
-	return 0;
-}
+typedef long long ll;
 
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n,lo=0,hi=-1,ans=0;
-	cin>>n;
-	vector<int> a(n),idx;
-	for(auto &v:a)
+	ll tc;
+	cin>>tc;
+	while(tc--)
 	{
-		cin>>v;
-	}
-	SegmentTree st(n);
-	st.build(0,0,n-1,a);
-	hi=n-1;
-	while(lo<=hi)
-	{
-		int mid=lo+(hi-lo)/2;
-		if(check(mid,n,st))
+		ll n,m,s=0,ans=0;
+		multiset<ll> st;
+		cin>>n>>m;
+		vector<ll> a(n);
+		for(auto &v:a)
 		{
-			ans=mid;
-			lo=mid+1;
+			cin>>v;
 		}
-		else
+		m--;
+		for(ll i=m;i>0;--i)
 		{
-			hi=mid-1;
+			s+=a[i];
+			st.insert(a[i]);
+			if(s>0)
+			{
+				auto it=st.rbegin();
+				ll x=*it;
+				ans++;
+				s-=2*x;
+				st.erase(st.find(x));
+			}
 		}
-	}
-	for(int i=0;i<n;++i)
-	{
-		if(i+ans>=n)
+		s=0;
+		st.clear();
+		for(ll i=m+1;i<n;++i)
 		{
-			break;
+			s+=a[i];
+			st.insert(a[i]);
+			if(s<0)
+			{
+				auto it=st.begin();
+				ll x=*it;
+				ans++;
+				s-=2*x;
+				st.erase(st.find(x));
+			}
 		}
-		pair<int,int> p=st.query(0,0,n-1,i,i+ans);
-		if(p.first==p.second)
-		{
-			idx.push_back(i+1);
-		}
+		cout<<ans<<'\n';
 	}
-	cout<<(int)idx.size()<<' '<<ans<<'\n';
-	for(auto &v:idx)
-	{
-		cout<<v<<' ';
-	}
-	cout<<'\n';
 	return 0;
 }
