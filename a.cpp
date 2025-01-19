@@ -1,61 +1,77 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-#ifdef LOCAL
-	#include"debug.h"
-#else
-	#define debug(x)
-#endif
+inline int ask(int l,int r)
+{
+	cout<<"? "<<l+1<<' '<<r+1<<endl;
+	int x;
+	cin>>x;
+	return x-1;
+}
 
-typedef long long ll;
+inline void reply(int x)
+{
+	cout<<"! "<<x+1<<endl;
+}
 
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	ll tc;
-	cin>>tc;
-	while(tc--)
+	int n,idx=-1,left=-1;
+	map<pair<int,int>,int> mp;
+	cin>>n;
+	idx=ask(0,n-1);
+	mp[{0,n-1}]=idx;
+	if(idx!=0)
 	{
-		ll n,m,s=0,ans=0;
-		multiset<ll> st;
-		cin>>n>>m;
-		vector<ll> a(n);
-		for(auto &v:a)
+		left=ask(0,idx);
+		mp[{0,idx}]=left;
+		if(left!=idx)
 		{
-			cin>>v;
+			left=-1;
 		}
-		m--;
-		for(ll i=m;i>0;--i)
+	}
+	if(left==-1)
+	{
+		int lo=idx+1,hi=n-1,ans=-1;
+		while(lo<=hi)
 		{
-			s+=a[i];
-			st.insert(a[i]);
-			if(s>0)
+			int mid=lo+(hi-lo)/2;
+			int cur=((mp.count({idx,mid}))?mp[{idx,mid}]:ask(idx,mid));
+			mp[{idx,mid}]=cur;
+			if(cur==idx)
 			{
-				auto it=st.rbegin();
-				ll x=*it;
-				ans++;
-				s-=2*x;
-				st.erase(st.find(x));
+				ans=mid;
+				hi=mid-1;
+			}
+			else
+			{
+				lo=mid+1;
 			}
 		}
-		s=0;
-		st.clear();
-		for(ll i=m+1;i<n;++i)
+		reply(ans);
+	}
+	else
+	{
+		int lo=0,hi=idx-1,ans=-1;
+		while(lo<=hi)
 		{
-			s+=a[i];
-			st.insert(a[i]);
-			if(s<0)
+			int mid=lo+(hi-lo)/2;
+			int cur=((mp.count({mid,idx}))?mp[{mid,idx}]:ask(mid,idx));
+			mp[{mid,idx}]=cur;
+			if(cur==idx)
 			{
-				auto it=st.begin();
-				ll x=*it;
-				ans++;
-				s-=2*x;
-				st.erase(st.find(x));
+				ans=mid;
+				lo=mid+1;
+			}
+			else
+			{
+				hi=mid-1;
 			}
 		}
-		cout<<ans<<'\n';
+		reply(ans);
 	}
 	return 0;
 }
