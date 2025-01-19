@@ -75,3 +75,6 @@ int main()
 	}
 	return 0;
 }
+
+
+// The same code for hard version
