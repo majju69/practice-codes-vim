@@ -7,73 +7,32 @@ using namespace std;
 	#define debug(x)
 #endif
 
-pair<int,int> check(vector<string> &a,vector<vector<pair<int,int>>> &par)
+typedef long long ll;
+
+void dfs(ll node,vector<bool> &vis,vector<ll> adj[],stack<ll> &st)
 {
-	int n=a.size(),m=a[0].size(),dx[]={-1,1,0,0},dy[]={0,0,-1,1};
-	queue<pair<pair<int,int>,int>> q;
-	vector<vector<int>> mon_dist(n,vector<int>(m,1e9));
-	vector<vector<bool>> vis(n,vector<bool>(m,0));
-	for(int i=0;i<n;++i)
+	vis[node]=1;
+	for(auto &v:adj[node])
 	{
-		for(int j=0;j<m;++j)
+		if(!vis[v])
 		{
-			if(a[i][j]=='M')
-			{
-				q.push({{i,j},0});
-				mon_dist[i][j]=0;
-			}
+			dfs(v,vis,adj,st);
 		}
 	}
-	while(q.size())
+	st.push(node);
+}
+
+void dfs(ll node,ll c,vector<ll> &comp,vector<ll> adjT[],ll &coins,vector<ll> &a)
+{
+	comp[node]=c;
+	coins+=a[node];
+	for(auto &v:adjT[node])
 	{
-		int x=q.front().first.first,y=q.front().first.second,level=q.front().second;
-		q.pop();
-		for(int i=0;i<4;++i)
+		if(comp[v]==-1)
 		{
-			int r=x+dx[i],c=y+dy[i];
-			if(r>=0&&r<n&&c>=0&&c<m&&a[r][c]!='#'&&mon_dist[r][c]>1+level)
-			{
-				q.push({{r,c},1+level});
-				mon_dist[r][c]=1+level;
-			}
+			dfs(v,c,comp,adjT,coins,a);
 		}
 	}
-	for(int i=0;i<n;++i)
-	{
-		if((int)q.size()>0)
-		{
-			break;
-		}
-		for(int j=0;j<m;++j)
-		{
-			if(a[i][j]=='A')
-			{
-				q.push({{i,j},0});
-				par[i][j]={-1,-1};
-				vis[i][j]=1;
-			}
-		}
-	}
-	while(q.size())
-	{
-		int x=q.front().first.first,y=q.front().first.second,level=q.front().second;
-		q.pop();
-		if(x==0||y==0||x==n-1||y==m-1)
-		{
-			return {x,y};
-		}
-		for(int i=0;i<4;++i)
-		{
-			int r=x+dx[i],c=y+dy[i];
-			if(r>=0&&r<n&&c>=0&&c<m&&a[r][c]!='#'&&!vis[r][c]&&1+level<mon_dist[r][c])
-			{
-				q.push({{r,c},1+level});
-				par[r][c]={x,y};
-				vis[r][c]=1;
-			}
-		}
-	}
-	return {-1,-1};
 }
 
 int main()
@@ -81,52 +40,85 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n,m;
-	pair<int,int> p;
+	ll n,m,cnt=0;
+	stack<ll> st;
 	cin>>n>>m;
-	vector<string> a(n);
-	vector<vector<pair<int,int>>> par(n,vector<pair<int,int>>(m));
+	vector<ll> a(n),coin_cnt,comp(n,-1),adj[n],adjT[n];
+	vector<bool> vis(n,0);
 	for(auto &v:a)
 	{
 		cin>>v;
 	}
-	p=check(a,par);
-	if(p.first==-1)
+	for(ll i=0;i<m;++i)
 	{
-		cout<<"NO\n";
+		ll u,v;
+		cin>>u>>v;
+		u--;
+		v--;
+		adj[u].push_back(v);
+		adjT[v].push_back(u);
 	}
-	else
+	for(ll i=0;i<n;++i)
 	{
-		cout<<"YES\n";
-		vector<pair<int,int>> path;
-		while(p.first!=-1)
+		if(!vis[i])
 		{
-			path.push_back(p);
-			p=par[p.first][p.second];
+			dfs(i,vis,adj,st);
 		}
-		reverse(path.begin(),path.end());
-		cout<<(int)path.size()-1<<'\n';
-		for(int i=1;i<(int)path.size();++i)
-		{
-			pair<int,int> pvs=path[i-1],cur=path[i];
-			if(pvs.first>cur.first)
-			{
-				cout<<'U';
-			}
-			if(pvs.first<cur.first)
-			{
-				cout<<'D';
-			}
-			if(pvs.second>cur.second)
-			{
-				cout<<'L';
-			}
-			if(pvs.second<cur.second)
-			{
-				cout<<'R';
-			}
-		}
-		cout<<'\n';
 	}
+	while(st.size())
+	{
+		ll node=st.top();
+		st.pop();
+		if(comp[node]==-1)
+		{
+			ll coins=0;
+			dfs(node,cnt++,comp,adjT,coins,a);
+			coin_cnt.push_back(coins);
+		}
+	}
+	queue<ll> q;
+	vector<ll> adj_red[cnt],indegree(cnt,0),dp(cnt,0),toposort;
+	for(ll i=0;i<n;++i)
+	{
+		for(auto &node:adj[i])
+		{
+			ll u=comp[i],v=comp[node];
+			if(u!=v)
+			{
+				adj_red[u].push_back(v);
+				indegree[v]++;
+			}
+		}
+	}
+	for(ll i=0;i<cnt;++i)
+	{
+		if(indegree[i]==0)
+		{
+			q.push(i);
+		}
+	}
+	while(q.size())
+	{
+		ll node=q.front();
+		toposort.push_back(node);
+		q.pop();
+		for(auto &v:adj_red[node])
+		{
+			indegree[v]--;
+			if(indegree[v]==0)
+			{
+				q.push(v);
+			}
+		}
+	}
+	for(auto &node:toposort)
+	{
+		dp[node]=max(dp[node],coin_cnt[node]);
+		for(auto &v:adj_red[node])
+		{
+			dp[v]=max(dp[v],dp[node]+coin_cnt[v]);
+		}
+	}
+	cout<<*max_element(dp.begin(),dp.end())<<'\n';
 	return 0;
 }
