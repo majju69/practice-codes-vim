@@ -9,30 +9,32 @@ using namespace std;
 
 typedef long long ll;
 
-void dfs(ll node,vector<bool> &vis,vector<ll> adj[],stack<ll> &st)
+const ll mod=998244353;
+
+long long power(long long a,long long b)        // Use when mod is of order 10^9 or less
 {
-	vis[node]=1;
-	for(auto &v:adj[node])
+	long long ans=1;
+	a=a%mod;
+	while(b)
 	{
-		if(!vis[v])
+		if(b&1)
 		{
-			dfs(v,vis,adj,st);
+			ans=(ans*a)%mod;
 		}
+		a=(a*a)%mod;
+		b>>=1;
 	}
-	st.push(node);
+	return ans%mod;
 }
 
-void dfs(ll node,ll c,vector<ll> &comp,vector<ll> adjT[],ll &coins,vector<ll> &a)
+inline ll mul(ll a,ll b)
 {
-	comp[node]=c;
-	coins+=a[node];
-	for(auto &v:adjT[node])
-	{
-		if(comp[v]==-1)
-		{
-			dfs(v,c,comp,adjT,coins,a);
-		}
-	}
+	return (a%mod*b%mod)%mod;
+}
+
+inline ll divide(ll a,ll b)
+{
+	return mul(a,power(b,mod-2));
 }
 
 int main()
@@ -40,85 +42,85 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	ll n,m,cnt=0;
-	stack<ll> st;
-	cin>>n>>m;
-	vector<ll> a(n),coin_cnt,comp(n,-1),adj[n],adjT[n];
-	vector<bool> vis(n,0);
-	for(auto &v:a)
+	ll tc;
+	cin>>tc;
+	while(tc--)
 	{
-		cin>>v;
-	}
-	for(ll i=0;i<m;++i)
-	{
-		ll u,v;
-		cin>>u>>v;
-		u--;
-		v--;
-		adj[u].push_back(v);
-		adjT[v].push_back(u);
-	}
-	for(ll i=0;i<n;++i)
-	{
-		if(!vis[i])
+		ll n,q,ans=1;
+		cin>>n>>q;
+		vector<pair<ll,ll>> a(n),b(n);
+		vector<ll> pos_a(n),pos_b(n),inv_a(n),inv_b(n);
+		for(ll i=0;i<n;++i)
 		{
-			dfs(i,vis,adj,st);
+			cin>>a[i].first;
+			a[i].second=i;
 		}
-	}
-	while(st.size())
-	{
-		ll node=st.top();
-		st.pop();
-		if(comp[node]==-1)
+		for(ll i=0;i<n;++i)
 		{
-			ll coins=0;
-			dfs(node,cnt++,comp,adjT,coins,a);
-			coin_cnt.push_back(coins);
+			cin>>b[i].first;
+			b[i].second=i;
 		}
-	}
-	queue<ll> q;
-	vector<ll> adj_red[cnt],indegree(cnt,0),dp(cnt,0),toposort;
-	for(ll i=0;i<n;++i)
-	{
-		for(auto &node:adj[i])
+		sort(a.begin(),a.end());
+		sort(b.begin(),b.end());
+		for(ll i=0;i<n;++i)
 		{
-			ll u=comp[i],v=comp[node];
-			if(u!=v)
+			ans=mul(ans,min(a[i].first,b[i].first));
+			pos_a[a[i].second]=i;
+			pos_b[b[i].second]=i;
+			inv_a[i]=a[i].second;
+			inv_b[i]=b[i].second;
+		}
+		cout<<ans<<' ';
+		while(q--)
+		{
+			ll type,i;
+			cin>>type>>i;
+			i--;
+			if(type==1)
 			{
-				adj_red[u].push_back(v);
-				indegree[v]++;
+				ll i1=pos_a[i];
+				ll i2=upper_bound(a.begin(),a.end(),make_pair(a[i1].first,n))-a.begin()-1;
+				ans=divide(ans,min(a[i1].first,b[i1].first));
+				if(i1!=i2)
+				{
+					ans=divide(ans,min(a[i2].first,b[i2].first));
+				}
+				a[i1].first++;
+				pos_a[i]=i2;
+				pos_a[inv_a[i2]]=i1;
+				inv_a[i1]=inv_a[i2];
+				inv_a[i2]=i;
+				swap(a[i1],a[i2]);
+				ans=mul(ans,min(a[i1].first,b[i1].first));
+				if(i1!=i2)
+				{
+					ans=mul(ans,min(a[i2].first,b[i2].first));
+				}
 			}
-		}
-	}
-	for(ll i=0;i<cnt;++i)
-	{
-		if(indegree[i]==0)
-		{
-			q.push(i);
-		}
-	}
-	while(q.size())
-	{
-		ll node=q.front();
-		toposort.push_back(node);
-		q.pop();
-		for(auto &v:adj_red[node])
-		{
-			indegree[v]--;
-			if(indegree[v]==0)
+			else
 			{
-				q.push(v);
+				ll i1=pos_b[i];
+				ll i2=upper_bound(b.begin(),b.end(),make_pair(b[i1].first,n))-b.begin()-1;
+				ans=divide(ans,min(a[i1].first,b[i1].first));
+				if(i1!=i2)
+				{
+					ans=divide(ans,min(a[i2].first,b[i2].first));
+				}
+				b[i1].first++;
+				pos_b[i]=i2;
+				pos_b[inv_b[i2]]=i1;
+				inv_b[i1]=inv_b[i2];
+				inv_b[i2]=i;
+				swap(b[i1],b[i2]);
+				ans=mul(ans,min(a[i1].first,b[i1].first));
+				if(i1!=i2)
+				{
+					ans=mul(ans,min(a[i2].first,b[i2].first));
+				}
 			}
+			cout<<ans<<' ';
 		}
+		cout<<'\n';
 	}
-	for(auto &node:toposort)
-	{
-		dp[node]=max(dp[node],coin_cnt[node]);
-		for(auto &v:adj_red[node])
-		{
-			dp[v]=max(dp[v],dp[node]+coin_cnt[v]);
-		}
-	}
-	cout<<*max_element(dp.begin(),dp.end())<<'\n';
 	return 0;
 }
