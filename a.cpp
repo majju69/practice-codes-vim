@@ -7,53 +7,72 @@ using namespace std;
 	#define debug(x)
 #endif
 
+typedef long long ll;
+
+bool check(ll mid,ll s,vector<pair<ll,ll>> &a)		// check median >= mid possible
+{
+	ll n=a.size(),sum=0;
+	ll req=((n+1)>>1);
+	vector<ll> tmp;
+	for(auto &v:a)
+	{
+		if(v.second<mid)
+		{
+			sum+=v.first;
+		}
+		else
+		{
+			tmp.push_back(v.first);
+		}
+	}
+	if((ll)tmp.size()<req)
+	{
+		return 0;
+	}
+	sort(tmp.rbegin(),tmp.rend());
+	for(ll i=0;i<req;++i)
+	{
+		sum+=max(mid,tmp[i]);
+	}
+	for(ll i=req;i<(ll)tmp.size();++i)
+	{
+		sum+=tmp[i];
+	}
+	return (sum<=s);
+}
+
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int tc;
+	ll tc;
 	cin>>tc;
 	while(tc--)
 	{
-		string s;
-		deque<char> odd,even;
-		cin>>s;
-		for(auto &v:s)
+		ll n,s,lo=1e18,hi=-1e18,ans=-1;
+		cin>>n>>s;
+		vector<pair<ll,ll>> a(n);
+		for(auto &v:a)
 		{
-			if((v-'0')&1)
+			cin>>v.first>>v.second;
+			lo=min(lo,v.first);
+			hi=max(hi,v.second);
+		}
+		while(lo<=hi)
+		{
+			ll mid=lo+(hi-lo)/2;
+			if(check(mid,s,a))
 			{
-				odd.push_back(v);
+				ans=mid;
+				lo=mid+1;
 			}
 			else
 			{
-				even.push_back(v);
+				hi=mid-1;
 			}
 		}
-		while((int)odd.size()&&(int)even.size())
-		{
-			if(odd[0]<even[0])
-			{
-				cout<<odd[0];
-				odd.pop_front();
-			}
-			else
-			{
-				cout<<even[0];
-				even.pop_front();
-			}
-		}
-		while((int)odd.size())
-		{
-			cout<<odd[0];
-			odd.pop_front();
-		}
-		while((int)even.size())
-		{
-			cout<<even[0];
-			even.pop_front();
-		}
-		cout<<'\n';
+		cout<<ans<<'\n';
 	}
 	return 0;
 }
