@@ -9,70 +9,52 @@ using namespace std;
 
 typedef long long ll;
 
-bool check(ll mid,ll s,vector<pair<ll,ll>> &a)		// check median >= mid possible
-{
-	ll n=a.size(),sum=0;
-	ll req=((n+1)>>1);
-	vector<ll> tmp;
-	for(auto &v:a)
-	{
-		if(v.second<mid)
-		{
-			sum+=v.first;
-		}
-		else
-		{
-			tmp.push_back(v.first);
-		}
-	}
-	if((ll)tmp.size()<req)
-	{
-		return 0;
-	}
-	sort(tmp.rbegin(),tmp.rend());
-	for(ll i=0;i<req;++i)
-	{
-		sum+=max(mid,tmp[i]);
-	}
-	for(ll i=req;i<(ll)tmp.size();++i)
-	{
-		sum+=tmp[i];
-	}
-	return (sum<=s);
-}
-
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	ll tc;
-	cin>>tc;
-	while(tc--)
+	ll n,m,sum=0;
+	map<ll,bool> vis;
+	vector<ll> a;
+	queue<pair<ll,ll>> q;
+	cin>>n>>m;
+	for(ll i=0;i<n;++i)
 	{
-		ll n,s,lo=1e18,hi=-1e18,ans=-1;
-		cin>>n>>s;
-		vector<pair<ll,ll>> a(n);
-		for(auto &v:a)
-		{
-			cin>>v.first>>v.second;
-			lo=min(lo,v.first);
-			hi=max(hi,v.second);
-		}
-		while(lo<=hi)
-		{
-			ll mid=lo+(hi-lo)/2;
-			if(check(mid,s,a))
-			{
-				ans=mid;
-				lo=mid+1;
-			}
-			else
-			{
-				hi=mid-1;
-			}
-		}
-		cout<<ans<<'\n';
+		ll x;
+		cin>>x;
+		vis[x]=1;
+		q.push({x,0});
 	}
+	while(1)
+	{
+		ll node=q.front().first,level=q.front().second;
+		q.pop();
+		if(level!=0)
+		{
+			sum+=level;
+			a.push_back(node);
+			if((ll)a.size()>=m)
+			{
+				break;
+			}
+		}
+		if(!vis.count(node-1))
+		{
+			vis[node-1]=1;
+			q.push({node-1,level+1});
+		}
+		if(!vis.count(node+1))
+		{
+			vis[node+1]=1;
+			q.push({node+1,level+1});
+		}
+	}
+	cout<<sum<<'\n';
+	for(auto &v:a)
+	{
+		cout<<v<<' ';
+	}
+	cout<<'\n';
 	return 0;
 }
