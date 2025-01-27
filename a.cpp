@@ -12,28 +12,33 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int tc;
-	cin>>tc;
-	while(tc--)
+	string s;
+	cin>>s;
+	int q,n=s.size();
+	vector<vector<int>> dp(n,vector<int>(n,0));
+	for(int i=n-1;i>=0;--i)
 	{
-		int n,ans=1e9;
-		cin>>n;
-		vector<pair<int,int>> a(n);
-		vector<int> left(n),right(n);
-		for(int i=0;i<n;++i)
+		dp[i][i]=1;
+		for(int j=i+1;j<n;++j)
 		{
-			cin>>a[i].first>>a[i].second;
-			left[i]=a[i].first;
-			right[i]=a[i].second;
+			dp[i][j]=(s[i]==s[j]&&(i+1>j-1||dp[i+1][j-1]));
 		}
-		sort(left.begin(),left.end());
-		sort(right.begin(),right.end());
-		for(auto &v:a)
+	}
+	for(int i=0;i<n;++i)
+	{
+		for(int j=0;j<n;++j)
 		{
-			int left_cnt=upper_bound(right.begin(),right.end(),v.first-1)-lower_bound(right.begin(),right.end(),0),right_cnt=upper_bound(left.begin(),left.end(),1e9+10)-lower_bound(left.begin(),left.end(),v.second+1);
-			ans=min(ans,left_cnt+right_cnt);
+			dp[i][j]+=((i>=1)?dp[i-1][j]:0)+((j>=1)?dp[i][j-1]:0)-((i>=1&&j>=1)?dp[i-1][j-1]:0);
 		}
-		cout<<ans<<'\n';
+	}
+	cin>>q;
+	while(q--)
+	{
+		int l,r;
+		cin>>l>>r;
+		l--;
+		r--;
+		cout<<dp[r][r]-((l>=1)?(dp[l-1][r]+dp[r][l-1]-dp[l-1][l-1]):0)<<'\n';
 	}
 	return 0;
 }
