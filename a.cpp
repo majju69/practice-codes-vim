@@ -7,54 +7,33 @@ using namespace std;
 	#define debug(x)
 #endif
 
-typedef long long ll;
-
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	ll n,m,sum=0;
-	map<ll,bool> vis;
-	vector<ll> a;
-	queue<pair<ll,ll>> q;
-	cin>>n>>m;
-	for(ll i=0;i<n;++i)
+	int tc;
+	cin>>tc;
+	while(tc--)
 	{
-		ll x;
-		cin>>x;
-		vis[x]=1;
-		q.push({x,0});
-	}
-	while(1)
-	{
-		ll node=q.front().first,level=q.front().second;
-		q.pop();
-		if(level!=0)
+		int n,ans=1e9;
+		cin>>n;
+		vector<pair<int,int>> a(n);
+		vector<int> left(n),right(n);
+		for(int i=0;i<n;++i)
 		{
-			sum+=level;
-			a.push_back(node);
-			if((ll)a.size()>=m)
-			{
-				break;
-			}
+			cin>>a[i].first>>a[i].second;
+			left[i]=a[i].first;
+			right[i]=a[i].second;
 		}
-		if(!vis.count(node-1))
+		sort(left.begin(),left.end());
+		sort(right.begin(),right.end());
+		for(auto &v:a)
 		{
-			vis[node-1]=1;
-			q.push({node-1,level+1});
+			int left_cnt=upper_bound(right.begin(),right.end(),v.first-1)-lower_bound(right.begin(),right.end(),0),right_cnt=upper_bound(left.begin(),left.end(),1e9+10)-lower_bound(left.begin(),left.end(),v.second+1);
+			ans=min(ans,left_cnt+right_cnt);
 		}
-		if(!vis.count(node+1))
-		{
-			vis[node+1]=1;
-			q.push({node+1,level+1});
-		}
+		cout<<ans<<'\n';
 	}
-	cout<<sum<<'\n';
-	for(auto &v:a)
-	{
-		cout<<v<<' ';
-	}
-	cout<<'\n';
 	return 0;
 }
