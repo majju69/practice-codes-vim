@@ -7,89 +7,160 @@ using namespace std;
 	#define debug(x)
 #endif
 
+typedef long long ll;
+
+class SegmentTree
+{
+
+private:
+
+	vector<ll> seg,lazy;
+
+public:
+
+	SegmentTree(ll n)
+	{
+		for(ll i=0;i<=4*n;++i)
+		{
+			seg.push_back(0);
+			lazy.push_back(-1);
+		}
+	}
+
+	void build(ll ind,ll lo,ll hi,vector<ll> &a)
+	{
+		if(lo==hi)
+		{
+			seg[ind]=a[lo];
+			return;
+		}
+		ll mid=lo+(hi-lo)/2;
+		build(2*ind+1,lo,mid,a);
+		build(2*ind+2,mid+1,hi,a);
+		seg[ind]=seg[2*ind+1]+seg[2*ind+2];
+	}
+
+	void update(ll ind,ll lo,ll hi,ll l,ll r,ll val)
+	{
+		if(lazy[ind]!=-1)
+		{
+			seg[ind]=(hi-lo+1)*lazy[ind];
+			if(lo!=hi)
+			{
+				lazy[2*ind+1]=lazy[ind];
+				lazy[2*ind+2]=lazy[ind];
+			}
+			lazy[ind]=-1;
+		}
+		if(l>hi||lo>r)
+		{
+			return;
+		}
+		if(l<=lo&&hi<=r)
+		{
+			seg[ind]=(hi-lo+1)*val;
+			if(lo!=hi)
+			{
+				lazy[2*ind+1]=val;
+				lazy[2*ind+2]=val;
+			}
+			return;
+		}
+		ll mid=lo+(hi-lo)/2;
+		update(2*ind+1,lo,mid,l,r,val);
+		update(2*ind+2,mid+1,hi,l,r,val);
+		seg[ind]=seg[2*ind+1]+seg[2*ind+2];
+	}
+
+	ll query(ll ind,ll lo,ll hi,ll l,ll r)
+	{
+		if(lazy[ind]!=-1)
+		{
+			seg[ind]=(hi-lo+1)*lazy[ind];
+			if(lo!=hi)
+			{
+				lazy[2*ind+1]=lazy[ind];
+				lazy[2*ind+2]=lazy[ind];
+			}
+			lazy[ind]=-1;
+		}
+		if(l>hi||lo>r)
+		{
+			return 0;
+		}
+		if(l<=lo&&hi<=r)
+		{
+			return seg[ind];
+		}
+		ll mid=lo+(hi-lo)/2;
+		return query(2*ind+1,lo,mid,l,r)+query(2*ind+2,mid+1,hi,l,r);
+	}
+
+};
+
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n,m,t,cur_node=-1,cur_cnt=-1;
-	queue<int> q;
-	cin>>n>>m>>t;
-	vector<int> indegree(n,0),topoSort,ans;
-	vector<pair<int,int>> adj[n];
-	vector<vector<int>> dp(n,vector<int>(n,1e9+10));
-	vector<vector<int>> par(n,vector<int>(n,-1));
-	for(int i=0;i<m;++i)
+	ll n,q;
+	cin>>n;
+	vector<ll> a(n);
+	for(auto &v:a)
 	{
-		int u,v,w;
-		cin>>u>>v>>w;
-		u--;
-		v--;
-		adj[u].push_back({v,w});
-		indegree[v]++;
+		cin>>v;
 	}
-	for(int i=0;i<n;++i)
+	SegmentTree st(n);
+	st.build(0,0,n-1,a);
+	cin>>q;
+	while(q--)
 	{
-		if(indegree[i]==0)
+		ll type;
+		cin>>type;
+		if(type==1)
 		{
-			q.push(i);
-		}
-	}
-	while(q.size())
-	{
-		int node=q.front();
-		q.pop();
-		topoSort.push_back(node);
-		for(auto &v:adj[node])
-		{
-			indegree[v.first]--;
-			if(indegree[v.first]==0)
+			ll i,val,lo=0,hi=-1,idx=-1;
+			cin>>i>>val;
+			i--;
+			lo=i;
+			hi=n-1;
+			while(lo<=hi)
 			{
-				q.push(v.first);
-			}
-		}
-	}
-	dp[0][0]=0;
-	for(auto &node:topoSort)
-	{
-		for(auto &v:adj[node])
-		{
-			for(int i=1;i<n;++i)
-			{
-				if(dp[node][i-1]+v.second>t)
+				ll mid=lo+(hi-lo)/2;
+				ll sum=st.query(0,0,n-1,i,mid);
+				if(sum<val)
 				{
-					continue;
+					idx=mid;
+					lo=mid+1;
 				}
-				if(dp[v.first][i]>dp[node][i-1]+v.second)
+				else
 				{
-					dp[v.first][i]=dp[node][i-1]+v.second;
-					par[v.first][i]=node;
+					hi=mid-1;
+				}
+			}
+			if(idx==-1)
+			{
+				ll cur=st.query(0,0,n-1,i,i);
+				st.update(0,0,n-1,i,i,cur-val);
+			}
+			else
+			{
+				val-=st.query(0,0,n-1,i,idx);
+				st.update(0,0,n-1,i,idx,0);
+				if(idx!=n-1)
+				{
+					ll cur=st.query(0,0,n-1,idx+1,idx+1);
+					st.update(0,0,n-1,idx+1,idx+1,cur-val);
 				}
 			}
 		}
-	}
-	for(int i=n-1;i>=0;--i)
-	{
-		if(dp[n-1][i]<=t)
+		else
 		{
-			cur_cnt=i;
-			break;
+			ll i;
+			cin>>i;
+			i--;
+			cout<<a[i]-st.query(0,0,n-1,i,i)<<'\n';
 		}
 	}
-	cur_node=n-1;
-	while(cur_node!=-1)
-	{
-		ans.push_back(cur_node+1);
-		cur_node=par[cur_node][cur_cnt];
-		cur_cnt--;
-	}
-	reverse(ans.begin(),ans.end());
-	cout<<(int)ans.size()<<'\n';
-	for(auto &v:ans)
-	{
-		cout<<v<<' ';
-	}
-	cout<<'\n';
 	return 0;
 }
-
