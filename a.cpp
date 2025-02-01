@@ -9,14 +9,16 @@ using namespace std;
 
 typedef long long ll;
 
-ll gcd(ll a,ll b)
+void dfs(ll node,ll p,vector<pair<ll,ll>> adj[],vector<ll> &depth)
 {
-	return ((b==0)?a:gcd(b,a%b));
-}
-
-inline ll lcm(ll a,ll b)
-{
-	return (a/gcd(a,b))*b;
+	for(auto &v:adj[node])
+	{
+		if(v.first!=p)
+		{
+			depth[v.first]=depth[node]+v.second;
+			dfs(v.first,node,adj,depth);
+		}
+	}
 }
 
 int main()
@@ -24,25 +26,21 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	ll a,b,diff=-1,k=0;
-	cin>>a>>b;
-	diff=abs(a-b);
-	for(ll i=1;i*i<=diff;++i)
+	ll n,ans=0;
+	cin>>n;
+	vector<pair<ll,ll>> adj[n];
+	vector<ll> depth(n,0);
+	for(ll i=1;i<n;++i)
 	{
-		if(diff%i==0)
-		{
-			ll d1=i,d2=diff/i;
-			ll k1=(d1-a%d1)%d1,k2=(d2-a%d2)%d2;
-			if(lcm(a+k1,b+k1)<lcm(a+k,b+k))
-			{
-				k=k1;
-			}
-			if(lcm(a+k2,b+k2)<lcm(a+k,b+k))
-			{
-				k=k2;
-			}
-		}
+		ll u,v,w;
+		cin>>u>>v>>w;
+		u--;
+		v--;
+		adj[u].push_back({v,w});
+		adj[v].push_back({u,w});
+		ans+=2*w;
 	}
-	cout<<k<<'\n';
+	dfs(0,0,adj,depth);
+	cout<<ans-*max_element(depth.begin(),depth.end())<<'\n';
 	return 0;
 }
