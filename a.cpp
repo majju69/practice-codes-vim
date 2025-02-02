@@ -7,28 +7,6 @@ using namespace std;
 	#define debug(x)
 #endif
 
-void dfs(int node,int p,int total,int mid,int &cnt,int &sum,vector<int> adj[],vector<int> &sub)
-{
-	sub[node]=1;
-	for(auto &v:adj[node])
-	{
-		if(v!=p)
-		{
-			dfs(v,node,total,mid,cnt,sum,adj,sub);
-			sub[node]+=sub[v];
-		}
-	}
-	if(sub[node]>=mid)
-	{
-		if(total-sum-sub[node]>=mid)
-		{
-			sum+=sub[node];
-			cnt++;
-			sub[node]=0;
-		}
-	}
-}
-
 int main()
 {
 	ios_base::sync_with_stdio(false);
@@ -38,32 +16,38 @@ int main()
 	cin>>tc;
 	while(tc--)
 	{
-		int n,k,lo=1,hi=0,ans=-1;
-		cin>>n>>k;
-		vector<int> adj[n];
-		for(int i=1;i<n;++i)
+		int n,ans=0,cur_num=0;
+		vector<int> candy;
+		cin>>n;
+		vector<vector<int>> a(n,vector<int>(n,0));
+		for(auto &vec:a)
 		{
-			int u,v;
-			cin>>u>>v;
-			u--;
-			v--;
-			adj[u].push_back(v);
-			adj[v].push_back(u);
-		}
-		hi=n;
-		while(lo<=hi)
-		{
-			int mid=lo+(hi-lo)/2,total=n,cnt=0,sum=0;
-			vector<int> sub(n,0);
-			dfs(0,0,total,mid,cnt,sum,adj,sub);
-			if(cnt>=k)
+			for(auto &v:vec)
 			{
-				ans=mid;
-				lo=mid+1;
+				cin>>v;
 			}
-			else
+			reverse(vec.begin(),vec.end());
+		}
+		for(int i=0;i<n;++i)
+		{
+			int cur=n;
+			for(int j=0;j<n;++j)
 			{
-				hi=mid-1;
+				if(a[i][j]!=1)
+				{
+					cur=j;
+					break;
+				}
+			}
+			candy.push_back(cur);
+		}
+		sort(candy.begin(),candy.end());
+		for(auto &v:candy)
+		{
+			if(v>=cur_num)
+			{
+				ans++;
+				cur_num++;
 			}
 		}
 		cout<<ans<<'\n';
