@@ -7,21 +7,35 @@ using namespace std;
 	#define debug(x)
 #endif
 
-inline int ask(int i,int j)
-{
-	cout<<"? "<<i+1<<' '<<j+1<<endl;
-	int x;
-	cin>>x;
-	if(x==-1)
-	{
-		exit(1);
-	}
-	return x;
-}
+const int dx[]={-1,1,0,0},dy[]={0,0,-1,1};
 
-inline void reply(int x)
+void bfs(int src_i,int src_j,int bad,vector<vector<int>> &dist,vector<string> &a)
 {
-	cout<<"! "<<x+1<<endl;
+	int n=a.size(),m=a[0].size();
+	deque<pair<int,int>> q;
+	dist[src_i][src_j]=0;
+	q.push_front({src_i,src_j});
+	while(q.size())
+	{
+		int x=q.front().first,y=q.front().second;
+		q.pop_front();
+		for(int i=0;i<4;++i)
+		{
+			int r=x+dx[i],c=y+dy[i],dis=(i==bad);
+			if(r>=0&&r<n&&c>=0&&c<m&&a[r][c]=='.'&&dis+dist[x][y]<dist[r][c])
+			{
+				dist[r][c]=dis+dist[x][y];
+				if(dis==0)
+				{
+					q.push_front({r,c});
+				}
+				else
+				{
+					q.push_back({r,c});
+				}
+			}
+		}
+	}
 }
 
 int main()
@@ -29,42 +43,25 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int tc;
-	cin>>tc;
-	while(tc--)
+	int n,m,src_i,src_j,x,y,ans=0;
+	cin>>n>>m>>src_i>>src_j>>x>>y;
+	vector<string> a(n);
+	vector<vector<int>> l_dist(n,vector<int>(m,1e9)),r_dist(n,vector<int>(m,1e9));
+	for(auto &v:a)
 	{
-		int n;
-		cin>>n;
-		vector<int> candy;
-		for(int i=0;i<n-1;i+=2)
+		cin>>v;
+	}
+	src_i--;
+	src_j--;
+	bfs(src_i,src_j,2,l_dist,a);
+	bfs(src_i,src_j,3,r_dist,a);
+	for(int i=0;i<n;++i)
+	{
+		for(int j=0;j<m;++j)
 		{
-			int a1=ask(i,i+1),a2=ask(i+1,i);
-			if(a1!=a2)
-			{
-				candy.push_back(i);
-				candy.push_back(i+1);
-			}
-		}
-		if((int)candy.size()==0)
-		{
-			reply(n-1);
-		}
-		else
-		{
-			int idx=-1,ans=-1,a1=-1,a2=-1;
-			for(int i=0;i<n;++i)
-			{
-				if(i!=candy[0]&&i!=candy[1])
-				{
-					idx=i;
-					break;
-				}
-			}
-			a1=ask(idx,candy[0]);
-			a2=ask(candy[0],idx);
-			ans=((a1==a2)?candy[1]:candy[0]);
-			reply(ans);
+			ans+=(a[i][j]=='.'&&l_dist[i][j]<=x&&r_dist[i][j]<=y);
 		}
 	}
+	cout<<ans<<'\n';
 	return 0;
 }
