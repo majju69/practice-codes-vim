@@ -7,19 +7,21 @@ using namespace std;
 	#define debug(x)
 #endif
 
-bool check(int mid,int m,int k,vector<int> &a)		// discarded mid boxes
+typedef long long ll;
+
+ll gcd(ll a,ll b,ll *x,ll *y)
 {
-	int n=a.size(),cnt=1,sum=0;
-	for(int i=mid;i<n;++i)
+	if(a==0)
 	{
-		sum+=a[i];
-		if(sum>k)
-		{
-			sum=a[i];
-			cnt++;
-		}
+		*x=0;
+		*y=1;
+		return b;
 	}
-	return (cnt<=m);
+	ll x1,y1;
+	ll g=gcd(b%a,a,&x1,&y1);
+	*x=y1-(b/a)*x1;
+	*y=x1;
+	return g;
 }
 
 int main()
@@ -27,27 +29,17 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n,m,k,lo=0,hi=-1,mn=1e9;
-	cin>>n>>m>>k;
-	vector<int> a(n);
-	for(auto &v:a)
+	ll a,b,c,x,y,g=-1;
+	cin>>a>>b>>c;
+	g=gcd(a,b,&x,&y);
+	if(c%g)
 	{
-		cin>>v;
+		cout<<-1<<'\n';
 	}
-	hi=n;
-	while(lo<=hi)
+	else
 	{
-		int mid=lo+(hi-lo)/2;
-		if(check(mid,m,k,a))
-		{
-			mn=mid;
-			hi=mid-1;
-		}
-		else
-		{
-			lo=mid+1;
-		}
+		c/=g;
+		cout<<-c*x<<' '<<-c*y<<'\n';
 	}
-	cout<<n-mn<<'\n';
 	return 0;
 }
