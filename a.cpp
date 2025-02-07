@@ -7,47 +7,47 @@ using namespace std;
 	#define debug(x)
 #endif
 
-typedef long long ll;
+bool check(int mid,int m,int k,vector<int> &a)		// discarded mid boxes
+{
+	int n=a.size(),cnt=1,sum=0;
+	for(int i=mid;i<n;++i)
+	{
+		sum+=a[i];
+		if(sum>k)
+		{
+			sum=a[i];
+			cnt++;
+		}
+	}
+	return (cnt<=m);
+}
 
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	ll n,k,cur=1,ans=0;
-	set<ll> vis;
-	map<ll,vector<ll>> mp;
-	cin>>n>>k;
-	vector<ll> a(n);
+	int n,m,k,lo=0,hi=-1,mn=1e9;
+	cin>>n>>m>>k;
+	vector<int> a(n);
 	for(auto &v:a)
 	{
 		cin>>v;
 	}
-	mp[a[0]].push_back(0);
-	for(ll i=1;i<n;++i)
+	hi=n;
+	while(lo<=hi)
 	{
-		a[i]+=a[i-1];
-		mp[a[i]].push_back(i);
-	}
-	while(1)
-	{
-		if(abs(cur)>1e14||vis.count(cur))
+		int mid=lo+(hi-lo)/2;
+		if(check(mid,m,k,a))
 		{
-			break;
+			mn=mid;
+			hi=mid-1;
 		}
-		for(ll i=0;i<n;++i)
+		else
 		{
-			// a[r]-a[l-1]=cur => a[r]=cur+a[l-1]
-			ll req=cur+((i==0)?0:a[i-1]);
-			if(mp.count(req))
-			{
-				vector<ll> &vec=mp[req];
-				ans+=upper_bound(vec.begin(),vec.end(),n)-lower_bound(vec.begin(),vec.end(),i);
-			}
+			lo=mid+1;
 		}
-		vis.insert(cur);
-		cur*=k;
 	}
-	cout<<ans<<'\n';
+	cout<<n-mn<<'\n';
 	return 0;
 }
