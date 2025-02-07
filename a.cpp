@@ -7,35 +7,59 @@ using namespace std;
 	#define debug(x)
 #endif
 
-const int dx[]={-1,1,0,0},dy[]={0,0,-1,1};
+typedef long long ll;
 
-void bfs(int src_i,int src_j,int bad,vector<vector<int>> &dist,vector<string> &a)
+ll get(ll a1,ll a2,vector<ll> &d,vector<ll> &f)
 {
-	int n=a.size(),m=a[0].size();
-	deque<pair<int,int>> q;
-	dist[src_i][src_j]=0;
-	q.push_front({src_i,src_j});
-	while(q.size())
+	ll n=f.size(),x1=(a1+a2)/2,x2=-1,mn=a2-a1;
+	if((a1+a2)&1)
 	{
-		int x=q.front().first,y=q.front().second;
-		q.pop_front();
-		for(int i=0;i<4;++i)
+		x2=x1+1;
+	}
+	for(auto &v:d)
+	{
+		// v+x>=x1 => x>=x1-v
+		ll i=lower_bound(f.begin(),f.end(),x1-v)-f.begin();
+		if(i>=0&&i<n)
 		{
-			int r=x+dx[i],c=y+dy[i],dis=(i==bad);
-			if(r>=0&&r<n&&c>=0&&c<m&&a[r][c]=='.'&&dis+dist[x][y]<dist[r][c])
+			ll x=v+f[i];
+			if(x<=a2&&x>=a1)
 			{
-				dist[r][c]=dis+dist[x][y];
-				if(dis==0)
+				mn=min(mn,max(x-a1,a2-x));
+			}
+		}
+		i--;
+		if(i>=0&&i<n)
+		{
+			ll x=v+f[i];
+			if(x<=a2&&x>=a1)
+			{
+				mn=min(mn,max(x-a1,a2-x));
+			}
+		}
+		if(x2!=-1)
+		{
+			ll i=lower_bound(f.begin(),f.end(),x2-v)-f.begin();
+			if(i>=0&&i<n)
+			{
+				ll x=v+f[i];
+				if(x<=a2&&x>=a1)
 				{
-					q.push_front({r,c});
+					mn=min(mn,max(x-a1,a2-x));
 				}
-				else
+			}
+			i--;
+			if(i>=0&&i<n)
+			{
+				ll x=v+f[i];
+				if(x<=a2&&x>=a1)
 				{
-					q.push_back({r,c});
+					mn=min(mn,max(x-a1,a2-x));
 				}
 			}
 		}
 	}
+	return mn;
 }
 
 int main()
@@ -43,25 +67,57 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n,m,src_i,src_j,x,y,ans=0;
-	cin>>n>>m>>src_i>>src_j>>x>>y;
-	vector<string> a(n);
-	vector<vector<int>> l_dist(n,vector<int>(m,1e9)),r_dist(n,vector<int>(m,1e9));
-	for(auto &v:a)
+	ll tc;
+	cin>>tc;
+	while(tc--)
 	{
-		cin>>v;
-	}
-	src_i--;
-	src_j--;
-	bfs(src_i,src_j,2,l_dist,a);
-	bfs(src_i,src_j,3,r_dist,a);
-	for(int i=0;i<n;++i)
-	{
-		for(int j=0;j<m;++j)
+		ll n,m,k;
+		cin>>n>>m>>k;
+		vector<ll> a(n),d(m),f(k);
+		for(auto &v:a)
 		{
-			ans+=(a[i][j]=='.'&&l_dist[i][j]<=x&&r_dist[i][j]<=y);
+			cin>>v;
+		}
+		for(auto &v:d)
+		{
+			cin>>v;
+		}
+		for(auto &v:f)
+		{
+			cin>>v;
+		}
+		sort(d.begin(),d.end());
+		sort(f.begin(),f.end());
+		if(n==2)
+		{
+			cout<<get(a[0],a[1],d,f)<<'\n';
+		}
+		else
+		{
+			vector<ll> diff;
+			for(ll i=1;i<n;++i)
+			{
+				diff.push_back(a[i]-a[i-1]);
+			}
+			sort(diff.rbegin(),diff.rend());
+			if(diff[0]==diff[1])
+			{
+				cout<<diff[0]<<'\n';
+			}
+			else
+			{
+				ll idx=-1;
+				for(ll i=1;i<n;++i)
+				{
+					if(a[i]-a[i-1]==diff[0])
+					{
+						idx=i-1;
+						break;
+					}
+				}
+				cout<<max(get(a[idx],a[idx+1],d,f),diff[1])<<'\n';
+			}
 		}
 	}
-	cout<<ans<<'\n';
 	return 0;
 }
