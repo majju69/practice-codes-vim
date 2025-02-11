@@ -7,83 +7,17 @@ using namespace std;
 	#define debug(x)
 #endif
 
-int dp[101][101][101][3];
-
-int solve(int i,int odd,int even,int pvs,vector<int> &a)	// pvs=1 => pvs odd
+inline int ask(int i,int j)
 {
-	if(i>=(int)a.size())
-	{
-		return 0;
-	}
-	if(dp[i][odd][even][pvs]!=-1)
-	{
-		return dp[i][odd][even][pvs];
-	}
-	if(a[i]!=-1)
-	{
-		return dp[i][odd][even][pvs]=solve(i+1,odd,even,(a[i]&1),a)+((a[i]+pvs)&1);
-	}
-	else
-	{
-		int ans=1e9;
-		if(odd>=1)
-		{
-			ans=min(ans,solve(i+1,odd-1,even,1,a)+(pvs==0));
-		}
-		if(even>=1)
-		{
-			ans=min(ans,solve(i+1,odd,even-1,0,a)+(pvs==1));
-		}
-		return dp[i][odd][even][pvs]=ans;
-	}
+	cout<<"? "<<i+1<<' '<<j+1<<endl;
+	int x;
+	cin>>x;
+	return x;
 }
 
-int minComplexity(vector<int> &a)
+inline void reply(char c)
 {
-	int n=a.size();
-	int even=((n-1)>>1)+1;
-	int odd=n-even;
-	for(auto &v:a)
-	{
-		if(v!=-1)
-		{
-			if(v&1)
-			{
-				odd--;
-			}
-			else
-			{
-				even--;
-			}
-		}
-	}
-	for(int i=0;i<=n;++i)
-	{
-		for(int j=0;j<=odd;++j)
-		{
-			for(int k=0;k<=even;++k)
-			{
-				dp[i][j][k][0]=dp[i][j][k][1]=dp[i][j][k][2]=-1;
-			}
-		}
-	}
-	if(a[0]!=-1)
-	{
-		return solve(1,odd,even,(a[0]&1),a);
-	}
-	else
-	{
-		int ans=1e9;
-		if(odd>=1)
-		{
-			ans=min(ans,solve(1,odd-1,even,1,a));
-		}
-		if(even>=1)
-		{
-			ans=min(ans,solve(1,odd,even-1,0,a));
-		}
-		return ans;
-	}
+	cout<<"! "<<c<<endl;
 }
 
 int main()
@@ -91,14 +25,74 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n;
-	cin>>n;
-	vector<int> a(n);
-	for(auto &v:a)
+	int tc;
+	cin>>tc;
+	while(tc--)
 	{
-		cin>>v;
-		v--;
+		int n,absent=-1;
+		cin>>n;
+		vector<int> a(n);
+		vector<bool> present(n,0);
+		for(auto &v:a)
+		{
+			cin>>v;
+			v--;
+			present[v]=1;
+		}
+		for(int i=0;i<n;++i)
+		{
+			if(!present[i])
+			{
+				absent=i;
+				break;
+			}
+		}
+		if(absent!=-1)
+		{
+			if(ask(absent,(absent+1)%n)==0)
+			{
+				reply('A');
+			}
+			else
+			{
+				reply('B');
+			}
+		}
+		else
+		{
+			int idx0=-1,idx1=-1,d=-1;
+			for(int i=0;i<n;++i)
+			{
+				if(a[i]==0)
+				{
+					idx0=i;
+				}
+				if(a[i]==n-1)
+				{
+					idx1=i;
+				}
+			}
+			d=ask(idx0,idx1);
+			if(d>=n)
+			{
+				reply('B');
+			}
+			else if(d<n-1)
+			{
+				reply('A');
+			}
+			else
+			{
+				if(d==ask(idx1,idx0))
+				{
+					reply('B');
+				}
+				else
+				{
+					reply('A');
+				}
+			}
+		}
 	}
-	cout<<minComplexity(a)<<'\n';
 	return 0;
 }
