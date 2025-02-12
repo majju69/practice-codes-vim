@@ -9,30 +9,9 @@ using namespace std;
 
 typedef long long ll;
 
-const vector<ll> nbrs={9,99,999,9999,99999,999999,9999999,99999999,999999999,9999999999};
-
-bool check(ll n)
+bool cmp(pair<ll,ll> a,pair<ll,ll> b)
 {
-	while(n)
-	{
-		if(n%10==7)
-		{
-			return 1;
-		}
-		n/=10;
-	}
-	return 0;
-}
-
-ll solve(ll n,ll x)
-{
-	ll ans=0;
-	while(!check(n))
-	{
-		ans++;
-		n+=x;
-	}
-	return ans;
+	return a.second<b.second;
 }
 
 int main()
@@ -44,11 +23,42 @@ int main()
 	cin>>tc;
 	while(tc--)
 	{
-		ll n,ans=1e18;
-		cin>>n;
-		for(auto &v:nbrs)
+		ll n,l,ans=0;
+		cin>>n>>l;
+		vector<pair<ll,ll>> a(n);
+		for(auto &v:a)
 		{
-			ans=min(ans,solve(n,v));
+			cin>>v.first>>v.second;
+		}
+		sort(a.begin(),a.end(),cmp);
+		for(ll i=0;i<n;++i)
+		{
+			if(a[i].first<=l)
+			{
+				ans=max(ans,1LL);
+				ll cnt=1,a_sum=a[i].first,b_sum=0;
+				priority_queue<ll> pq;
+				pq.push(a[i].first);
+				for(ll j=i+1;j<n;++j)
+				{
+					b_sum+=(a[j].second-a[j-1].second);
+					if(b_sum>l)
+					{
+						break;
+					}
+					a_sum+=a[j].first;
+					pq.push(a[j].first);
+					cnt++;
+					while(a_sum+b_sum>l)
+					{
+						ll x=pq.top();
+						pq.pop();
+						cnt--;
+						a_sum-=x;
+					}
+					ans=max(ans,cnt);
+				}
+			}
 		}
 		cout<<ans<<'\n';
 	}
