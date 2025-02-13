@@ -7,80 +7,107 @@ using namespace std;
 	#define debug(x)
 #endif
 
-int dp[101][10001];
+typedef long long ll;
 
-bool solve(int i,int tar,vector<int> &a,vector<int> &b)
+inline pair<ll,ll> merge(pair<ll,ll> a,pair<ll,ll> b)
 {
-	if(i<0)
-	{
-		return (tar==0);
-	}
-	if(dp[i][tar]!=-1)
-	{
-		return dp[i][tar];
-	}
-	bool take_a=0,take_b=0;
-	if(a[i]<=tar)
-	{
-		take_a=solve(i-1,tar-a[i],a,b);
-	}
-	if(b[i]<=tar)
-	{
-		take_b=solve(i-1,tar-b[i],a,b);
-	}
-	return dp[i][tar]=(take_a||take_b);
+	return {min(a.first,a.second+b.first),a.second+b.second};
 }
 
-int minCost(vector<int> &a,vector<int> &b)
+class SegmentTree
 {
-	int n=a.size(),sum=0,mx_sum=0,ans=0,mn=1e9;
-	for(int i=0;i<n;++i)
+
+private:
+
+	vector<pair<ll,ll>> seg;	// {pref,sum}
+
+public:
+
+	SegmentTree(ll n)
 	{
-		sum+=(a[i]+b[i]);
-		ans+=(a[i]*a[i]+b[i]*b[i]);
-		mx_sum+=max(a[i],b[i]);
+		seg.resize(4*n+1);
 	}
-	ans*=(n-2);
-	for(int i=0;i<=n;++i)
+
+	void build(ll ind,ll lo,ll hi,vector<ll> &a)
 	{
-		for(int j=0;j<=mx_sum;++j)
+		if(lo==hi)
 		{
-			dp[i][j]=-1;
+			seg[ind]={min(a[lo],0LL),a[lo]};
+			return;
 		}
+		ll mid=lo+(hi-lo)/2;
+		build(2*ind+1,lo,mid,a);
+		build(2*ind+2,mid+1,hi,a);
+		seg[ind]=merge(seg[2*ind+1],seg[2*ind+2]);
 	}
-	for(int s=0;s<=mx_sum;++s)
+
+	pair<ll,ll> query(ll ind,ll lo,ll hi,ll l,ll r)
 	{
-		if(solve(n-1,s,a,b))
+		if(l>hi||lo>r)
 		{
-			int s1=s,s2=sum-s;
-			mn=min(mn,s1*s1+s2*s2);
+			return {1e18,0};
 		}
+		if(l<=lo&&hi<=r)
+		{
+			return seg[ind];
+		}
+		ll mid=lo+(hi-lo)/2;
+		return merge(query(2*ind+1,lo,mid,l,r),query(2*ind+2,mid+1,hi,l,r));
 	}
-	ans+=mn;
-	return ans;
-}
+
+};
 
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int tc;
+	ll tc;
 	cin>>tc;
 	while(tc--)
 	{
-		int n;
-		cin>>n;
-		vector<int> a(n),b(n);
+		ll n,s,lo=1,hi=0,ans_l=-1,ans_r=-1;
+		cin>>n>>s;
+		vector<ll> a(n);
 		for(auto &v:a)
 		{
 			cin>>v;
 		}
-		for(auto &v:b)
+		SegmentTree st(n);
+		st.build(0,0,n-1,a);
+		hi=n;
+		while(lo<=hi)
 		{
-			cin>>v;
+			ll mid=lo+(hi-lo)/2;
+			ll idx=-1;
+			for(ll i=0;i<n-mid+1;++i)
+			{
+				pair<ll,ll> p=st.query(0,0,n-1,i,i+mid-1);
+				if(p.first+s>=0)
+				{
+					idx=i;
+					break;
+				}
+			}
+			if(idx!=-1)
+			{
+				ans_l=idx;
+				ans_r=idx+mid-1;
+				lo=mid+1;
+			}
+			else
+			{
+				hi=mid-1;
+			}
 		}
-		cout<<minCost(a,b)<<'\n';
+		if(ans_l==-1)
+		{
+			cout<<-1<<'\n';
+		}
+		else
+		{
+			cout<<ans_l+1<<' '<<ans_r+1<<'\n';
+		}
 	}
 	return 0;
 }
