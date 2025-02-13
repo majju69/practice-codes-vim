@@ -7,11 +7,57 @@ using namespace std;
 	#define debug(x)
 #endif
 
-typedef long long ll;
+int dp[101][10001];
 
-bool cmp(pair<ll,ll> a,pair<ll,ll> b)
+bool solve(int i,int tar,vector<int> &a,vector<int> &b)
 {
-	return a.second<b.second;
+	if(i<0)
+	{
+		return (tar==0);
+	}
+	if(dp[i][tar]!=-1)
+	{
+		return dp[i][tar];
+	}
+	bool take_a=0,take_b=0;
+	if(a[i]<=tar)
+	{
+		take_a=solve(i-1,tar-a[i],a,b);
+	}
+	if(b[i]<=tar)
+	{
+		take_b=solve(i-1,tar-b[i],a,b);
+	}
+	return dp[i][tar]=(take_a||take_b);
+}
+
+int minCost(vector<int> &a,vector<int> &b)
+{
+	int n=a.size(),sum=0,mx_sum=0,ans=0,mn=1e9;
+	for(int i=0;i<n;++i)
+	{
+		sum+=(a[i]+b[i]);
+		ans+=(a[i]*a[i]+b[i]*b[i]);
+		mx_sum+=max(a[i],b[i]);
+	}
+	ans*=(n-2);
+	for(int i=0;i<=n;++i)
+	{
+		for(int j=0;j<=mx_sum;++j)
+		{
+			dp[i][j]=-1;
+		}
+	}
+	for(int s=0;s<=mx_sum;++s)
+	{
+		if(solve(n-1,s,a,b))
+		{
+			int s1=s,s2=sum-s;
+			mn=min(mn,s1*s1+s2*s2);
+		}
+	}
+	ans+=mn;
+	return ans;
 }
 
 int main()
@@ -19,48 +65,22 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	ll tc;
+	int tc;
 	cin>>tc;
 	while(tc--)
 	{
-		ll n,l,ans=0;
-		cin>>n>>l;
-		vector<pair<ll,ll>> a(n);
+		int n;
+		cin>>n;
+		vector<int> a(n),b(n);
 		for(auto &v:a)
 		{
-			cin>>v.first>>v.second;
+			cin>>v;
 		}
-		sort(a.begin(),a.end(),cmp);
-		for(ll i=0;i<n;++i)
+		for(auto &v:b)
 		{
-			if(a[i].first<=l)
-			{
-				ans=max(ans,1LL);
-				ll cnt=1,a_sum=a[i].first,b_sum=0;
-				priority_queue<ll> pq;
-				pq.push(a[i].first);
-				for(ll j=i+1;j<n;++j)
-				{
-					b_sum+=(a[j].second-a[j-1].second);
-					if(b_sum>l)
-					{
-						break;
-					}
-					a_sum+=a[j].first;
-					pq.push(a[j].first);
-					cnt++;
-					while(a_sum+b_sum>l)
-					{
-						ll x=pq.top();
-						pq.pop();
-						cnt--;
-						a_sum-=x;
-					}
-					ans=max(ans,cnt);
-				}
-			}
+			cin>>v;
 		}
-		cout<<ans<<'\n';
+		cout<<minCost(a,b)<<'\n';
 	}
 	return 0;
 }
