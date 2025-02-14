@@ -7,30 +7,31 @@ using namespace std;
 	#define debug(x)
 #endif
 
-typedef long long ll;
-
-vector<long long> lpf(1000001,0);
-vector<long long> primes;
-
-void leastPrimeFactor()
+int ask(vector<int> &a)
 {
-    long long n=lpf.size();
-    for(long long i=2;i<n;++i)
-    {
-        if(lpf[i]==0)
-        {
-            lpf[i]=i;
-            primes.push_back(i);
-        }
-        for(long long j=0;i*primes[j]<n;++j)
-        {
-            lpf[i*primes[j]]=primes[j];
-            if(primes[j]==lpf[i])
-            {
-                break;
-            }
-        }
-    }
+	cout<<"? ";
+	for(auto &v:a)
+	{
+		cout<<v<<' ';
+	}
+	cout<<endl;
+	int x;
+	cin>>x;
+	if(x==-1)
+	{
+		exit(1);
+	}
+	return x;
+}
+
+inline void reply(int x)
+{
+	cout<<"! "<<x<<endl;
+}
+
+inline int bit(int a,int i)
+{
+	return a>>i&1;
 }
 
 int main()
@@ -38,57 +39,31 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	leastPrimeFactor();
-	ll tc;
-	cin>>tc;
-	while(tc--)
+	int small_num=-1,big_num=-1,ans=0;
+	vector<int> big,small;
+	for(int i=1;i<=100;++i)
 	{
-		ll n,q,mx=0,even=0,odd=0;
-		map<ll,ll> mp;
-		cin>>n;
-		for(ll i=0;i<n;++i)
+		big.push_back(i<<7);
+		small.push_back(i);
+	}
+	small_num=ask(small);
+	big_num=ask(big);
+	for(int i=0;i<14;++i)
+	{
+		int b=-1;
+		if(i<7)
 		{
-			ll x,real_x=1;
-			map<ll,ll> tmp;
-			cin>>x;
-			while(x>1)
-			{
-				tmp[lpf[x]]++;
-				x/=lpf[x];
-			}
-			for(auto &v:tmp)
-			{
-				if(v.second&1)
-				{
-					real_x*=v.first;
-				}
-			}
-			mp[real_x]++;
-			mx=max(mx,mp[real_x]);
+			b=bit(big_num,i);
 		}
-		for(auto &v:mp)
+		else
 		{
-			if(v.first>1)
-			{
-				if(v.second&1)
-				{
-					odd=max(odd,v.second);
-					continue;
-				}
-				even+=v.second;
-			}
-			else
-			{
-				even+=v.second;
-			}
+			b=bit(small_num,i);
 		}
-		cin>>q;
-		while(q--)
+		if(b==1)
 		{
-			ll x;
-			cin>>x;
-			cout<<((x==0)?mx:max(even,odd))<<'\n';
+			ans+=(1<<i);
 		}
 	}
+	reply(ans);
 	return 0;
 }
