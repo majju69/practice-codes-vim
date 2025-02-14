@@ -7,63 +7,97 @@ using namespace std;
 	#define debug(x)
 #endif
 
-int ask(vector<int> &a)
+int gcd(int a,int b)
 {
-	cout<<"? ";
-	for(auto &v:a)
-	{
-		cout<<v<<' ';
-	}
-	cout<<endl;
-	int x;
-	cin>>x;
-	if(x==-1)
-	{
-		exit(1);
-	}
-	return x;
+	return ((b==0)?a:gcd(b,a%b));
 }
 
-inline void reply(int x)
+class SegmentTree
 {
-	cout<<"! "<<x<<endl;
-}
 
-inline int bit(int a,int i)
-{
-	return a>>i&1;
-}
+private:
+
+	vector<int> seg;
+
+public:
+
+	SegmentTree(int n)
+	{
+		seg.resize(4*n+1);
+	}
+
+	void build(int ind,int lo,int hi,vector<int> &a)
+	{
+		if(lo==hi)
+		{
+			seg[ind]=a[lo];
+			return;
+		}
+		int mid=lo+(hi-lo)/2;
+		build(2*ind+1,lo,mid,a);
+		build(2*ind+2,mid+1,hi,a);
+		seg[ind]=gcd(seg[2*ind+1],seg[2*ind+2]);
+	}
+
+	int query(int ind,int lo,int hi,int l,int r)
+	{
+		if(l>hi||lo>r)
+		{
+			return 0;
+		}
+		if(l<=lo&&hi<=r)
+		{
+			return seg[ind];
+		}
+		int mid=lo+(hi-lo)/2;
+		return gcd(query(2*ind+1,lo,mid,l,r),query(2*ind+2,mid+1,hi,l,r));
+	}
+
+};
 
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int small_num=-1,big_num=-1,ans=0;
-	vector<int> big,small;
-	for(int i=1;i<=100;++i)
+	int tc;
+	cin>>tc;
+	while(tc--)
 	{
-		big.push_back(i<<7);
-		small.push_back(i);
+		int n,g=0,mx=0;
+		cin>>n;
+		vector<int> a(n);
+		for(auto &v:a)
+		{
+			cin>>v;
+			g=gcd(g,v);
+		}
+		for(int i=0;i<n;++i)
+		{
+			a.push_back(a[i]);
+		}
+		SegmentTree st(2*n);
+		st.build(0,0,2*n-1,a);
+		for(int i=0;i<n;++i)
+		{
+			int lo=i,hi=i+n-1,idx=-1;
+			while(lo<=hi)
+			{
+				int mid=lo+(hi-lo)/2;
+				int cur=st.query(0,0,2*n-1,i,mid);
+				if(cur==g)
+				{
+					idx=mid;
+					hi=mid-1;
+				}
+				else
+				{
+					lo=mid+1;
+				}
+			}
+			mx=max(mx,idx-i);
+		}
+		cout<<mx<<'\n';
 	}
-	small_num=ask(small);
-	big_num=ask(big);
-	for(int i=0;i<14;++i)
-	{
-		int b=-1;
-		if(i<7)
-		{
-			b=bit(big_num,i);
-		}
-		else
-		{
-			b=bit(small_num,i);
-		}
-		if(b==1)
-		{
-			ans+=(1<<i);
-		}
-	}
-	reply(ans);
 	return 0;
 }
