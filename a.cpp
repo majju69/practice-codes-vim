@@ -7,97 +7,67 @@ using namespace std;
 	#define debug(x)
 #endif
 
-int gcd(int a,int b)
+vector<vector<int>> divisors(200001);
+
+void fillDivisors()
 {
-	return ((b==0)?a:gcd(b,a%b));
+	int n=divisors.size();
+	for(int i=2;i<n;i++)
+	{
+		for(int j=i;j<n;j+=i)
+		{
+			divisors[j].push_back(i);
+		}
+	}
 }
-
-class SegmentTree
-{
-
-private:
-
-	vector<int> seg;
-
-public:
-
-	SegmentTree(int n)
-	{
-		seg.resize(4*n+1);
-	}
-
-	void build(int ind,int lo,int hi,vector<int> &a)
-	{
-		if(lo==hi)
-		{
-			seg[ind]=a[lo];
-			return;
-		}
-		int mid=lo+(hi-lo)/2;
-		build(2*ind+1,lo,mid,a);
-		build(2*ind+2,mid+1,hi,a);
-		seg[ind]=gcd(seg[2*ind+1],seg[2*ind+2]);
-	}
-
-	int query(int ind,int lo,int hi,int l,int r)
-	{
-		if(l>hi||lo>r)
-		{
-			return 0;
-		}
-		if(l<=lo&&hi<=r)
-		{
-			return seg[ind];
-		}
-		int mid=lo+(hi-lo)/2;
-		return gcd(query(2*ind+1,lo,mid,l,r),query(2*ind+2,mid+1,hi,l,r));
-	}
-
-};
 
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
+	fillDivisors();
 	int tc;
 	cin>>tc;
 	while(tc--)
 	{
-		int n,g=0,mx=0;
-		cin>>n;
-		vector<int> a(n);
-		for(auto &v:a)
-		{
-			cin>>v;
-			g=gcd(g,v);
-		}
+		int n,x,ans=1;
+		map<int,int> mp;
+		cin>>n>>x;
+		vector<int> div=divisors[x];
 		for(int i=0;i<n;++i)
 		{
-			a.push_back(a[i]);
-		}
-		SegmentTree st(2*n);
-		st.build(0,0,2*n-1,a);
-		for(int i=0;i<n;++i)
-		{
-			int lo=i,hi=i+n-1,idx=-1;
-			while(lo<=hi)
+			int tmp;
+			set<int> st;
+			cin>>tmp;
+			if(tmp==1||x%tmp)
 			{
-				int mid=lo+(hi-lo)/2;
-				int cur=st.query(0,0,2*n-1,i,mid);
-				if(cur==g)
+				continue;
+			}
+			for(auto &d:div)
+			{
+				if(d%tmp)
 				{
-					idx=mid;
-					hi=mid-1;
+					continue;
 				}
-				else
+				if(mp.count(d/tmp))
 				{
-					lo=mid+1;
+					st.insert(d);
 				}
 			}
-			mx=max(mx,idx-i);
+			for(auto &v:st)
+			{
+				mp[v]++;
+			}
+			mp[tmp]++;
+			if(mp.count(x))
+			{
+				ans++;
+				mp.clear();
+				mp[tmp]=1;
+			}
 		}
-		cout<<mx<<'\n';
+		cout<<ans<<'\n';
 	}
 	return 0;
 }
