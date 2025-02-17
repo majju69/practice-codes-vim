@@ -9,7 +9,6 @@ using namespace std;
 
 typedef long long ll;
 
-
 int main()
 {
 	ios_base::sync_with_stdio(false);
@@ -19,58 +18,62 @@ int main()
 	cin>>tc;
 	while(tc--)
 	{
-		ll a,b,c,d,x=-1,y=-1;
-		vector<ll> div_a,div_b;
-		cin>>a>>b>>c>>d;
-		for(ll i=1;i*i<=a;++i)
+		ll n,q,sum=0,cur=0,mx=0;
+		vector<pair<ll,ll>> req;
+		cin>>n>>q;
+		vector<ll> a(n);
+		for(auto &v:a)
 		{
-			if(a%i==0)
+			cin>>v;
+			sum+=v;
+		}
+		for(ll i=1;i<n;++i)
+		{
+			a[i]+=a[i-1];
+		}
+		for(ll i=0;i<n;++i)
+		{
+			if(a[i]>cur)
 			{
-				div_a.push_back(a/i);
-				if(i*i!=a)
+				req.push_back({a[i],i});
+				mx=max(mx,a[i]);
+				cur=a[i];
+			}
+		}
+		while(q--)
+		{
+			ll x;
+			cin>>x;
+			if(sum<=0)
+			{
+				if(mx<x)
 				{
-					div_a.push_back(i);
+					cout<<-1<<' ';
+				}
+				else
+				{
+					ll idx=lower_bound(req.begin(),req.end(),make_pair(x,-1LL))-req.begin();
+					cout<<req[idx].second<<' ';
+				}
+			}
+			else
+			{
+				// cnt*sum+mx>=x => cnt>=(x-mx)/sum
+				if(x<=mx)
+				{
+					ll idx=lower_bound(req.begin(),req.end(),make_pair(x,-1LL))-req.begin();
+					cout<<req[idx].second<<' ';
+				}
+				else
+				{
+					ll cnt=(x-mx)/sum+((x-mx)%sum!=0);
+					x-=cnt*sum;
+					ll idx=lower_bound(req.begin(),req.end(),make_pair(x,-1ll))-req.begin();
+					cout<<cnt*n+req[idx].second<<' ';
 				}
 			}
 		}
-		for(ll i=1;i*i<=b;++i)
-		{
-			if(b%i==0)
-			{
-				div_b.push_back(b/i);
-				if(i*i!=b)
-				{
-					div_b.push_back(i);
-				}
-			}
-		}
-		for(auto &d_a:div_a)
-		{
-			if(x!=-1)
-			{
-				break;
-			}
-			for(auto &d_b:div_b)
-			{
-				ll tmp_x=d_a*d_b;
-				ll tmp_y=(a*b)/tmp_x;
-				if((c/tmp_x)*tmp_x>a&&(d/tmp_y)*tmp_y>b)
-				{
-					x=(c/tmp_x)*tmp_x;
-					y=(d/tmp_y)*tmp_y;
-					break;
-				}
-				tmp_y=d_a*d_b;
-				tmp_x=(a*b)/tmp_y;
-				if((c/tmp_x)*tmp_x>a&&(d/tmp_y)*tmp_y>b)
-				{
-					x=(c/tmp_x)*tmp_x;
-					y=(d/tmp_y)*tmp_y;
-					break;
-				}
-			}
-		}
-		cout<<x<<' '<<y<<'\n';
+		cout<<'\n';
 	}
 	return 0;
 }
