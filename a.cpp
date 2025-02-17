@@ -7,73 +7,48 @@ using namespace std;
 	#define debug(x)
 #endif
 
-typedef long long ll;
+bool check(int x,int p,vector<int> &a)
+{
+	int n=a.size(),cur=0;
+	// x+i >= a[i]
+	for(int i=0;i<n;++i)
+	{
+		int cnt=upper_bound(a.begin(),a.end(),x+i)-a.begin()-cur++;
+		if(cnt%p==0)
+		{
+			return 0;
+		}
+	}
+	return 1; 
+}
 
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	ll tc;
-	cin>>tc;
-	while(tc--)
+	int n,p,mn=1e9,mx=-1e9;
+	cin>>n>>p;
+	vector<int> a(n),ans;
+	for(auto &v:a)
 	{
-		ll n,q,sum=0,cur=0,mx=0;
-		vector<pair<ll,ll>> req;
-		cin>>n>>q;
-		vector<ll> a(n);
-		for(auto &v:a)
-		{
-			cin>>v;
-			sum+=v;
-		}
-		for(ll i=1;i<n;++i)
-		{
-			a[i]+=a[i-1];
-		}
-		for(ll i=0;i<n;++i)
-		{
-			if(a[i]>cur)
-			{
-				req.push_back({a[i],i});
-				mx=max(mx,a[i]);
-				cur=a[i];
-			}
-		}
-		while(q--)
-		{
-			ll x;
-			cin>>x;
-			if(sum<=0)
-			{
-				if(mx<x)
-				{
-					cout<<-1<<' ';
-				}
-				else
-				{
-					ll idx=lower_bound(req.begin(),req.end(),make_pair(x,-1LL))-req.begin();
-					cout<<req[idx].second<<' ';
-				}
-			}
-			else
-			{
-				// cnt*sum+mx>=x => cnt>=(x-mx)/sum
-				if(x<=mx)
-				{
-					ll idx=lower_bound(req.begin(),req.end(),make_pair(x,-1LL))-req.begin();
-					cout<<req[idx].second<<' ';
-				}
-				else
-				{
-					ll cnt=(x-mx)/sum+((x-mx)%sum!=0);
-					x-=cnt*sum;
-					ll idx=lower_bound(req.begin(),req.end(),make_pair(x,-1ll))-req.begin();
-					cout<<cnt*n+req[idx].second<<' ';
-				}
-			}
-		}
-		cout<<'\n';
+		cin>>v;
 	}
+	sort(a.begin(),a.end());
+	mn=a[0];
+	mx=a[n-1];
+	for(int x=mn;x<mx;++x)
+	{
+		if(check(x,p,a))
+		{
+			ans.push_back(x);
+		}
+	}
+	cout<<(int)ans.size()<<'\n';
+	for(auto &v:ans)
+	{
+		cout<<v<<' ';
+	}
+	cout<<'\n';
 	return 0;
 }
