@@ -7,11 +7,59 @@ using namespace std;
 	#define debug(x)
 #endif
 
-typedef long long ll;
-
-inline ll get(ll n)
+int solve(deque<char> &a)
 {
-	return ((n*(n+1))>>1);
+	int n=a.size();
+	int lo=1,hi=n,ans=n;
+	while(lo<=hi)
+	{
+		int mid=lo+(hi-lo)/2,l=0,r=n-1;
+		vector<int> freq(26,0);
+		bool ok=1;
+		for(int i=0;i<mid;++i)
+		{
+			freq[a[i]-'a']++;
+		}
+		while(l<=r)
+		{
+			if(r==mid)
+			{
+				break;
+			}
+			if(l<mid)
+			{
+				if(freq[a[r]-'a']>0)
+				{
+					freq[a[r]-'a']--;
+					l++;
+					r--;
+				}
+				else
+				{
+					ok=0;
+					break;
+				}
+			}
+			else
+			{
+				if(a[l++]!=a[r--])
+				{
+					ok=0;
+					break;
+				}
+			}
+		}
+		if(ok)
+		{
+			ans=mid;
+			hi=mid-1;
+		}
+		else
+		{
+			lo=mid+1;
+		}
+	}
+	return ans;
 }
 
 int main()
@@ -19,52 +67,27 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	ll n,k;
-	cin>>n>>k;
-	if(k>=1e6)
+	int tc;
+	cin>>tc;
+	while(tc--)
 	{
-		cout<<-1<<'\n';
-	}
-	else
-	{
-		vector<ll> div,ans;
-		for(ll i=1;i*i<=n;++i)
+		int ans=1e9;
+		deque<char> a;
+		string s;
+		cin>>s;
+		for(auto &v:s)
 		{
-			if(n%i==0)
-			{
-				div.push_back(n/i);
-				if(i*i!=n)
-				{
-					div.push_back(i);
-				}
-			}
+			a.push_back(v);
 		}
-		sort(div.rbegin(),div.rend());
-		for(auto &d:div)
+		while((int)a.size()&&a[0]==a.back())
 		{
-			if(get(k)<=n/d)
-			{
-				ll x=n/d-get(k);
-				for(ll i=1;i<k;++i)
-				{
-					ans.push_back(i*d);
-				}
-				ans.push_back(d*(k+x));
-				break;
-			}
+			a.pop_back();
+			a.pop_front();
 		}
-		if((int)ans.size()==0)
-		{
-			cout<<-1<<'\n';
-		}
-		else
-		{
-			for(auto &v:ans)
-			{
-				cout<<v<<' ';
-			}
-			cout<<'\n';
-		}
+		ans=solve(a);
+		reverse(a.begin(),a.end());
+		ans=min(ans,solve(a));
+		cout<<ans<<'\n';
 	}
 	return 0;
 }
