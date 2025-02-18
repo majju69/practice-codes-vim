@@ -7,19 +7,11 @@ using namespace std;
 	#define debug(x)
 #endif
 
-bool check(int x,int p,vector<int> &a)
+typedef long long ll;
+
+inline ll get(ll n)
 {
-	int n=a.size(),cur=0;
-	// x+i >= a[i]
-	for(int i=0;i<n;++i)
-	{
-		int cnt=upper_bound(a.begin(),a.end(),x+i)-a.begin()-cur++;
-		if(cnt%p==0)
-		{
-			return 0;
-		}
-	}
-	return 1; 
+	return ((n*(n+1))>>1);
 }
 
 int main()
@@ -27,28 +19,52 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n,p,mn=1e9,mx=-1e9;
-	cin>>n>>p;
-	vector<int> a(n),ans;
-	for(auto &v:a)
+	ll n,k;
+	cin>>n>>k;
+	if(k>=1e6)
 	{
-		cin>>v;
+		cout<<-1<<'\n';
 	}
-	sort(a.begin(),a.end());
-	mn=a[0];
-	mx=a[n-1];
-	for(int x=mn;x<mx;++x)
+	else
 	{
-		if(check(x,p,a))
+		vector<ll> div,ans;
+		for(ll i=1;i*i<=n;++i)
 		{
-			ans.push_back(x);
+			if(n%i==0)
+			{
+				div.push_back(n/i);
+				if(i*i!=n)
+				{
+					div.push_back(i);
+				}
+			}
+		}
+		sort(div.rbegin(),div.rend());
+		for(auto &d:div)
+		{
+			if(get(k)<=n/d)
+			{
+				ll x=n/d-get(k);
+				for(ll i=1;i<k;++i)
+				{
+					ans.push_back(i*d);
+				}
+				ans.push_back(d*(k+x));
+				break;
+			}
+		}
+		if((int)ans.size()==0)
+		{
+			cout<<-1<<'\n';
+		}
+		else
+		{
+			for(auto &v:ans)
+			{
+				cout<<v<<' ';
+			}
+			cout<<'\n';
 		}
 	}
-	cout<<(int)ans.size()<<'\n';
-	for(auto &v:ans)
-	{
-		cout<<v<<' ';
-	}
-	cout<<'\n';
 	return 0;
 }
