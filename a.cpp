@@ -7,74 +7,34 @@ using namespace std;
 	#define debug(x)
 #endif
 
-typedef long long ll;
-
-bool check(ll mid,ll k,vector<ll> &a,vector<pair<ll,ll>> &edges)
+deque<int> add(deque<int> &a,deque<int> &b)
 {
-	ll n=0;
-	vector<bool> take((ll)a.size(),0);
-	vector<ll> new_idx((ll)a.size(),-1);
-	for(ll i=0;i<(ll)a.size();++i)
+	while((int)a.size()<(int)b.size())
 	{
-		if(a[i]<=mid)
-		{
-			take[i]=1;
-			new_idx[i]=n++;
-		}
+		a.push_back(0);
 	}
-	vector<ll> adj[n],indegree(n,0),topoSort;
-	queue<ll> q;
-	for(auto &edge:edges)
+	while((int)b.size()<(int)a.size())
 	{
-		ll u=edge.first,v=edge.second;
-		if(take[u]&&take[v])
-		{
-			adj[new_idx[u]].push_back(new_idx[v]);
-			indegree[new_idx[v]]++;
-		}
+		b.push_back(0);
 	}
-	for(ll i=0;i<n;++i)
+	int n=a.size(),carry=0;
+	deque<int> ans(n);
+	for(int i=0;i<n;++i)
 	{
-		if(indegree[i]==0)
-		{
-			q.push(i);
-		}
+		int x=a[i]+b[i]+carry;
+		ans[i]=x%26;
+		carry=x/26;
 	}
-	while(q.size())
+	if(carry!=0)
 	{
-		ll node=q.front();
-		q.pop();
-		topoSort.push_back(node);
-		for(auto &v:adj[node])
-		{
-			indegree[v]--;
-			if(indegree[v]==0)
-			{
-				q.push(v);
-			}
-		}
+		ans.push_back(carry);
 	}
-	if((ll)topoSort.size()!=n)
-	{
-		return 1;
-	}
-	vector<ll> pathLength(n,-1e18);
-	for(auto &v:topoSort)
-	{
-		if(pathLength[v]<0)
-		{
-			pathLength[v]=0;
-		}
-		if(pathLength[v]>=k-1)
-		{
-			return 1;
-		}
-		for(auto &node:adj[v])
-		{
-			pathLength[node]=max(pathLength[node],1+pathLength[v]);
-		}
-	}
-	return 0;
+	return ans;
+}
+
+inline char get(int i)
+{
+	return (char)(i+'a');
 }
 
 int main()
@@ -82,35 +42,39 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	ll n,m,k,lo=1e18,hi=-1e18,ans=-1;
-	cin>>n>>m>>k;
-	vector<ll> a(n);
-	vector<pair<ll,ll>> edges(m);
-	for(auto &v:a)
+	int n,cnt=0;
+	string s,t;
+	deque<int> a,b,sum,rem,sum2,sum4,sum8,ans;
+	cin>>n>>s>>t;
+	for(int i=n-1;i>=0;--i)
 	{
-		cin>>v;
-		lo=min(lo,v);
-		hi=max(hi,v);
+		a.push_back(s[i]-'a');
+		b.push_back(t[i]-'a');
 	}
-	for(auto &edge:edges)
+	while((int)a.size()&&a.back()==b.back()&&a.back()==0)
 	{
-		cin>>edge.first>>edge.second;
-		edge.first--;
-		edge.second--;
+		a.pop_back();
+		b.pop_back();
+		cnt++;
 	}
-	while(lo<=hi)
+	sum=add(a,b);
+	rem.push_back(sum[0]/2);
+	sum.pop_front();
+	sum2=add(sum,sum);
+	sum4=add(sum2,sum2);
+	sum8=add(sum4,sum4);
+	ans=add(sum,sum4);
+	ans=add(ans,sum8);
+	ans=add(ans,rem);
+	while(cnt--)
 	{
-		ll mid=lo+(hi-lo)/2;
-		if(check(mid,k,a,edges))
-		{
-			ans=mid;
-			hi=mid-1;
-		}
-		else
-		{
-			lo=mid+1;
-		}
+		ans.push_back(0);
 	}
-	cout<<ans<<'\n';
+	reverse(ans.begin(),ans.end());
+	for(auto &v:ans)
+	{
+		cout<<get(v);
+	}
+	cout<<'\n';
 	return 0;
 }
