@@ -7,49 +7,101 @@ using namespace std;
 	#define debug(x)
 #endif
 
-int solve(deque<char> &a)
+typedef long long ll;
+
+bool check(ll mid,ll k,vector<ll> &a,vector<pair<ll,ll>> &edges)
 {
-	int n=a.size();
-	int lo=1,hi=n,ans=n;
+	ll n=0;
+	vector<bool> take((ll)a.size(),0);
+	vector<ll> new_idx((ll)a.size(),-1);
+	for(ll i=0;i<(ll)a.size();++i)
+	{
+		if(a[i]<=mid)
+		{
+			take[i]=1;
+			new_idx[i]=n++;
+		}
+	}
+	vector<ll> adj[n],indegree(n,0),topoSort;
+	queue<ll> q;
+	for(auto &edge:edges)
+	{
+		ll u=edge.first,v=edge.second;
+		if(take[u]&&take[v])
+		{
+			adj[new_idx[u]].push_back(new_idx[v]);
+			indegree[new_idx[v]]++;
+		}
+	}
+	for(ll i=0;i<n;++i)
+	{
+		if(indegree[i]==0)
+		{
+			q.push(i);
+		}
+	}
+	while(q.size())
+	{
+		ll node=q.front();
+		q.pop();
+		topoSort.push_back(node);
+		for(auto &v:adj[node])
+		{
+			indegree[v]--;
+			if(indegree[v]==0)
+			{
+				q.push(v);
+			}
+		}
+	}
+	if((ll)topoSort.size()!=n)
+	{
+		return 1;
+	}
+	vector<ll> pathLength(n,-1e18);
+	for(auto &v:topoSort)
+	{
+		if(pathLength[v]<0)
+		{
+			pathLength[v]=0;
+		}
+		if(pathLength[v]>=k-1)
+		{
+			return 1;
+		}
+		for(auto &node:adj[v])
+		{
+			pathLength[node]=max(pathLength[node],1+pathLength[v]);
+		}
+	}
+	return 0;
+}
+
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+	ll n,m,k,lo=1e18,hi=-1e18,ans=-1;
+	cin>>n>>m>>k;
+	vector<ll> a(n);
+	vector<pair<ll,ll>> edges(m);
+	for(auto &v:a)
+	{
+		cin>>v;
+		lo=min(lo,v);
+		hi=max(hi,v);
+	}
+	for(auto &edge:edges)
+	{
+		cin>>edge.first>>edge.second;
+		edge.first--;
+		edge.second--;
+	}
 	while(lo<=hi)
 	{
-		int mid=lo+(hi-lo)/2,l=0,r=n-1;
-		vector<int> freq(26,0);
-		bool ok=1;
-		for(int i=0;i<mid;++i)
-		{
-			freq[a[i]-'a']++;
-		}
-		while(l<=r)
-		{
-			if(r==mid)
-			{
-				break;
-			}
-			if(l<mid)
-			{
-				if(freq[a[r]-'a']>0)
-				{
-					freq[a[r]-'a']--;
-					l++;
-					r--;
-				}
-				else
-				{
-					ok=0;
-					break;
-				}
-			}
-			else
-			{
-				if(a[l++]!=a[r--])
-				{
-					ok=0;
-					break;
-				}
-			}
-		}
-		if(ok)
+		ll mid=lo+(hi-lo)/2;
+		if(check(mid,k,a,edges))
 		{
 			ans=mid;
 			hi=mid-1;
@@ -59,35 +111,6 @@ int solve(deque<char> &a)
 			lo=mid+1;
 		}
 	}
-	return ans;
-}
-
-int main()
-{
-	ios_base::sync_with_stdio(false);
-	cin.tie(NULL);
-	cout.tie(NULL);
-	int tc;
-	cin>>tc;
-	while(tc--)
-	{
-		int ans=1e9;
-		deque<char> a;
-		string s;
-		cin>>s;
-		for(auto &v:s)
-		{
-			a.push_back(v);
-		}
-		while((int)a.size()&&a[0]==a.back())
-		{
-			a.pop_back();
-			a.pop_front();
-		}
-		ans=solve(a);
-		reverse(a.begin(),a.end());
-		ans=min(ans,solve(a));
-		cout<<ans<<'\n';
-	}
+	cout<<ans<<'\n';
 	return 0;
 }
