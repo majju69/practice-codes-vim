@@ -7,34 +7,24 @@ using namespace std;
 	#define debug(x)
 #endif
 
-typedef long long ll;
+vector<vector<int>> divisors(100001);
 
-const ll mod=1e9+7;
-
-long long power(long long a,long long b)        // Use when mod is of order 10^9 or less
+void fillDivisors()
 {
-	long long ans=1;
-	a=a%mod;
-	while(b)
+	int n=divisors.size();
+	divisors[0].push_back(0);
+	divisors[1].push_back(1);
+	for(int i=2;i<n;i++)
 	{
-		if(b&1)
-		{
-			ans=(ans*a)%mod;
-		}
-		a=(a*a)%mod;
-		b>>=1;
+		divisors[i].push_back(1);
 	}
-	return ans%mod;
-}
-
-inline ll mul(ll a,ll b)
-{
-	return (a%mod*b%mod)%mod;
-}
-
-inline ll sub(ll a,ll b)
-{
-	return (a%mod-b%mod+mod)%mod;
+	for(int i=2;i<n;i++)
+	{
+		for(int j=i;j<n;j+=i)
+		{
+			divisors[j].push_back(i);
+		}
+	}
 }
 
 int main()
@@ -42,57 +32,39 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	ll n,cnt=0,ans=1;
-	queue<ll> q;
+	fillDivisors();
+	int n;
+	map<int,vector<int>> mp;
 	cin>>n;
-	vector<ll> adj[n],indegree(n,0);
-	vector<bool> vis(n,0);
-	for(ll i=0;i<n;++i)
+	for(int i=0;i<n;++i)
 	{
-		ll x;
-		cin>>x;
-		x--;
-		adj[i].push_back(x);
-		indegree[x]++;
-	}
-	for(ll i=0;i<n;++i)
-	{
-		if(indegree[i]==0)
+		int x,y,ans=0;
+		cin>>x>>y;
+		for(auto &d:divisors[x])
 		{
-			q.push(i);
-		}
-	}
-	while(q.size())
-	{
-		ll node=q.front();
-		q.pop();
-		cnt++;
-		vis[node]=1;
-		for(auto &v:adj[node])
-		{
-			indegree[v]--;
-			if(indegree[v]==0)
+			if(mp.count(d))
 			{
-				q.push(v);
+				vector<int> &vec=mp[d];
+				if(i-y<=i-1)
+				{
+					int cnt=upper_bound(vec.begin(),vec.end(),i-1)-lower_bound(vec.begin(),vec.end(),i-y);
+					if(cnt==0)
+					{
+						ans++;
+					}
+				}
+				else
+				{
+					ans++;
+				}
 			}
-		}
-	}
-	ans=mul(ans,power(2,cnt));
-	for(ll i=0;i<n;++i)
-	{
-		if(!vis[i])
-		{
-			cnt=0;
-			ll cur=i;
-			while(!vis[cur])
+			else
 			{
-				vis[cur]=1;
-				cnt++;
-				cur=adj[cur][0];
+				ans++;
 			}
-			ans=mul(ans,sub(power(2,cnt),2));
+			mp[d].push_back(i);
 		}
+		cout<<ans<<'\n';
 	}
-	cout<<ans<<'\n';
 	return 0;
 }
