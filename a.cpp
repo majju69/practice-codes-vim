@@ -29,10 +29,10 @@ int main()
 	while(tc--)
 	{
 		int n,ans=0;
-		vector<vector<int>> idx(200);
-		vector<int> freq(200);
+		vector<vector<int>> idx(26);
+		vector<int> freq(26);
 		cin>>n;
-		vector<vector<int>> pre(200,vector<int>(n,0));
+		vector<vector<int>> pre(26,vector<int>(n,0));
 		for(int i=0;i<n;++i)
 		{
 			int x;
@@ -41,14 +41,14 @@ int main()
 			idx[x].push_back(i);
 			freq[x]++;
 			ans=max(ans,freq[x]);
-			for(int j=0;j<200;++j)
+			for(int j=0;j<26;++j)
 			{
 				pre[j][i]=freq[j];
 			}
 		}
-		for(int i=0;i<199;++i)
+		for(int i=0;i<25;++i)
 		{
-			for(int j=i+1;j<200;++j)
+			for(int j=i+1;j<26;++j)
 			{
 				if((int)idx[i].size()&&(int)idx[j].size())
 				{
