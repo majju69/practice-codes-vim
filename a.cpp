@@ -7,16 +7,44 @@ using namespace std;
 	#define debug(x)
 #endif
 
-int get(vector<int> &a,vector<int> &pre_b)
+typedef long long ll;
+
+bool check(ll mid,ll t,vector<pair<pair<ll,ll>,ll>> &a)
 {
-	int ans=0,i=0,j=(int)a.size()-1;
-	while(i<j)
+	ll sum=0,cnt=0;
+	for(auto &v:a)
 	{
-		ans=max(ans,2*(i+1)+pre_b[a[j]-1]-pre_b[a[i]]);
-		i++;
-		j--;
+		if(v.first.second>=mid&&sum+v.first.first<=t)
+		{
+			sum+=v.first.first;
+			cnt++;
+			if(cnt>=mid)
+			{
+				return 1;
+			}
+		}
 	}
-	return ans;
+	return 0;
+}
+
+void print(ll ans,ll t,vector<pair<pair<ll,ll>,ll>> &a)
+{
+	ll n=a.size(),sum=0,cnt=0;
+	cout<<ans<<'\n'<<ans<<'\n';
+	for(ll i=0;i<n;++i)
+	{
+		if(a[i].first.second>=ans&&sum+a[i].first.first<=t)
+		{
+			cout<<a[i].second+1<<' ';
+			cnt++;
+			sum+=a[i].first.first;
+			if(cnt>=ans)
+			{
+				break;
+			}
+		}
+	}
+	cout<<'\n';
 }
 
 int main()
@@ -24,40 +52,29 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int tc;
-	cin>>tc;
-	while(tc--)
+	ll n,t,lo=0,hi=-1,ans=0;
+	cin>>n>>t;
+	vector<pair<pair<ll,ll>,ll>> a(n);
+	for(ll i=0;i<n;++i)
 	{
-		int n,ans=0;
-		vector<vector<int>> idx(26);
-		vector<int> freq(26);
-		cin>>n;
-		vector<vector<int>> pre(26,vector<int>(n,0));
-		for(int i=0;i<n;++i)
-		{
-			int x;
-			cin>>x;
-			x--;
-			idx[x].push_back(i);
-			freq[x]++;
-			ans=max(ans,freq[x]);
-			for(int j=0;j<26;++j)
-			{
-				pre[j][i]=freq[j];
-			}
-		}
-		for(int i=0;i<25;++i)
-		{
-			for(int j=i+1;j<26;++j)
-			{
-				if((int)idx[i].size()&&(int)idx[j].size())
-				{
-					ans=max(ans,get(idx[i],pre[j]));
-					ans=max(ans,get(idx[j],pre[i]));
-				}
-			}
-		}
-		cout<<ans<<'\n';
+		cin>>a[i].first.second>>a[i].first.first;
+		a[i].second=i;
 	}
+	sort(a.begin(),a.end());
+	hi=n;
+	while(hi>=lo)
+	{
+		ll mid=lo+(hi-lo)/2;
+		if(check(mid,t,a))
+		{
+			ans=mid;
+			lo=mid+1;
+		}
+		else
+		{
+			hi=mid-1;
+		}
+	}
+	print(ans,t,a);
 	return 0;
 }
