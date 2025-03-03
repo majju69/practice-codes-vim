@@ -7,74 +7,108 @@ using namespace std;
 	#define debug(x)
 #endif
 
-typedef long long ll;
-
-bool check(ll mid,ll t,vector<pair<pair<ll,ll>,ll>> &a)
+class SegmentTree
 {
-	ll sum=0,cnt=0;
-	for(auto &v:a)
-	{
-		if(v.first.second>=mid&&sum+v.first.first<=t)
-		{
-			sum+=v.first.first;
-			cnt++;
-			if(cnt>=mid)
-			{
-				return 1;
-			}
-		}
-	}
-	return 0;
-}
 
-void print(ll ans,ll t,vector<pair<pair<ll,ll>,ll>> &a)
-{
-	ll n=a.size(),sum=0,cnt=0;
-	cout<<ans<<'\n'<<ans<<'\n';
-	for(ll i=0;i<n;++i)
+private:
+
+	vector<int> seg;
+
+public:
+
+	SegmentTree(int n)
 	{
-		if(a[i].first.second>=ans&&sum+a[i].first.first<=t)
-		{
-			cout<<a[i].second+1<<' ';
-			cnt++;
-			sum+=a[i].first.first;
-			if(cnt>=ans)
-			{
-				break;
-			}
-		}
+		seg.resize(4*n+1);
 	}
-	cout<<'\n';
-}
+
+	void build(int ind,int lo,int hi,vector<int> &a)
+	{
+		if(lo==hi)
+		{
+			seg[ind]=a[lo];
+			return;
+		}
+		int mid=lo+(hi-lo)/2;
+		build(2*ind+1,lo,mid,a);
+		build(2*ind+2,mid+1,hi,a);
+		seg[ind]=max(seg[2*ind+1],seg[2*ind+2]);
+	}
+
+	int firstAbove(int ind,int lo,int hi,int l,int r,int x)
+	{
+		if(seg[ind]<x||l>hi||lo>r)
+		{
+			return -1;
+		}
+		if(lo==hi)
+		{
+			return lo;
+		}
+		int mid=lo+(hi-lo)/2;
+		int ans=firstAbove(2*ind+1,lo,mid,l,r,x);
+		if(ans==-1)
+		{
+			ans=firstAbove(2*ind+2,mid+1,hi,l,r,x);
+		}
+		return ans;
+	}
+
+	int lastAbove(int ind,int lo,int hi,int l,int r,int x)
+	{
+		if(seg[ind]<x||l>hi||lo>r)
+		{
+			return -1;
+		}
+		if(lo==hi)
+		{
+			return lo;
+		}
+		int mid=lo+(hi-lo)/2;
+		int ans=lastAbove(2*ind+2,mid+1,hi,l,r,x);
+		if(ans==-1)
+		{
+			ans=lastAbove(2*ind+1,lo,mid,l,r,x);
+		}
+		return ans;
+	}
+
+
+};
 
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	ll n,t,lo=0,hi=-1,ans=0;
-	cin>>n>>t;
-	vector<pair<pair<ll,ll>,ll>> a(n);
-	for(ll i=0;i<n;++i)
+	int n,ans=0;
+	cin>>n;
+	vector<int> a(n);
+	for(auto &v:a)
 	{
-		cin>>a[i].first.second>>a[i].first.first;
-		a[i].second=i;
+		cin>>v;
 	}
-	sort(a.begin(),a.end());
-	hi=n;
-	while(hi>=lo)
+	SegmentTree st(n);
+	st.build(0,0,n-1,a);
+	for(int i=0;i<n;++i)
 	{
-		ll mid=lo+(hi-lo)/2;
-		if(check(mid,t,a))
+		int left=-1,right=-1;
+		if(i>0)
 		{
-			ans=mid;
-			lo=mid+1;
+			left=st.lastAbove(0,0,n-1,0,i-1,a[i]);
 		}
-		else
+		if(i<n-1)
 		{
-			hi=mid-1;
+			right=st.firstAbove(0,0,n-1,i+1,n-1,a[i]);
+		}
+		if(left!=-1)
+		{
+			ans=max(ans,(a[i]^a[left]));
+		}
+		if(right!=-1)
+		{
+			ans=max(ans,(a[i]^a[right]));
 		}
 	}
-	print(ans,t,a);
+	cout<<ans<<'\n';
 	return 0;
 }
