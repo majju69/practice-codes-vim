@@ -7,100 +7,73 @@ using namespace std;
 	#define debug(x)
 #endif
 
-class SegmentTree
+int dp[201][201][201];
+
+int solve(int i,int j,int k,vector<int> &red,vector<int> &green,vector<int> &blue)
 {
-
-private:
-
-	vector<int> seg;
-
-public:
-
-	SegmentTree(int n)
+	if(i>=(int)red.size()&&j>=(int)green.size()&&k>=(int)blue.size())
 	{
-		seg.resize(4*n+1);
+		return 0;
 	}
-
-	void update(int ind,int lo,int hi,int i)
+	if(dp[i][j][k]!=-1)
 	{
-		if(lo==hi)
-		{
-			seg[ind]=1;
-			return;
-		}
-		int mid=lo+(hi-lo)/2;
-		if(i<=mid)
-		{
-			update(2*ind+1,lo,mid,i);
-		}
-		else
-		{
-			update(2*ind+2,mid+1,hi,i);
-		}
-		seg[ind]=seg[2*ind+1]+seg[2*ind+2];
+		return dp[i][j][k];
 	}
-
-	int query(int ind,int lo,int hi,int l,int r)
+	int ans=0;
+	if(i<(int)red.size()&&j<(int)green.size())
 	{
-		if(l>hi||lo>r)
-		{
-			return 0;
-		}
-		if(l<=lo&&hi<=r)
-		{
-			return seg[ind];
-		}
-		int mid=lo+(hi-lo)/2;
-		return query(2*ind+1,lo,mid,l,r)+query(2*ind+2,mid+1,hi,l,r);
+		ans=max(ans,red[i]*green[j]+solve(i+1,j+1,k,red,green,blue));
 	}
+	if(i<(int)red.size()&&k<(int)blue.size())
+	{
+		ans=max(ans,red[i]*blue[k]+solve(i+1,j,k+1,red,green,blue));
+	}
+	if(j<(int)green.size()&&k<(int)blue.size())
+	{
+		ans=max(ans,green[j]*blue[k]+solve(i,j+1,k+1,red,green,blue));
+	}
+	return dp[i][j][k]=ans;
+}
 
-};
+int maxArea(vector<int> &red,vector<int> &green,vector<int> &blue)
+{
+	int r=red.size(),g=green.size(),b=blue.size();
+	sort(red.rbegin(),red.rend());
+	sort(green.rbegin(),green.rend());
+	sort(blue.rbegin(),blue.rend());
+	for(int i=0;i<=r;++i)
+	{
+		for(int j=0;j<=g;++j)
+		{
+			for(int k=0;k<=b;++k)
+			{
+				dp[i][j][k]=-1;
+			}
+		}
+	}
+	return solve(0,0,0,red,green,blue);
+}
 
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n,ind=0;
-	map<int,int> mp;
-	cin>>n;
-	vector<int> a(2*n),idx(2*n),left(n),right(n),ans(n);
-	vector<pair<int,int>> arr(n);
-	for(auto &v:arr)
+	int r,g,b;
+	cin>>r>>g>>b;
+	vector<int> red(r),green(g),blue(b);
+	for(auto &v:red)
 	{
-		cin>>v.first>>v.second;
-		mp[v.first]=mp[v.second]=0;
+		cin>>v;
 	}
-	for(auto &v:mp)
+	for(auto &v:green)
 	{
-		v.second=ind++;
+		cin>>v;
 	}
-	for(int i=0;i<n;++i)
+	for(auto &v:blue)
 	{
-		arr[i].first=mp[arr[i].first];
-		arr[i].second=mp[arr[i].second];
-		idx[arr[i].first]=i;
+		cin>>v;
 	}
-	sort(arr.begin(),arr.end());
-	for(int i=0;i<n;++i)
-	{
-		a[arr[i].first]=a[arr[i].second]=i;
-		left[i]=arr[i].first;
-		right[i]=arr[i].second;
-	}
-	n<<=1;
-	SegmentTree st(n);
-	for(int i=0;i<n;++i)
-	{
-		if(right[a[i]]==i)
-		{
-			ans[idx[left[a[i]]]]=st.query(0,0,n-1,left[a[i]],right[a[i]]);
-			st.update(0,0,n-1,left[a[i]]);
-		}
-	}
-	for(auto &v:ans)
-	{
-		cout<<v<<'\n';
-	}
+	cout<<maxArea(red,green,blue)<<'\n';
 	return 0;
 }
