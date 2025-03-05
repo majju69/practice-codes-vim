@@ -7,51 +7,68 @@ using namespace std;
 	#define debug(x)
 #endif
 
-int dp[201][201][201];
+typedef long long ll;
 
-int solve(int i,int j,int k,vector<int> &red,vector<int> &green,vector<int> &blue)
+const ll mod=1e9+7;
+
+inline ll add(ll a,ll b)
 {
-	if(i>=(int)red.size()&&j>=(int)green.size()&&k>=(int)blue.size())
+	return (a%mod+b%mod)%mod;
+}
+
+vector<long long> fact(1000001);
+
+void fillFact()
+{
+	long long n=fact.size();
+	fact[0]=1;
+	for(long long i=1;i<n;++i)
+	{
+		fact[i]=(i%mod*fact[i-1]%mod)%mod;
+	}
+}
+
+long long power(long long a,long long b)        // Use when mod is of order 10^9 or less
+{
+	long long ans=1;
+	a=a%mod;
+	while(b)
+	{
+		if(b&1)
+		{
+			ans=(ans*a)%mod;
+		}
+		a=(a*a)%mod;
+		b>>=1;
+	}
+	return ans%mod;
+}
+
+long long nCr(long long n,long long r)         // Ensure that fillFact() is called before this function is used
+{
+	if(n<r||n<0||r<0)
 	{
 		return 0;
 	}
-	if(dp[i][j][k]!=-1)
+	if(r==n||r==0)
 	{
-		return dp[i][j][k];
+		return 1;
 	}
-	int ans=0;
-	if(i<(int)red.size()&&j<(int)green.size())
-	{
-		ans=max(ans,red[i]*green[j]+solve(i+1,j+1,k,red,green,blue));
-	}
-	if(i<(int)red.size()&&k<(int)blue.size())
-	{
-		ans=max(ans,red[i]*blue[k]+solve(i+1,j,k+1,red,green,blue));
-	}
-	if(j<(int)green.size()&&k<(int)blue.size())
-	{
-		ans=max(ans,green[j]*blue[k]+solve(i,j+1,k+1,red,green,blue));
-	}
-	return dp[i][j][k]=ans;
+	return (fact[n]*power(fact[r],mod-2)%mod*power(fact[n-r],mod-2)%mod)%mod;
 }
 
-int maxArea(vector<int> &red,vector<int> &green,vector<int> &blue)
+bool isGood(ll x,ll a,ll b)
 {
-	int r=red.size(),g=green.size(),b=blue.size();
-	sort(red.rbegin(),red.rend());
-	sort(green.rbegin(),green.rend());
-	sort(blue.rbegin(),blue.rend());
-	for(int i=0;i<=r;++i)
+	while(x)
 	{
-		for(int j=0;j<=g;++j)
+		ll rem=x%10;
+		if(rem!=a&&rem!=b)
 		{
-			for(int k=0;k<=b;++k)
-			{
-				dp[i][j][k]=-1;
-			}
+			return 0;
 		}
+		x/=10;
 	}
-	return solve(0,0,0,red,green,blue);
+	return 1;
 }
 
 int main()
@@ -59,21 +76,17 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int r,g,b;
-	cin>>r>>g>>b;
-	vector<int> red(r),green(g),blue(b);
-	for(auto &v:red)
+	fillFact();
+	ll a,b,n,ans=0;
+	cin>>a>>b>>n;
+	for(ll i=0;i<=n;++i)	// i  a's
 	{
-		cin>>v;
+		ll sum=i*a+(n-i)*b;
+		if(isGood(sum,a,b))
+		{
+			ans=add(ans,nCr(n,i));
+		}
 	}
-	for(auto &v:green)
-	{
-		cin>>v;
-	}
-	for(auto &v:blue)
-	{
-		cin>>v;
-	}
-	cout<<maxArea(red,green,blue)<<'\n';
+	cout<<ans<<'\n';
 	return 0;
 }
