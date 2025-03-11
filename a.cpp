@@ -7,38 +7,17 @@ using namespace std;
 	#define debug(x)
 #endif
 
-bool check(int mid,int k,vector<int> &arr)
+inline int ask(int i,int j,int k)
 {
-	int n=arr.size(),sum=0;
-	vector<int> a,pre,dp(n,0);
-	for(auto &v:arr)
-	{
-		if(v>=mid)
-		{
-			a.push_back(1);
-		}
-		else
-		{
-			a.push_back(-1);
-		}
-		sum+=a.back();
-		pre.push_back(sum);
-	}
-	for(int i=0;i<n;++i)
-	{
-		int s1=max(a[i],0),s2=a[i]+((i>0)?dp[i-1]:0);
-		dp[i]=max(s1,s2);
-	}
-	for(int i=k-1;i<n;++i)
-	{
-		int s1=pre[i]-((i>=k)?pre[i-k]:0);
-		int s2=s1+((i>=k)?dp[i-k]:0);
-		if(max(s1,s2)>0)
-		{
-			return 1;
-		}
-	}
-	return 0;
+	cout<<"? "<<i+1<<' '<<j+1<<' '<<k+1<<endl;
+	int x;
+	cin>>x;
+	return x-1;
+}
+
+inline void reply(int i,int j,int k)
+{
+	cout<<"! "<<i+1<<' '<<j+1<<' '<<k+1<<endl;
 }
 
 int main()
@@ -46,28 +25,42 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n,k,lo=1e9,hi=-1e9,ans=-1;
-	cin>>n>>k;
-	vector<int> a(n);
-	for(auto &v:a)
+	int tc;
+	cin>>tc;
+	while(tc--)
 	{
-		cin>>v;
-		lo=min(lo,v);
-		hi=max(hi,v);
-	}
-	while(lo<=hi)
-	{
-		int mid=lo+(hi-lo)/2;
-		if(check(mid,k,a))
+		int n,x=0,y=1,z=2;
+		cin>>n;
+		while(1)
 		{
-			ans=mid;
-			lo=mid+1;
-		}
-		else
-		{
-			hi=mid-1;
+			int new_point=ask(x,y,z);
+			if(new_point==-1)
+			{
+				reply(x,y,z);
+				break;
+			}
+			int new_x=ask(new_point,y,z);
+			if(new_x==-1)
+			{
+				reply(new_point,y,z);
+				break;
+			}
+			int new_y=ask(x,new_point,z);
+			if(new_y==-1)
+			{
+				reply(x,new_point,z);
+				break;
+			}
+			int new_z=ask(x,y,new_point);
+			if(new_z==-1)
+			{
+				reply(x,y,new_point);
+				break;
+			}
+			x=new_x;
+			y=new_y;
+			z=new_z;
 		}
 	}
-	cout<<ans<<'\n';
 	return 0;
 }
