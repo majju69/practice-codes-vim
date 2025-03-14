@@ -7,102 +7,90 @@ using namespace std;
 	#define debug(x)
 #endif
 
-int kadane(vector<int> &a)
+typedef long long ll;
+
+class SegmentTree
 {
-	int n=a.size(),mx=0;
-	if(n==0)
+
+private:
+
+	vector<ll> seg;
+
+public:
+
+	SegmentTree(ll n)
 	{
-		return 0;
+		seg.resize(4*n+1);
 	}
-	vector<int> dp(n,0);
-	dp[0]=a[0];
-	for(int i=1;i<n;++i)
+
+	void update(ll ind,ll lo,ll hi,ll i)
 	{
-		dp[i]=max(dp[i-1]+a[i],a[i]);
-	}
-	for(int i=0;i<n;++i)
-	{
-		if(dp[i]>mx)
+		if(lo==hi)
 		{
-			mx=dp[i];
+			seg[ind]++;
+			return;
 		}
+		ll mid=lo+(hi-lo)/2;
+		if(i<=mid)
+		{
+			update(2*ind+1,lo,mid,i);
+		}
+		else
+		{
+			update(2*ind+2,mid+1,hi,i);
+		}
+		seg[ind]=seg[2*ind+1]+seg[2*ind+2];
 	}
-	return mx;
-}
+
+	ll query(ll ind,ll lo,ll hi,ll l,ll r)
+	{
+		if(l>hi||lo>r)
+		{
+			return 0;
+		}
+		if(l<=lo&&hi<=r)
+		{
+			return seg[ind];
+		}
+		ll mid=lo+(hi-lo)/2;
+		return query(2*ind+1,lo,mid,l,r)+query(2*ind+2,mid+1,hi,l,r);
+	}
+
+};
 
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int tc;
-	cin>>tc;
-	while(tc--)
+	ll n,ans=0;
+	map<ll,ll> mp;
+	cin>>n;
+	vector<ll> a(n),pre(n),suf(n);
+	SegmentTree st(n+1);
+	for(auto &v:a)
 	{
-		int n,num=-1,sum=0,s=0,l=0,r=-1;
-		map<int,vector<int>> mp,mp_pre;
-		cin>>n;
-		vector<int> a(n),pre;
-		for(int i=0;i<n;++i)
-		{
-			int x;
-			cin>>x;
-			mp[x].push_back(i);
-			a[i]=x;
-		}
-		for(auto &v:mp)
-		{
-			int cur=1,cur_sum=-1;
-			vector<int> tmp;
-			for(int i=1;i<v.second.size();++i)
-			{
-				if(v.second[i]==v.second[i-1]+1)
-				{
-					cur++;
-				}
-				else
-				{
-					tmp.push_back(cur);
-					tmp.push_back(v.second[i-1]-v.second[i]+1);
-					cur=1;
-				}
-			}
-			tmp.push_back(cur);
-			cur_sum=kadane(tmp);
-			if(cur_sum>sum)
-			{
-				sum=cur_sum;
-				num=v.first;
-			}
-		}
-		cout<<num<<' ';
-		for(auto &v:a)
-		{
-			s+=(v==num);
-			s-=(v!=num);
-			pre.push_back(s);
-		}
-		for(int i=0;i<n;++i)
-		{
-			mp_pre[pre[i]].push_back(i);
-		}
-		for(int i=0;i<n;++i)
-		{
-			// a[i]+...+a[j]=sum => pre[j]-pre[i-1]=sum => pre[j]=sum+pre[i-1]
-			int req=sum+((i==0)?0:pre[i-1]);
-			if(mp_pre.count(req))
-			{
-				auto &vec=mp_pre[req];
-				int idx=lower_bound(vec.begin(),vec.end(),i)-vec.begin();
-				if(idx<(int)vec.size())
-				{
-					l=i+1;
-					r=vec[idx]+1;
-					break;
-				}
-			}
-		}
-		cout<<l<<' '<<r<<'\n';
+		cin>>v;
 	}
+	for(ll i=0;i<n;++i)
+	{
+		mp[a[i]]++;
+		pre[i]=mp[a[i]];
+	}
+	mp.clear();
+	for(ll i=n-1;i>=0;--i)
+	{
+		mp[a[i]]++;
+		suf[i]=mp[a[i]];
+	}
+	for(ll i=n-1;i>=0;--i)
+	{
+		if(pre[i]!=0)
+		{
+			ans+=st.query(0,0,n,0,pre[i]-1);
+		}
+		st.update(0,0,n,suf[i]);
+	}
+	cout<<ans<<'\n';
 	return 0;
 }
