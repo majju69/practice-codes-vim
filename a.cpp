@@ -7,58 +7,27 @@ using namespace std;
 	#define debug(x)
 #endif
 
-const int N=1e5,LOG=18;
-int up[N][LOG],depth[N];
-
-void dfs(int node,int p,vector<int> adj[])
+int kadane(vector<int> &a)
 {
-	for(auto &v:adj[node])
+	int n=a.size(),mx=0;
+	if(n==0)
 	{
-		if(v!=p)
+		return 0;
+	}
+	vector<int> dp(n,0);
+	dp[0]=a[0];
+	for(int i=1;i<n;++i)
+	{
+		dp[i]=max(dp[i-1]+a[i],a[i]);
+	}
+	for(int i=0;i<n;++i)
+	{
+		if(dp[i]>mx)
 		{
-			depth[v]=depth[node]+1;
-			up[v][0]=node;
-			for(int j=1;j<LOG;++j)
-			{
-				up[v][j]=up[up[v][j-1]][j-1];
-			}
-			dfs(v,node,adj);
+			mx=dp[i];
 		}
 	}
-}
-
-int lowestCommonAncestor(int u,int v)
-{
-	if(depth[u]<depth[v])
-	{
-		swap(u,v);
-	}
-	int k=depth[u]-depth[v];
-	for(int j=LOG-1;j>=0;--j)
-	{
-		if(k>>j&1)
-		{
-			u=up[u][j];
-		}
-	}
-	if(u==v)
-	{
-		return u;
-	}
-	for(int j=LOG-1;j>=0;--j)
-	{
-		if(up[u][j]!=up[v][j])
-		{
-			u=up[u][j];
-			v=up[v][j];
-		}
-	}
-	return up[u][0];
-}
-
-inline int dist(int u,int v)
-{
-	return depth[u]+depth[v]-(depth[lowestCommonAncestor(u,v)]<<1);
+	return mx;
 }
 
 int main()
@@ -66,30 +35,74 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n,q;
-	cin>>n;
-	vector<int> adj[n];
-	for(int i=1;i<n;++i)
+	int tc;
+	cin>>tc;
+	while(tc--)
 	{
-		int u,v;
-		cin>>u>>v;
-		u--;
-		v--;
-		adj[u].push_back(v);
-		adj[v].push_back(u);
-	}
-	dfs(0,0,adj);
-	cin>>q;
-	while(q--)
-	{
-		int x,y,u,v,k;
-		cin>>x>>y>>u>>v>>k;
-		x--;
-		y--;
-		u--;
-		v--;
-		int d1=k-dist(u,v),d2=k-(dist(u,x)+dist(y,v)+1),d3=k-(dist(u,y)+dist(x,v)+1);
-		cout<<(((d1>=0&&d1%2==0)||(d2>=0&&d2%2==0)||(d3>=0&&d3%2==0))?"YES":"NO")<<'\n';
+		int n,num=-1,sum=0,s=0,l=0,r=-1;
+		map<int,vector<int>> mp,mp_pre;
+		cin>>n;
+		vector<int> a(n),pre;
+		for(int i=0;i<n;++i)
+		{
+			int x;
+			cin>>x;
+			mp[x].push_back(i);
+			a[i]=x;
+		}
+		for(auto &v:mp)
+		{
+			int cur=1,cur_sum=-1;
+			vector<int> tmp;
+			for(int i=1;i<v.second.size();++i)
+			{
+				if(v.second[i]==v.second[i-1]+1)
+				{
+					cur++;
+				}
+				else
+				{
+					tmp.push_back(cur);
+					tmp.push_back(v.second[i-1]-v.second[i]+1);
+					cur=1;
+				}
+			}
+			tmp.push_back(cur);
+			cur_sum=kadane(tmp);
+			if(cur_sum>sum)
+			{
+				sum=cur_sum;
+				num=v.first;
+			}
+		}
+		cout<<num<<' ';
+		for(auto &v:a)
+		{
+			s+=(v==num);
+			s-=(v!=num);
+			pre.push_back(s);
+		}
+		for(int i=0;i<n;++i)
+		{
+			mp_pre[pre[i]].push_back(i);
+		}
+		for(int i=0;i<n;++i)
+		{
+			// a[i]+...+a[j]=sum => pre[j]-pre[i-1]=sum => pre[j]=sum+pre[i-1]
+			int req=sum+((i==0)?0:pre[i-1]);
+			if(mp_pre.count(req))
+			{
+				auto &vec=mp_pre[req];
+				int idx=lower_bound(vec.begin(),vec.end(),i)-vec.begin();
+				if(idx<(int)vec.size())
+				{
+					l=i+1;
+					r=vec[idx]+1;
+					break;
+				}
+			}
+		}
+		cout<<l<<' '<<r<<'\n';
 	}
 	return 0;
 }
