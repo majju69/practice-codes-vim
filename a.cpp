@@ -7,33 +7,28 @@ using namespace std;
 	#define debug(x)
 #endif
 
-typedef long long ll;
+vector<int> lpf(10000001,0);
+vector<int> primes;
 
-const ll mod=1e9+7;
-
-inline ll add(ll a,ll b)
+void leastPrimeFactor()
 {
-	return (a%mod+b%mod)%mod;
-}
-
-vector<vector<long long>> divisors(1000001);
-
-void fillDivisors()
-{
-	long long n=divisors.size();
-	divisors[0].push_back(0);
-	divisors[1].push_back(1);
-	for(long long i=2;i<n;i++)
-	{
-		divisors[i].push_back(1);
-	}
-	for(long long i=2;i<n;i++)
-	{
-		for(long long j=i;j<n;j+=i)
-		{
-			divisors[j].push_back(i);
-		}
-	}
+    int n=lpf.size();
+    for(int i=2;i<n;++i)
+    {
+        if(lpf[i]==0)
+        {
+            lpf[i]=i;
+            primes.push_back(i);
+        }
+        for(int j=0;i*primes[j]<n;++j)
+        {
+            lpf[i*primes[j]]=primes[j];
+            if(primes[j]==lpf[i])
+            {
+                break;
+            }
+        }
+    }
 }
 
 int main()
@@ -41,33 +36,53 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	fillDivisors();
-	for(auto &vec:divisors)
+	leastPrimeFactor();
+	int tc;
+	cin>>tc;
+	while(tc--)
 	{
-		sort(vec.rbegin(),vec.rend());
-	}
-	ll n,ans=0,dp[1000001]={0};
-	cin>>n;
-	for(ll i=0;i<n;++i)
-	{
-		ll x;
-		cin>>x;
-		for(auto &d:divisors[x])
+		int n,k,ans=1;
+		map<int,bool> present;
+		cin>>n>>k;
+		for(int i=0;i<n;++i)
 		{
-			if(d==1)
+			int x,cur=1,cur_p=-1,cnt=0;
+			cin>>x;
+			cur_p=lpf[x];
+			while(x>1)
 			{
-				dp[d]++;
+				if(lpf[x]==cur_p)
+				{
+					cnt++;
+					x/=lpf[x];
+				}
+				else
+				{
+					if(cnt&1)
+					{
+						cur*=cur_p;
+					}
+					cnt=1;
+					cur_p=lpf[x];
+					x/=lpf[x];
+				}
+			}
+			if(cnt&1)
+			{
+				cur*=cur_p;
+			}
+			if(present[cur])
+			{
+				ans++;
+				present.clear();
+				present[cur]=1;
 			}
 			else
 			{
-				dp[d]=add(dp[d],dp[d-1]);
+				present[cur]=1;
 			}
 		}
+		cout<<ans<<'\n';
 	}
-	for(ll i=1;i<=1000000;++i)
-	{
-		ans=add(ans,dp[i]);
-	}
-	cout<<ans<<'\n';
 	return 0;
 }
