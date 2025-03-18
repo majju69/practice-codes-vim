@@ -7,28 +7,34 @@ using namespace std;
 	#define debug(x)
 #endif
 
-vector<int> lpf(10000001,0);
-vector<int> primes;
+typedef long long ll;
 
-void leastPrimeFactor()
+ll dp[61][61][61];
+
+ll solve(ll i,ll x,ll y)
 {
-    int n=lpf.size();
-    for(int i=2;i<n;++i)
-    {
-        if(lpf[i]==0)
-        {
-            lpf[i]=i;
-            primes.push_back(i);
-        }
-        for(int j=0;i*primes[j]<n;++j)
-        {
-            lpf[i*primes[j]]=primes[j];
-            if(primes[j]==lpf[i])
-            {
-                break;
-            }
-        }
-    }
+	if(x==0&&y==0)
+	{
+		return 0;
+	}
+	if(i>=60)
+	{
+		return 1e18;
+	}
+	if(dp[i][x][y]!=-1)
+	{
+		return dp[i][x][y];
+	}
+	ll skip=solve(i+1,x,y),take_x=1e18,take_y=1e18;
+	if(i<=x)
+	{
+		take_x=solve(i+1,x-i,y)+(1LL<<i);
+	}
+	if(i<=y)
+	{
+		take_y=solve(i+1,x,y-i)+(1LL<<i);
+	}
+	return dp[i][x][y]=min({skip,take_x,take_y});
 }
 
 int main()
@@ -36,50 +42,21 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	leastPrimeFactor();
-	int tc;
+	memset(dp,-1,sizeof(dp));
+	ll tc;
 	cin>>tc;
 	while(tc--)
 	{
-		int n,k,ans=1;
-		map<int,bool> present;
-		cin>>n>>k;
-		for(int i=0;i<n;++i)
+		ll x,y,ans=1e18;
+		cin>>x>>y;
+		for(ll i=0;i<60;++i)
 		{
-			int x,cur=1,cur_p=-1,cnt=0;
-			cin>>x;
-			cur_p=lpf[x];
-			while(x>1)
+			for(ll j=0;j<60;++j)
 			{
-				if(lpf[x]==cur_p)
+				if((x>>i)==(y>>j))
 				{
-					cnt++;
-					x/=lpf[x];
+					ans=min(ans,solve(0,i,j));
 				}
-				else
-				{
-					if(cnt&1)
-					{
-						cur*=cur_p;
-					}
-					cnt=1;
-					cur_p=lpf[x];
-					x/=lpf[x];
-				}
-			}
-			if(cnt&1)
-			{
-				cur*=cur_p;
-			}
-			if(present[cur])
-			{
-				ans++;
-				present.clear();
-				present[cur]=1;
-			}
-			else
-			{
-				present[cur]=1;
 			}
 		}
 		cout<<ans<<'\n';
