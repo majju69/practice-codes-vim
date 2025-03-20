@@ -9,55 +9,95 @@ using namespace std;
 
 typedef long long ll;
 
-ll dp[61][61][61];
-
-ll solve(ll i,ll x,ll y)
+class SegmentTree
 {
-	if(x==0&&y==0)
+
+private:
+
+	vector<ll> seg;
+
+public:
+
+	SegmentTree(ll n)
 	{
-		return 0;
+		seg.resize(4*n+1);
 	}
-	if(i>=60)
+
+	void update(ll ind,ll lo,ll hi,ll i)
 	{
-		return 1e18;
+		if(lo==hi)
+		{
+			seg[ind]++;
+			return;
+		}
+		ll mid=lo+(hi-lo)/2;
+		if(i<=mid)
+		{
+			update(2*ind+1,lo,mid,i);
+		}
+		else
+		{
+			update(2*ind+2,mid+1,hi,i);
+		}
+		seg[ind]=seg[2*ind+1]+seg[2*ind+2];
 	}
-	if(dp[i][x][y]!=-1)
+
+	ll query(ll ind,ll lo,ll hi,ll l,ll r)
 	{
-		return dp[i][x][y];
+		if(l>hi||lo>r)
+		{
+			return 0;
+		}
+		if(l<=lo&&hi<=r)
+		{
+			return seg[ind];
+		}
+		ll mid=lo+(hi-lo)/2;
+		return query(2*ind+1,lo,mid,l,r)+query(2*ind+2,mid+1,hi,l,r);
 	}
-	ll skip=solve(i+1,x,y),take_x=1e18,take_y=1e18;
-	if(i<=x)
-	{
-		take_x=solve(i+1,x-i,y)+(1LL<<i);
-	}
-	if(i<=y)
-	{
-		take_y=solve(i+1,x,y-i)+(1LL<<i);
-	}
-	return dp[i][x][y]=min({skip,take_x,take_y});
-}
+
+};
 
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	memset(dp,-1,sizeof(dp));
 	ll tc;
 	cin>>tc;
 	while(tc--)
 	{
-		ll x,y,ans=1e18;
-		cin>>x>>y;
-		for(ll i=0;i<60;++i)
+		ll n,ind=0,ans=0;
+		map<ll,ll> mp;
+		cin>>n;
+		vector<ll> a(n);
+		for(auto &v:a)
 		{
-			for(ll j=0;j<60;++j)
+			cin>>v;
+			mp[v]=0;
+		}
+		for(auto &v:mp)
+		{
+			v.second=ind++;
+		}
+		for(auto &v:a)
+		{
+			v=mp[v];
+		}
+		SegmentTree st(ind);
+		for(auto &v:a)
+		{
+			ll small=0,big=0;
+			if(v!=0)
 			{
-				if((x>>i)==(y>>j))
-				{
-					ans=min(ans,solve(0,i,j));
-				}
+				small=st.query(0,0,ind-1,0,v-1);
 			}
+			if(v!=ind-1)
+			{
+				big=st.query(0,0,ind-1,v+1,ind-1);
+			}
+			ans+=min(small,big);
+			st.update(0,0,ind-1,v);
 		}
 		cout<<ans<<'\n';
 	}
