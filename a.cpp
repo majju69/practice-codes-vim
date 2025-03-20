@@ -7,99 +7,91 @@ using namespace std;
 	#define debug(x)
 #endif
 
-typedef long long ll;
-
-class SegmentTree
+vector<int> get(vector<int> &a)
 {
-
-private:
-
-	vector<ll> seg;
-
-public:
-
-	SegmentTree(ll n)
+	int n=a.size(),s=0;
+	vector<int> ans,pre(n),suf(n);
+	for(int i=0;i<n;++i)
 	{
-		seg.resize(4*n+1);
+		s+=a[i];
+		pre[i]=s;
 	}
-
-	void update(ll ind,ll lo,ll hi,ll i)
+	s=0;
+	for(int i=n-1;i>=0;--i)
 	{
-		if(lo==hi)
-		{
-			seg[ind]++;
-			return;
-		}
-		ll mid=lo+(hi-lo)/2;
-		if(i<=mid)
-		{
-			update(2*ind+1,lo,mid,i);
-		}
-		else
-		{
-			update(2*ind+2,mid+1,hi,i);
-		}
-		seg[ind]=seg[2*ind+1]+seg[2*ind+2];
+		s+=a[i];
+		suf[n-i-1]=s;
 	}
-
-	ll query(ll ind,ll lo,ll hi,ll l,ll r)
+	for(int pick=0;pick<=n;++pick)
 	{
-		if(l>hi||lo>r)
+		int cur=0;
+		for(int pre_pick=0;pre_pick<=pick;++pre_pick)
 		{
-			return 0;
+			int suf_pick=pick-pre_pick;
+			int pre_sum=((pre_pick==0)?0:pre[pre_pick-1]),suf_sum=((suf_pick==0)?0:suf[suf_pick-1]);
+			cur=max(cur,pre_sum+suf_sum);
 		}
-		if(l<=lo&&hi<=r)
-		{
-			return seg[ind];
-		}
-		ll mid=lo+(hi-lo)/2;
-		return query(2*ind+1,lo,mid,l,r)+query(2*ind+2,mid+1,hi,l,r);
+		ans.push_back(cur);
 	}
+	return ans;
+}
 
-};
+int dp[101][10001];
+
+int solve(int i,int m,vector<vector<int>> &a)
+{
+	if(i>=(int)a.size()||m==0)
+	{
+		return 0;
+	}
+	if(dp[i][m]!=-1)
+	{
+		return dp[i][m];
+	}
+	int ans=0;
+	for(int j=0;j<(int)a[i].size();++j)
+	{
+		if(j>m)
+		{
+			break;
+		}
+		ans=max(ans,solve(i+1,m-j,a)+a[i][j]);
+	}
+	return dp[i][m]=ans;
+}
+
+int maxDamage(int m,vector<vector<int>> &a)
+{
+	int n=a.size();
+	for(int i=0;i<=n;++i)
+	{
+		for(int j=0;j<=m;++j)
+		{
+			dp[i][j]=-1;
+		}
+	}
+	return solve(0,m,a);
+}
 
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	ll tc;
-	cin>>tc;
-	while(tc--)
+	int n,m;
+	cin>>n>>m;
+	vector<vector<int>> a;
+	for(int i=0;i<n;++i)
 	{
-		ll n,ind=0,ans=0;
-		map<ll,ll> mp;
-		cin>>n;
-		vector<ll> a(n);
-		for(auto &v:a)
+		int len;
+		cin>>len;
+		vector<int> tmp(len);
+		for(auto &v:tmp)
 		{
 			cin>>v;
-			mp[v]=0;
 		}
-		for(auto &v:mp)
-		{
-			v.second=ind++;
-		}
-		for(auto &v:a)
-		{
-			v=mp[v];
-		}
-		SegmentTree st(ind);
-		for(auto &v:a)
-		{
-			ll small=0,big=0;
-			if(v!=0)
-			{
-				small=st.query(0,0,ind-1,0,v-1);
-			}
-			if(v!=ind-1)
-			{
-				big=st.query(0,0,ind-1,v+1,ind-1);
-			}
-			ans+=min(small,big);
-			st.update(0,0,ind-1,v);
-		}
-		cout<<ans<<'\n';
+		a.push_back(get(tmp));
 	}
+	cout<<maxDamage(m,a)<<'\n';
 	return 0;
 }
