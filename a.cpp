@@ -7,91 +7,52 @@ using namespace std;
 	#define debug(x)
 #endif
 
-vector<int> get(vector<int> &a)
-{
-	int n=a.size(),s=0;
-	vector<int> ans,pre(n),suf(n);
-	for(int i=0;i<n;++i)
-	{
-		s+=a[i];
-		pre[i]=s;
-	}
-	s=0;
-	for(int i=n-1;i>=0;--i)
-	{
-		s+=a[i];
-		suf[n-i-1]=s;
-	}
-	for(int pick=0;pick<=n;++pick)
-	{
-		int cur=0;
-		for(int pre_pick=0;pre_pick<=pick;++pre_pick)
-		{
-			int suf_pick=pick-pre_pick;
-			int pre_sum=((pre_pick==0)?0:pre[pre_pick-1]),suf_sum=((suf_pick==0)?0:suf[suf_pick-1]);
-			cur=max(cur,pre_sum+suf_sum);
-		}
-		ans.push_back(cur);
-	}
-	return ans;
-}
-
-int dp[101][10001];
-
-int solve(int i,int m,vector<vector<int>> &a)
-{
-	if(i>=(int)a.size()||m==0)
-	{
-		return 0;
-	}
-	if(dp[i][m]!=-1)
-	{
-		return dp[i][m];
-	}
-	int ans=0;
-	for(int j=0;j<(int)a[i].size();++j)
-	{
-		if(j>m)
-		{
-			break;
-		}
-		ans=max(ans,solve(i+1,m-j,a)+a[i][j]);
-	}
-	return dp[i][m]=ans;
-}
-
-int maxDamage(int m,vector<vector<int>> &a)
-{
-	int n=a.size();
-	for(int i=0;i<=n;++i)
-	{
-		for(int j=0;j<=m;++j)
-		{
-			dp[i][j]=-1;
-		}
-	}
-	return solve(0,m,a);
-}
+typedef long long ll;
+typedef long double ld;
 
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n,m;
-	cin>>n>>m;
-	vector<vector<int>> a;
-	for(int i=0;i<n;++i)
+	ll w,b;
+	cin>>w>>b;
+	ld dp[w+1][b+1][2];
+	dp[0][0][0]=0;
+	dp[0][0][1]=1;
+	for(ll i=1;i<=w;++i)
 	{
-		int len;
-		cin>>len;
-		vector<int> tmp(len);
-		for(auto &v:tmp)
-		{
-			cin>>v;
-		}
-		a.push_back(get(tmp));
+		dp[i][0][0]=1;
+		dp[i][0][1]=1;
 	}
-	cout<<maxDamage(m,a)<<'\n';
+	for(ll i=1;i<=b;++i)
+	{
+		dp[0][i][0]=0;
+		dp[0][i][1]=1;
+	}
+	for(ll i=1;i<=w;++i)
+	{
+		for(ll j=1;j<=b;++j)
+		{
+			dp[i][j][1]=(ld)i/(i+j)+((ld)j/(i+j))*((ld)1-dp[i][j-1][0]);
+			dp[i][j][0]=(ld)i/(i+j)+((ld)j/(i+j))*((ld)i/(i+j-1)*((ld)1-dp[i-1][j-1][1]));
+			if(j>=2)
+			{
+				dp[i][j][0]+=((ld)j/(i+j))*((ld)(j-1)/(i+j-1)*((ld)1-dp[i][j-2][1]));
+			}
+		}
+	}
+	cout<<fixed<<setprecision(9)<<dp[w][b][0]<<'\n';
 	return 0;
 }
+
+
+/*
+
+
+i->white j->black
+
+dp[i][j][chance] = i/(i+j) + (j/(i+j))(1-dp[i][j-1][1-chance])   if chance == dragon (ie 1)
+dp[i][j][chance] = i/(i+j) + (j/(i+j))((j-1)/(i+j-1)(1-dp[i][j-2][1-chance]) + i/(i+j-1)(1-dp[i-1][j-1][1-chance])) if chance == princess (ie 0)
+
+*/
