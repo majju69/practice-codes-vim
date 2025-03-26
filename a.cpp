@@ -7,52 +7,11 @@ using namespace std;
 	#define debug(x)
 #endif
 
-int get(int k,vector<int> &a)
-{
-	int n=a.size(),ans=1e9;
-	for(int i=0;i<=k;++i)
-	{
-		int left=a[i],right=a[n-1-(k-i)];
-		ans=min(ans,max(0,right-left+1));
-	}
-	return ans;
-}
+typedef long long ll;
 
-int dp[501][501];
-
-int solve(int i,int k,vector<vector<int>> &a)
+inline bool ok(ll a,ll b)
 {
-	if(i>=(int)a.size())
-	{
-		return 0;
-	}
-	if(dp[i][k]!=-1)
-	{
-		return dp[i][k];
-	}
-	int ans=1e9;
-	for(int j=0;j<(int)a[i].size();++j)
-	{
-		if(j>k)
-		{
-			break;
-		}
-		ans=min(ans,solve(i+1,k-j,a)+a[i][j]);
-	}
-	return dp[i][k]=ans;
-}
-
-int minTime(int k,vector<vector<int>> &a)
-{
-	int n=a.size();
-	for(int i=0;i<=n;++i)
-	{
-		for(int j=0;j<=k;++j)
-		{
-			dp[i][j]=-1;
-		}
-	}
-	return solve(0,k,a);
+	return (a==0||b==0||(a<=(ll)2e18/b&&b<=(ll)2e18/a));
 }
 
 int main()
@@ -60,28 +19,51 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n,m,k;
-	vector<vector<int>> a;
-	cin>>n>>m>>k;
-	for(int i=0;i<n;++i)
+	ll x,y,l,r,pow_x[61]={1},pow_y[61]={1};
+	vector<ll> a;
+	cin>>x>>y>>l>>r;
+	for(ll i=1;i<=60;++i)
 	{
-		vector<int> tmp,cur;
-		string s;
-		cin>>s;
-		for(int j=0;j<m;++j)
+		if(pow_x[i-1]!=-1&&ok(pow_x[i-1],x)&&x*pow_x[i-1]<r)
 		{
-			if(s[j]=='1')
+			pow_x[i]=x*pow_x[i-1];
+		}
+		else
+		{
+			pow_x[i]=-1;
+		}
+		if(pow_y[i-1]!=-1&&ok(pow_y[i-1],y)&&y*pow_y[i-1]<r)
+		{
+			pow_y[i]=y*pow_y[i-1];
+		}
+		else
+		{
+			pow_y[i]=-1;
+		}
+	}
+	for(ll i=0;i<=60;++i)
+	{
+		for(ll j=0;j<=60;++j)
+		{
+			if(pow_x[i]!=-1&&pow_y[j]!=-1&&pow_x[i]+pow_y[j]>=l&&pow_x[i]+pow_y[j]<=r)
 			{
-				tmp.push_back(j);
+				a.push_back(pow_x[i]+pow_y[j]);
 			}
 		}
-		for(int i=0;i<(int)tmp.size();++i)
-		{
-			cur.push_back(get(i,tmp));
-		}
-		cur.push_back(0);
-		a.push_back(cur);
 	}
-	cout<<minTime(k,a)<<'\n';
+	if((ll)a.size()==0)
+	{
+		cout<<r-l+1<<'\n';
+	}
+	else
+	{
+		sort(a.begin(),a.end());
+		ll ans=max({0LL,a[0]-l,r-a.back()});
+		for(ll i=1;i<(ll)a.size();++i)
+		{
+			ans=max(ans,a[i]-a[i-1]-1);
+		}
+		cout<<ans<<'\n';
+	}
 	return 0;
 }
