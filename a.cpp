@@ -8,51 +8,100 @@ using namespace std;
 #endif
 
 typedef long long ll;
-typedef long double ld;
+
+const ll mod=998244353;
+
+inline ll add(ll a,ll b)
+{
+	return (a%mod+b%mod)%mod;
+}
+
+inline ll sub(ll a,ll b)
+{
+	return (a%mod-b%mod+mod)%mod;
+}
 
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	ll w,b;
-	cin>>w>>b;
-	ld dp[w+1][b+1][2];
-	dp[0][0][0]=0;
-	dp[0][0][1]=1;
-	for(ll i=1;i<=w;++i)
+	ll tc;
+	cin>>tc;
+	while(tc--)
 	{
-		dp[i][0][0]=1;
-		dp[i][0][1]=1;
-	}
-	for(ll i=1;i<=b;++i)
-	{
-		dp[0][i][0]=0;
-		dp[0][i][1]=1;
-	}
-	for(ll i=1;i<=w;++i)
-	{
-		for(ll j=1;j<=b;++j)
+		ll n,m,d_same,d_up=-1,ans=0;
+		cin>>n>>m>>d_same;
+		d_up+=d_same;
+		vector<string> a(n);
+		vector<vector<ll>> dp(n,vector<ll>(m,0));
+		for(auto &v:a)
 		{
-			dp[i][j][1]=(ld)i/(i+j)+((ld)j/(i+j))*((ld)1-dp[i][j-1][0]);
-			dp[i][j][0]=(ld)i/(i+j)+((ld)j/(i+j))*((ld)i/(i+j-1)*((ld)1-dp[i-1][j-1][1]));
-			if(j>=2)
+			cin>>v;
+		}
+		for(ll i=0;i<n;++i)
+		{
+			if(i==0)
 			{
-				dp[i][j][0]+=((ld)j/(i+j))*((ld)(j-1)/(i+j-1)*((ld)1-dp[i][j-2][1]));
+				ll s=0;
+				vector<ll> pre(m,0);
+				for(ll j=0;j<m;++j)
+				{
+					s+=(a[i][j]=='X');
+					pre[j]=s;
+				}
+				for(ll j=0;j<m;++j)
+				{
+					if(a[i][j]!='X')
+					{
+						continue;
+					}
+					ll lb=max(j-d_same,0LL),ub=min(m-1,j+d_same);
+					dp[i][j]=sub(pre[ub],((lb==0)?0LL:pre[lb-1]));
+				}
+			}
+			else
+			{
+				ll s=0;
+				vector<ll> pre_pvs(m,0),pre_cur(m,0);
+				for(ll j=0;j<m;++j)
+				{
+					s=add(s,dp[i-1][j]);
+					pre_pvs[j]=s;
+				}
+				for(ll j=0;j<m;++j)
+				{
+					if(a[i][j]!='X')
+					{
+						continue;
+					}
+					ll lb=max(j-d_up,0LL),ub=min(m-1,j+d_up);
+					pre_cur[j]=sub(pre_pvs[ub],((lb==0)?0LL:pre_pvs[lb-1]));
+				}
+				for(ll j=1;j<m;++j)
+				{
+					pre_cur[j]=add(pre_cur[j],pre_cur[j-1]);
+				}
+				for(ll j=0;j<m;++j)
+				{
+					if(a[i][j]!='X')
+					{
+						continue;
+					}
+					ll lb=max(j-d_same,0LL),ub=min(m-1,j+d_same);
+					dp[i][j]=sub(pre_cur[ub],((lb==0)?0LL:pre_cur[lb-1]));
+				}
 			}
 		}
+		for(ll j=0;j<m;++j)
+		{
+			if(a[n-1][j]!='X')
+			{
+				continue;
+			}
+			ans=add(ans,dp[n-1][j]);
+		}
+		cout<<ans<<'\n';
 	}
-	cout<<fixed<<setprecision(9)<<dp[w][b][0]<<'\n';
 	return 0;
 }
-
-
-/*
-
-
-i->white j->black
-
-dp[i][j][chance] = i/(i+j) + (j/(i+j))(1-dp[i][j-1][1-chance])   if chance == dragon (ie 1)
-dp[i][j][chance] = i/(i+j) + (j/(i+j))((j-1)/(i+j-1)(1-dp[i][j-2][1-chance]) + i/(i+j-1)(1-dp[i-1][j-1][1-chance])) if chance == princess (ie 0)
-
-*/
