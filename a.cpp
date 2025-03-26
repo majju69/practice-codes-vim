@@ -7,48 +7,52 @@ using namespace std;
 	#define debug(x)
 #endif
 
-typedef long long ll;
-
-ll get(deque<ll> &a)
+int get(int k,vector<int> &a)
 {
-	ll total_cnt=a.size(),cur_cnt=0,total_sum=0,cur_sum=0,lb=a[0],ub=a.back(),ans=1e18;
-	for(auto &v:a)
+	int n=a.size(),ans=1e9;
+	for(int i=0;i<=k;++i)
 	{
-		total_sum+=v;
-	}
-	for(ll i=lb;i<=ub;++i)
-	{
-		if(i==a[0])
-		{
-			cur_cnt++;
-			cur_sum+=i;
-			a.pop_front();
-		}
-		ll left_cnt=cur_cnt,left_sum=cur_sum,right_cnt=total_cnt-left_cnt,right_sum=total_sum-cur_sum;
-		ll left=left_cnt*i-left_sum,right=right_sum-i*right_cnt;
-		ans=min(ans,left+right);
+		int left=a[i],right=a[n-1-(k-i)];
+		ans=min(ans,max(0,right-left+1));
 	}
 	return ans;
 }
 
-ll get(deque<ll> a,ll d)
+int dp[501][501];
+
+int solve(int i,int k,vector<vector<int>> &a)
 {
-	if(d==1)
+	if(i>=(int)a.size())
 	{
-		return 1e18;
+		return 0;
 	}
-	ll ans=0;
-	while((ll)a.size())
+	if(dp[i][k]!=-1)
 	{
-		deque<ll> tmp;
-		for(ll i=0;i<d;++i)
+		return dp[i][k];
+	}
+	int ans=1e9;
+	for(int j=0;j<(int)a[i].size();++j)
+	{
+		if(j>k)
 		{
-			tmp.push_back(a[0]);
-			a.pop_front();
+			break;
 		}
-		ans+=get(tmp);
+		ans=min(ans,solve(i+1,k-j,a)+a[i][j]);
 	}
-	return ans;
+	return dp[i][k]=ans;
+}
+
+int minTime(int k,vector<vector<int>> &a)
+{
+	int n=a.size();
+	for(int i=0;i<=n;++i)
+	{
+		for(int j=0;j<=k;++j)
+		{
+			dp[i][j]=-1;
+		}
+	}
+	return solve(0,k,a);
 }
 
 int main()
@@ -56,35 +60,28 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	ll n,sum=0;
-	deque<ll> a;
-	cin>>n;
-	for(ll i=0;i<n;++i)
+	int n,m,k;
+	vector<vector<int>> a;
+	cin>>n>>m>>k;
+	for(int i=0;i<n;++i)
 	{
-		ll x;
-		cin>>x;
-		sum+=x;
-		if(x==1)
+		vector<int> tmp,cur;
+		string s;
+		cin>>s;
+		for(int j=0;j<m;++j)
 		{
-			a.push_back(i);
-		}
-	}
-	if(sum==1)
-	{
-		cout<<-1<<'\n';
-	}
-	else
-	{
-		ll ans=1e18;
-		for(ll i=1;i*i<=sum;++i)
-		{
-			if(sum%i==0)
+			if(s[j]=='1')
 			{
-				ans=min(ans,get(a,i));
-				ans=min(ans,get(a,sum/i));
+				tmp.push_back(j);
 			}
 		}
-		cout<<ans<<'\n';
+		for(int i=0;i<(int)tmp.size();++i)
+		{
+			cur.push_back(get(i,tmp));
+		}
+		cur.push_back(0);
+		a.push_back(cur);
 	}
+	cout<<minTime(k,a)<<'\n';
 	return 0;
 }
