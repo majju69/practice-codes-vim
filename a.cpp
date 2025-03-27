@@ -7,11 +7,17 @@ using namespace std;
 	#define debug(x)
 #endif
 
-typedef long long ll;
-
-inline bool ok(ll a,ll b)
+inline void print(set<int> &st)
 {
-	return (a==0||b==0||(a<=(ll)2e18/b&&b<=(ll)2e18/a));
+	if((int)st.size()==0)
+	{
+		cout<<"Nothing\n";
+	}
+	else
+	{
+		auto it=st.rbegin();
+		cout<<*it<<'\n';
+	}
 }
 
 int main()
@@ -19,51 +25,51 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	ll x,y,l,r,pow_x[61]={1},pow_y[61]={1};
-	vector<ll> a;
-	cin>>x>>y>>l>>r;
-	for(ll i=1;i<=60;++i)
+	int n,k,idx=-1;
+	map<int,int> mp;
+	set<int> st;
+	cin>>n>>k;
+	vector<int> a(n);
+	for(auto &v:a)
 	{
-		if(pow_x[i-1]!=-1&&ok(pow_x[i-1],x)&&x*pow_x[i-1]<r)
+		cin>>v;
+	}
+	for(int i=0;i<k;++i)
+	{
+		mp[a[i]]++;
+		if(mp[a[i]]==1)
 		{
-			pow_x[i]=x*pow_x[i-1];
+			st.insert(a[i]);
 		}
 		else
 		{
-			pow_x[i]=-1;
+			st.erase(a[i]);
 		}
-		if(pow_y[i-1]!=-1&&ok(pow_y[i-1],y)&&y*pow_y[i-1]<r)
+	}
+	print(st);
+	idx=k;
+	while(idx<n)
+	{
+		mp[a[idx]]++;
+		if(mp[a[idx]]==1)
 		{
-			pow_y[i]=y*pow_y[i-1];
+			st.insert(a[idx]);
 		}
 		else
 		{
-			pow_y[i]=-1;
+			st.erase(a[idx]);
 		}
-	}
-	for(ll i=0;i<=60;++i)
-	{
-		for(ll j=0;j<=60;++j)
+		mp[a[idx-k]]--;
+		if(mp[a[idx-k]]==1)
 		{
-			if(pow_x[i]!=-1&&pow_y[j]!=-1&&pow_x[i]+pow_y[j]>=l&&pow_x[i]+pow_y[j]<=r)
-			{
-				a.push_back(pow_x[i]+pow_y[j]);
-			}
+			st.insert(a[idx-k]);
 		}
-	}
-	if((ll)a.size()==0)
-	{
-		cout<<r-l+1<<'\n';
-	}
-	else
-	{
-		sort(a.begin(),a.end());
-		ll ans=max({0LL,a[0]-l,r-a.back()});
-		for(ll i=1;i<(ll)a.size();++i)
+		else
 		{
-			ans=max(ans,a[i]-a[i-1]-1);
+			st.erase(a[idx-k]);
 		}
-		cout<<ans<<'\n';
+		print(st);
+		idx++;
 	}
 	return 0;
 }
