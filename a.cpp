@@ -7,17 +7,80 @@ using namespace std;
 	#define debug(x)
 #endif
 
-inline void print(set<int> &st)
+typedef long long ll;
+
+const ll mod=998244353;
+
+inline ll add(ll a,ll b)
 {
-	if((int)st.size()==0)
+	return (a%mod+b%mod)%mod;
+}
+
+ll dp[1001][2001][5];
+
+ll solve(ll i,ll k,ll pvs,ll n)
+{
+	if(i>=n)
 	{
-		cout<<"Nothing\n";
+		return (k==0);
 	}
-	else
+	if(dp[i][k][pvs]!=-1)
 	{
-		auto it=st.rbegin();
-		cout<<*it<<'\n';
+		return dp[i][k][pvs];
 	}
+	ll ans=0;
+	for(int j=0;j<4;++j)
+	{
+		if(pvs==0||pvs==3)
+		{
+			if(pvs==j)
+			{
+				ans=add(ans,solve(i+1,k,j,n));
+			}
+			else
+			{
+				if(k>=1)
+				{
+					ans=add(ans,solve(i+1,k-1,j,n));
+				}
+			}
+		}
+		else
+		{
+			if(pvs+j==3)
+			{
+				if(k>=2)
+				{
+					ans=add(ans,solve(i+1,k-2,j,n));
+				}
+			}
+			else
+			{
+				ans=add(ans,solve(i+1,k,j,n));
+			}
+		}
+	}
+	return dp[i][k][pvs]=ans;
+}
+
+ll countColourings(ll k,ll n)
+{
+	for(ll i=0;i<=n;++i)
+	{
+		for(ll j=0;j<=k;++j)
+		{
+			dp[i][j][0]=dp[i][j][1]=dp[i][j][2]=dp[i][j][3]=dp[i][j][4]=-1;
+		}
+	}
+	ll ans=0;
+	ans=add(ans,solve(1,k-1,0,n));
+	ans=add(ans,solve(1,k-1,3,n));
+	if(k>=2)
+	{
+		ans=add(ans,solve(1,k-2,2,n));
+		ans=add(ans,solve(1,k-2,1,n));
+	}
+	return ans;
 }
 
 int main()
@@ -25,51 +88,8 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n,k,idx=-1;
-	map<int,int> mp;
-	set<int> st;
+	ll n,k;
 	cin>>n>>k;
-	vector<int> a(n);
-	for(auto &v:a)
-	{
-		cin>>v;
-	}
-	for(int i=0;i<k;++i)
-	{
-		mp[a[i]]++;
-		if(mp[a[i]]==1)
-		{
-			st.insert(a[i]);
-		}
-		else
-		{
-			st.erase(a[i]);
-		}
-	}
-	print(st);
-	idx=k;
-	while(idx<n)
-	{
-		mp[a[idx]]++;
-		if(mp[a[idx]]==1)
-		{
-			st.insert(a[idx]);
-		}
-		else
-		{
-			st.erase(a[idx]);
-		}
-		mp[a[idx-k]]--;
-		if(mp[a[idx-k]]==1)
-		{
-			st.insert(a[idx-k]);
-		}
-		else
-		{
-			st.erase(a[idx-k]);
-		}
-		print(st);
-		idx++;
-	}
+	cout<<countColourings(k,n)<<'\n';
 	return 0;
 }
