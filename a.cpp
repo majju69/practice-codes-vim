@@ -7,80 +7,73 @@ using namespace std;
 	#define debug(x)
 #endif
 
-typedef long long ll;
+int dp[200001][4];
 
-const ll mod=998244353;
-
-inline ll add(ll a,ll b)
+int solve(int i,int pvs,vector<int> &a)		// 0 -> pos    1 -> neg    2 -> no op
 {
-	return (a%mod+b%mod)%mod;
-}
-
-ll dp[1001][2001][5];
-
-ll solve(ll i,ll k,ll pvs,ll n)
-{
-	if(i>=n)
+	if(i>=(int)a.size())
 	{
-		return (k==0);
+		return 0;
 	}
-	if(dp[i][k][pvs]!=-1)
+	if(dp[i][pvs]!=-1)
 	{
-		return dp[i][k][pvs];
+		return dp[i][pvs];
 	}
-	ll ans=0;
-	for(int j=0;j<4;++j)
+	if(a[i-1]>a[i])
 	{
-		if(pvs==0||pvs==3)
+		if(pvs==1)
 		{
-			if(pvs==j)
-			{
-				ans=add(ans,solve(i+1,k,j,n));
-			}
-			else
-			{
-				if(k>=1)
-				{
-					ans=add(ans,solve(i+1,k-1,j,n));
-				}
-			}
+			return dp[i][pvs]=min({solve(i+1,1,a),solve(i+1,0,a)+1,solve(i+1,2,a)});
+		}
+		else if(pvs==0)
+		{
+			return dp[i][pvs]=solve(i+1,0,a)+1;
 		}
 		else
 		{
-			if(pvs+j==3)
-			{
-				if(k>=2)
-				{
-					ans=add(ans,solve(i+1,k-2,j,n));
-				}
-			}
-			else
-			{
-				ans=add(ans,solve(i+1,k,j,n));
-			}
+			return dp[i][pvs]=solve(i+1,0,a)+1;
 		}
 	}
-	return dp[i][k][pvs]=ans;
+	else if(a[i-1]<a[i])
+	{
+		if(pvs==0)
+		{
+			return dp[i][pvs]=solve(i+1,0,a);
+		}
+		else if(pvs==1)
+		{
+			return dp[i][pvs]=min({solve(i+1,0,a),solve(i+1,1,a)+1,solve(i+1,2,a)});
+		}
+		else
+		{
+			return dp[i][pvs]=min(solve(i+1,2,a),solve(i+1,0,a)+1);
+		}
+	}
+	else
+	{
+		if(pvs==0)
+		{
+			return dp[i][pvs]=solve(i+1,0,a)+1;
+		}
+		else if(pvs==1)
+		{
+			return dp[i][pvs]=min({solve(i+1,0,a),solve(i+1,1,a)+1,solve(i+1,2,a)});
+		}
+		else
+		{
+			return dp[i][pvs]=solve(i+1,0,a)+1;
+		}
+	}
 }
 
-ll countColourings(ll k,ll n)
+int countOperations(vector<int> &a)
 {
-	for(ll i=0;i<=n;++i)
+	int n=a.size();
+	for(int i=0;i<=n;++i)
 	{
-		for(ll j=0;j<=k;++j)
-		{
-			dp[i][j][0]=dp[i][j][1]=dp[i][j][2]=dp[i][j][3]=dp[i][j][4]=-1;
-		}
+		dp[i][0]=dp[i][1]=dp[i][2]=dp[i][3]=-1;
 	}
-	ll ans=0;
-	ans=add(ans,solve(1,k-1,0,n));
-	ans=add(ans,solve(1,k-1,3,n));
-	if(k>=2)
-	{
-		ans=add(ans,solve(1,k-2,2,n));
-		ans=add(ans,solve(1,k-2,1,n));
-	}
-	return ans;
+	return min({solve(1,1,a)+1,solve(1,0,a)+1,solve(1,2,a)});
 }
 
 int main()
@@ -88,8 +81,18 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	ll n,k;
-	cin>>n>>k;
-	cout<<countColourings(k,n)<<'\n';
+	int tc;
+	cin>>tc;
+	while(tc--)
+	{
+		int n;
+		cin>>n;
+		vector<int> a(n);
+		for(auto &v:a)
+		{
+			cin>>v;
+		}
+		cout<<countOperations(a)<<'\n';
+	}
 	return 0;
 }
