@@ -7,57 +7,45 @@ using namespace std;
 	#define debug(x)
 #endif
 
+typedef long long ll;
+
+inline ll bit(ll a,ll i)
+{
+	return a>>i&1;
+}
+
+ll gcd(ll a,ll b)
+{
+	return ((b==0)?a:gcd(b,a%b));
+}
+
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n,k;
-	cin>>n>>k;
-	vector<int> a(n),ans;
-	vector<vector<bool>> dp(k+1,vector<bool>(k+1,0));
+	ll n;
+	cin>>n;
+	vector<ll> a(n),g((1LL<<n),0),dp((1LL<<n),0);
 	for(auto &v:a)
 	{
 		cin>>v;
 	}
-	dp[0][0]=1;
-	for(int i=0;i<n;++i)
+	for(ll mask=1;mask<(1LL<<n);++mask)
 	{
-		vector<vector<bool>> ndp=dp;
-		for(int x=0;x<=k;++x)
-		{
-			for(int y=0;y<=k;++y)
-			{
-				if(x>=a[i]&&dp[x-a[i]][y])
-				{
-					ndp[x][y]=1;
-				}
-				if(y>=a[i]&&dp[x][y-a[i]])
-				{
-					ndp[x][y]=1;
-				}
-			}
-		}
-		dp=ndp;
+		ll lsb=__builtin_ctzll(mask);
+		g[mask]=gcd(g[mask^(1LL<<lsb)],a[lsb]);
 	}
-	for(int i=0;i<=k/2;++i)
+	for(ll mask=1;mask<(1LL<<n);++mask)
 	{
-		int x=i,y=k-i;
-		if(dp[x][y])
+		for(ll i=0;i<n;++i)
 		{
-			ans.push_back(x);
-			if(x!=y)
+			if(bit(mask,i))
 			{
-				ans.push_back(y);
+				dp[mask]=max(dp[mask],g[mask]+dp[mask^(1LL<<i)]);
 			}
 		}
 	}
-	sort(ans.begin(),ans.end());
-	cout<<(int)ans.size()<<'\n';
-	for(auto &v:ans)
-	{
-		cout<<v<<' ';
-	}
-	cout<<'\n';
+	cout<<dp[(1LL<<n)-1]<<'\n';
 	return 0;
 }
