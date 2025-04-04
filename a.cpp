@@ -7,112 +7,124 @@ using namespace std;
 	#define debug(x)
 #endif
 
-class SegmentTree
+typedef long long ll;
+
+const ll mod=998244353;
+
+vector<long long> fact(1000011);
+
+void fillFact()
 {
-
-private:
-
-	vector<int> seg;
-
-public:
-
-	SegmentTree(int n)
+	long long n=fact.size();
+	fact[0]=1;
+	for(long long i=1;i<n;++i)
 	{
-		seg.resize(4*n+1);
+		fact[i]=(i%mod*fact[i-1]%mod)%mod;
 	}
+}
 
-	void build(int ind,int lo,int hi,vector<int> &a)
+long long power(long long a,long long b)        // Use when mod is of order 10^9 or less
+{
+	long long ans=1;
+	a=a%mod;
+	while(b)
 	{
-		if(lo==hi)
+		if(b&1)
 		{
-			seg[ind]=a[lo];
-			return;
+			ans=(ans*a)%mod;
 		}
-		int mid=lo+(hi-lo)/2;
-		build(2*ind+1,lo,mid,a);
-		build(2*ind+2,mid+1,hi,a);
-		seg[ind]=min(seg[2*ind+1],seg[2*ind+2]);
+		a=(a*a)%mod;
+		b>>=1;
 	}
+	return ans%mod;
+}
 
-	int firstBelow(int ind,int lo,int hi,int l,int r,int x)
+long long nCr(long long n,long long r)         // Ensure that fillFact() is called before this function is used
+{
+	if(n<r||n<0||r<0)
 	{
-		if(l>hi||lo>r||seg[ind]>=x)
-		{
-			return -1;
-		}
-		if(lo==hi)
-		{
-			return lo;
-		}
-		int mid=lo+(hi-lo)/2;
-		int ans=firstBelow(2*ind+1,lo,mid,l,r,x);
-		if(ans==-1)
-		{
-			ans=firstBelow(2*ind+2,mid+1,hi,l,r,x);
-		}
-		return ans;
+		return 0;
 	}
-
-	int lastBelow(int ind,int lo,int hi,int l,int r,int x)
+	if(r==n||r==0)
 	{
-		if(l>hi||lo>r||seg[ind]>=x)
-		{
-			return -1;
-		}
-		if(lo==hi)
-		{
-			return lo;
-		}
-		int mid=lo+(hi-lo)/2;
-		int ans=lastBelow(2*ind+2,mid+1,hi,l,r,x);
-		if(ans==-1)
-		{
-			ans=lastBelow(2*ind+1,lo,mid,l,r,x);
-		}
-		return ans;
+		return 1;
 	}
+	return (fact[n]*power(fact[r],mod-2)%mod*power(fact[n-r],mod-2)%mod)%mod;
+}
 
+inline ll mul(ll a,ll b)
+{
+	return (a%mod*b%mod)%mod;
+}
 
-};
+ll dp[27][500001];
+
+ll solve(ll i,ll tar,vector<ll> &a)
+{
+	if(tar==0)
+	{
+		return 1;
+	}
+	if(i>=(ll)a.size())
+	{
+		return 0;
+	}
+	if(dp[i][tar]!=-1)
+	{
+		return dp[i][tar];
+	}
+	ll skip=solve(i+1,tar,a),take=0;
+	if(a[i]<=tar)
+	{
+		take=solve(i+1,tar-a[i],a);
+	}
+	return dp[i][tar]=take+skip;
+}
+
+ll knapsack(ll tar,vector<ll> &a)
+{
+	ll n=a.size();
+	for(ll i=0;i<=n;++i)
+	{
+		for(ll j=0;j<=tar;++j)
+		{
+			dp[i][j]=-1;
+		}
+	}
+	return solve(0,tar,a);
+}
 
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n;
-	cin>>n;
-	vector<int> a(n),ans(n,-1);
-	for(auto &v:a)
+	fillFact();
+	ll tc;
+	cin>>tc;
+	while(tc--)
 	{
-		cin>>v;
-	}
-	SegmentTree st(n);
-	st.build(0,0,n-1,a);
-	for(int i=0;i<n;++i)
-	{
-		int left=st.lastBelow(0,0,n-1,0,i,a[i]),right=st.firstBelow(0,0,n-1,i,n-1,a[i]);
-		if(right==-1)
+		ll sum=0,tar=-1,ans=-1;
+		vector<ll> a;
+		for(ll i=0;i<26;++i)
 		{
-			right=n;
+			ll x;
+			cin>>x;
+			sum+=x;
+			if(x>0)
+			{
+				a.push_back(x);
+			}
 		}
-		ans[right-left-2]=max(ans[right-left-2],a[i]);
-	}
-	for(int i=n-1;i>=0;--i)
-	{
-		if(ans[i]==-1)
+		tar=sum/2;
+		ans=knapsack(tar,a);
+		ans=mul(ans,fact[tar]);
+		ans=mul(ans,fact[sum-tar]);
+		for(auto &v:a)
 		{
-			ans[i]=ans[i+1];
+			ans=mul(ans,power(fact[v],mod-2));
 		}
+		cout<<ans<<'\n';
 	}
-	for(int i=n-2;i>=0;--i)
-	{
-		ans[i]=max(ans[i],ans[i+1]);
-	}
-	for(auto &v:ans)
-	{
-		cout<<v<<' ';
-	}
-	cout<<'\n';
 	return 0;
 }
