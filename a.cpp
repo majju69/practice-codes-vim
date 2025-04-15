@@ -7,38 +7,53 @@ using namespace std;
 	#define debug(x)
 #endif
 
-typedef long long ll;
-typedef long double ld;
+const int mod=1e9+7;
+
+inline int add(int a,int b)
+{
+	return (a%mod+b%mod)%mod;
+}
+
+inline int bit(int a,int i)
+{
+	return a>>i&1;
+}
 
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	ll n,t;
-	ld p,ans=0;
-	cin>>n>>p>>t;
-	vector<vector<ld>> dp(n+1,vector<ld>(t+1,0));
-	dp[n][0]=1;
-	for(ll i=0;i<n;++i)
+	int n;
+	cin>>n;
+	vector<vector<int>> a(n,vector<int>(n,0));
+	vector<int> dp((1<<n),0);
+	dp[0]=1;
+	for(auto &vec:a)
 	{
-		dp[i][0]=0;
-	}
-	for(ll i=1;i<=t;++i)
-	{
-		dp[n][i]=dp[n][i-1]*(1-p);
-	}
-	for(ll i=n-1;i>=0;--i)
-	{
-		for(ll j=1;j<=t;++j)
+		for(auto &v:vec)
 		{
-			dp[i][j]+=dp[i+1][j-1]*p+dp[i][j-1]*(1-p);
+			cin>>v;
 		}
 	}
-	for(ll i=1;i<=n;++i)
+	for(int i=0;i<n;++i)
 	{
-		ans+=i*dp[i][t];
+		vector<int> ndp=dp;
+		for(int j=0;j<n;++j)
+		{
+			if(a[i][j]==1)
+			{
+				for(int mask=0;mask<(1<<n);++mask)
+				{
+					if(!bit(mask,j))
+					{
+						ndp[mask^(1<<j)]=add(ndp[mask^(1<<j)],dp[mask]);
+					}
+				}
+			}
+		}
+		dp=ndp;
 	}
-	cout<<fixed<<setprecision(7)<<n-ans<<'\n';
+	cout<<dp.back()<<'\n';
 	return 0;
 }
