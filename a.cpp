@@ -7,65 +7,59 @@ using namespace std;
 	#define debug(x)
 #endif
 
-int dp[200001][5][3];
+int dp[50001][5];
 
-int solve(int i,int pvs,bool left,vector<int> &a)
+int solve(int i,int pvs,int x,vector<int> &a)
 {
-	if(i>=((int)a.size()))
+	if(i>=(int)a.size())
 	{
-		if(left)
-		{
-			if(pvs==0)
-			{
-				return 0;
-			}
-			return 1e9;
-		}
-		if(pvs==0)
-		{
-			return 1e9;
-		}
-		if(pvs==1||pvs==2)
-		{
-			return 0;
-		}
-		return 1;
+		return 0;
 	}
-	if(dp[i][pvs][left]!=-1)
+	if(dp[i][pvs]!=-1)
 	{
-		return dp[i][pvs][left];
+		return dp[i][pvs];
 	}
 	if(pvs==0)
 	{
-		return dp[i][pvs][left]=solve(i+1,a[i],left,a);
+		return dp[i][pvs]=max(solve(i+1,0,x,a),solve(i+1,1,x,a)+1);
 	}
 	if(pvs==1)
 	{
-		return dp[i][pvs][left]=min({solve(i+1,(a[i]|1),left,a)+1,solve(i+1,(a[i]|2),left,a)+2,((left)?(int)1e9:solve(i+1,a[i],1,a))});
+		if(a[i]+a[i-1]>=2*x)
+		{
+			return dp[i][pvs]=max(solve(i+1,2,x,a),solve(i+1,3,x,a)+1);
+		}
+		else
+		{
+			return dp[i][pvs]=solve(i+1,2,x,a);
+		}
 	}
 	if(pvs==2)
-	{
-		return dp[i][pvs][left]=min({solve(i+1,(a[i]|2),left,a)+1,solve(i+1,(a[i]|1),left,a)+2,((left)?(int)1e9:solve(i+1,a[i],1,a))});
+	{	
+		return dp[i][pvs]=max(solve(i+1,0,x,a),solve(i+1,1,x,a)+1);
 	}
-	return dp[i][pvs][left]=min({solve(i+1,(a[i]|2),left,a)+2,solve(i+1,(a[i]|1),left,a)+2,solve(i+1,3,left,a)+2,((left)?(int)1e9:solve(i+1,a[i],1,a))+1});
+	if(a[i-2]+a[i-1]+a[i]>=3*x&&a[i-1]+a[i]>=2*x)
+	{
+		return dp[i][pvs]=max(solve(i+1,3,x,a)+1,solve(i+1,2,x,a));
+	}
+	return dp[i][pvs]=solve(i+1,2,x,a);
 }
 
-int minCost(vector<string> &s)
+int maxTake(vector<int> &a,int x)
 {
-	int n=s[0].size();
-	vector<int> a(n);
-	for(int i=0;i<n;++i)
+	int n=a.size();
+	if(n==1)
 	{
-		a[i]=(s[0][i]=='*')+2*(s[1][i]=='*');
+		return 1;
 	}
 	for(int i=0;i<=n;++i)
 	{
 		for(int j=0;j<5;++j)
 		{
-			dp[i][j][0]=dp[i][j][1]=dp[i][j][2]=-1;
+			dp[i][j]=-1;
 		}
 	}
-	return solve(1,a[0],0,a);
+	return max({solve(2,0,x,a),solve(2,1,x,a)+1,solve(2,2,x,a)+1,((a[0]+a[1]>=2*x)?solve(2,3,x,a)+2:(int)-1e9)});
 }
 
 int main()
@@ -77,10 +71,15 @@ int main()
 	cin>>tc;
 	while(tc--)
 	{
-		int n;
-		vector<string> a(2);
-		cin>>n>>a[0]>>a[1];
-		cout<<minCost(a)<<'\n';
+		int n,x;
+		cin>>n;
+		vector<int> a(n);
+		for(auto &v:a)
+		{
+			cin>>v;
+		}
+		cin>>x;
+		cout<<maxTake(a,x)<<'\n';
 	}
 	return 0;
-}	
+}
