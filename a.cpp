@@ -7,59 +7,96 @@ using namespace std;
 	#define debug(x)
 #endif
 
-int dp[50001][5];
+int dp[1001][6];		// 0->phi  1->n  2->na  3->nar  4->nare
 
-int solve(int i,int pvs,int x,vector<int> &a)
+int solve(int i,int cur,vector<string> &s)
 {
-	if(i>=(int)a.size())
+	if(i>=(int)s.size())
 	{
-		return 0;
+		return 5*(cur==5)-4*(cur==4)-3*(cur==3)-2*(cur==2)-(cur==1);
 	}
-	if(dp[i][pvs]!=-1)
+	if(dp[i][cur]!=-1e9)
 	{
-		return dp[i][pvs];
+		return dp[i][cur];
 	}
-	if(pvs==0)
+	int skip=solve(i+1,cur,s),init_cur=cur,inc=0,dec=0;
+	for(int j=0;j<(int)s[i].size();++j)
 	{
-		return dp[i][pvs]=max(solve(i+1,0,x,a),solve(i+1,1,x,a)+1);
-	}
-	if(pvs==1)
-	{
-		if(a[i]+a[i-1]>=2*x)
+		if(s[i][j]=='n')
 		{
-			return dp[i][pvs]=max(solve(i+1,2,x,a),solve(i+1,3,x,a)+1);
+			if(cur==0)
+			{
+				cur=1;
+			}
+			else
+			{
+				dec++;
+			}
+		}
+		else if(s[i][j]=='a')
+		{
+			if(cur==1)
+			{
+				cur=2;
+			}
+			else
+			{
+				dec++;
+			}
+		}
+		else if(s[i][j]=='r')
+		{
+			if(cur==2)
+			{
+				cur=3;
+			}
+			else
+			{
+				dec++;
+			}
+		}
+		else if(s[i][j]=='e')
+		{
+			if(cur==3)
+			{
+				cur=4;
+			}
+			else
+			{
+				dec++;
+			}
+		}
+		else if(s[i][j]=='k')
+		{
+			if(cur==4)
+			{
+				cur=0;
+				inc+=5;
+			}
+			else
+			{
+				dec++;
+			}
 		}
 		else
 		{
-			return dp[i][pvs]=solve(i+1,2,x,a);
+			continue;
 		}
 	}
-	if(pvs==2)
-	{	
-		return dp[i][pvs]=max(solve(i+1,0,x,a),solve(i+1,1,x,a)+1);
-	}
-	if(a[i-2]+a[i-1]+a[i]>=3*x&&a[i-1]+a[i]>=2*x)
-	{
-		return dp[i][pvs]=max(solve(i+1,3,x,a)+1,solve(i+1,2,x,a));
-	}
-	return dp[i][pvs]=solve(i+1,2,x,a);
+	return dp[i][init_cur]=max(skip,solve(i+1,cur,s)+inc-dec);
 }
 
-int maxTake(vector<int> &a,int x)
+int maxScore(vector<string> &s)
 {
-	int n=a.size();
-	if(n==1)
-	{
-		return 1;
-	}
+	int n=s.size();
 	for(int i=0;i<=n;++i)
 	{
-		for(int j=0;j<5;++j)
+		for(int j=0;j<6;++j)
 		{
-			dp[i][j]=-1;
+			dp[i][j]=-1e9;
 		}
 	}
-	return max({solve(2,0,x,a),solve(2,1,x,a)+1,solve(2,2,x,a)+1,((a[0]+a[1]>=2*x)?solve(2,3,x,a)+2:(int)-1e9)});
+	return solve(0,0,s);
 }
 
 int main()
@@ -71,15 +108,14 @@ int main()
 	cin>>tc;
 	while(tc--)
 	{
-		int n,x;
-		cin>>n;
-		vector<int> a(n);
-		for(auto &v:a)
+		int n,m;
+		cin>>n>>m;
+		vector<string> s(n);
+		for(auto &v:s)
 		{
 			cin>>v;
 		}
-		cin>>x;
-		cout<<maxTake(a,x)<<'\n';
+		cout<<maxScore(s)<<'\n';
 	}
 	return 0;
 }
