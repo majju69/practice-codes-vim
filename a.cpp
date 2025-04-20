@@ -7,96 +7,32 @@ using namespace std;
 	#define debug(x)
 #endif
 
-int dp[1001][6];		// 0->phi  1->n  2->na  3->nar  4->nare
+int dp[201][201][201];
 
-int solve(int i,int cur,vector<string> &s)
+int solve(int one,int two,int three)
 {
-	if(i>=(int)s.size())
+	if(one==0&&two==0&&three==0)
 	{
-		return 5*(cur==5)-4*(cur==4)-3*(cur==3)-2*(cur==2)-(cur==1);
+		return 0;
 	}
-	if(dp[i][cur]!=-1e9)
+	if(dp[one][two][three]!=-1)
 	{
-		return dp[i][cur];
+		return dp[one][two][three];
 	}
-	int skip=solve(i+1,cur,s),init_cur=cur,inc=0,dec=0;
-	for(int j=0;j<(int)s[i].size();++j)
+	int ans=0,cur=((((one&1)?1:0)^((two&1)?2:0)^((three&1)?3:0))==0);
+	if(one>=1)
 	{
-		if(s[i][j]=='n')
-		{
-			if(cur==0)
-			{
-				cur=1;
-			}
-			else
-			{
-				dec++;
-			}
-		}
-		else if(s[i][j]=='a')
-		{
-			if(cur==1)
-			{
-				cur=2;
-			}
-			else
-			{
-				dec++;
-			}
-		}
-		else if(s[i][j]=='r')
-		{
-			if(cur==2)
-			{
-				cur=3;
-			}
-			else
-			{
-				dec++;
-			}
-		}
-		else if(s[i][j]=='e')
-		{
-			if(cur==3)
-			{
-				cur=4;
-			}
-			else
-			{
-				dec++;
-			}
-		}
-		else if(s[i][j]=='k')
-		{
-			if(cur==4)
-			{
-				cur=0;
-				inc+=5;
-			}
-			else
-			{
-				dec++;
-			}
-		}
-		else
-		{
-			continue;
-		}
+		ans=max(ans,solve(one-1,two,three)+cur);
 	}
-	return dp[i][init_cur]=max(skip,solve(i+1,cur,s)+inc-dec);
-}
-
-int maxScore(vector<string> &s)
-{
-	int n=s.size();
-	for(int i=0;i<=n;++i)
+	if(two>=1)
 	{
-		for(int j=0;j<6;++j)
-		{
-			dp[i][j]=-1e9;
-		}
+		ans=max(ans,solve(one,two-1,three)+cur);
 	}
-	return solve(0,0,s);
+	if(three>=1)
+	{
+		ans=max(ans,solve(one,two,three-1)+cur);
+	}
+	return dp[one][two][three]=ans;
 }
 
 int main()
@@ -104,18 +40,14 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
+	memset(dp,-1,sizeof(dp));
 	int tc;
 	cin>>tc;
 	while(tc--)
 	{
-		int n,m;
-		cin>>n>>m;
-		vector<string> s(n);
-		for(auto &v:s)
-		{
-			cin>>v;
-		}
-		cout<<maxScore(s)<<'\n';
+		int one,two,three,four;
+		cin>>one>>two>>three>>four;
+		cout<<solve(one,two,three)+four/2<<'\n';
 	}
 	return 0;
 }
