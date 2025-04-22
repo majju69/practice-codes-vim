@@ -9,65 +9,36 @@ using namespace std;
 
 typedef long long ll;
 
-const ll mod=998244353;
-
-inline ll add(ll a,ll b)
-{
-	return ((a%mod)+(b%mod))%mod;
-}
-
-inline ll sub(ll a,ll b)
-{
-	return ((a%mod)-(b%mod)+mod)%mod;
-}
-
-inline ll mul(ll a,ll b)
-{
-	return ((a%mod)*(b%mod))%mod;
-}
-
-vector<bool> isPrime(300001,true);
-
-void sieve()
-{
-	long long n=isPrime.size();
-	isPrime[0]=isPrime[1]=false;
-	isPrime[2]=true;
-	for(long long p=2;p*p<n;p++)
-	{
-		if(isPrime[p]==true)
-		{
-			for(long long i=p*p;i<n;i+=p)
-			{
-				isPrime[i]=false;
-			}
-		}
-	}
-}
-
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	sieve();
-	ll n,m,mult=1,ans=0;
-	cin>>n>>m;
-	vector<ll> dp(n+1,0),tot(n+1,0);
-	dp[1]=m;
-	tot[1]=m;
-	for(ll i=2;i<=n;++i)
+	ll n,k,x,ans=-1;
+	cin>>n>>k>>x;
+	vector<ll> a(n);
+	vector<vector<ll>> dp(n,vector<ll>(x,-1e18));
+	for(auto &v:a)
 	{
-		if(isPrime[i]&&mult<=m)
-		{
-			mult*=i;
-		}
-		dp[i]=mul(dp[i-1],(m/mult));
-		tot[i]=mul(tot[i-1],m);
+		cin>>v;
 	}
-	for(ll i=1;i<=n;++i)
+	for(ll i=0;i<k;++i)
 	{
-		ans=add(ans,sub(tot[i],dp[i]));
+		dp[i][0]=a[i];
+	}
+	for(ll i1=1;i1<n;++i1)
+	{
+		for(ll i2=1;i2<x;++i2)
+		{
+			for(ll i3=i1-1;i3>=max(0LL,i1-k);--i3)
+			{
+				dp[i1][i2]=max(dp[i3][i2-1]+a[i1],dp[i1][i2]);
+			}
+		}
+	}
+	for(ll i=n-1;i>=n-k;--i)
+	{
+		ans=max(ans,dp[i][x-1]);
 	}
 	cout<<ans<<'\n';
 	return 0;
