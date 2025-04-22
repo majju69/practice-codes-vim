@@ -7,32 +7,42 @@ using namespace std;
 	#define debug(x)
 #endif
 
-int dp[201][201][201];
+typedef long long ll;
 
-int solve(int one,int two,int three)
+const ll mod=998244353;
+
+inline ll add(ll a,ll b)
 {
-	if(one==0&&two==0&&three==0)
+	return ((a%mod)+(b%mod))%mod;
+}
+
+inline ll sub(ll a,ll b)
+{
+	return ((a%mod)-(b%mod)+mod)%mod;
+}
+
+inline ll mul(ll a,ll b)
+{
+	return ((a%mod)*(b%mod))%mod;
+}
+
+vector<bool> isPrime(300001,true);
+
+void sieve()
+{
+	long long n=isPrime.size();
+	isPrime[0]=isPrime[1]=false;
+	isPrime[2]=true;
+	for(long long p=2;p*p<n;p++)
 	{
-		return 0;
+		if(isPrime[p]==true)
+		{
+			for(long long i=p*p;i<n;i+=p)
+			{
+				isPrime[i]=false;
+			}
+		}
 	}
-	if(dp[one][two][three]!=-1)
-	{
-		return dp[one][two][three];
-	}
-	int ans=0,cur=((((one&1)?1:0)^((two&1)?2:0)^((three&1)?3:0))==0);
-	if(one>=1)
-	{
-		ans=max(ans,solve(one-1,two,three)+cur);
-	}
-	if(two>=1)
-	{
-		ans=max(ans,solve(one,two-1,three)+cur);
-	}
-	if(three>=1)
-	{
-		ans=max(ans,solve(one,two,three-1)+cur);
-	}
-	return dp[one][two][three]=ans;
 }
 
 int main()
@@ -40,14 +50,25 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	memset(dp,-1,sizeof(dp));
-	int tc;
-	cin>>tc;
-	while(tc--)
+	sieve();
+	ll n,m,mult=1,ans=0;
+	cin>>n>>m;
+	vector<ll> dp(n+1,0),tot(n+1,0);
+	dp[1]=m;
+	tot[1]=m;
+	for(ll i=2;i<=n;++i)
 	{
-		int one,two,three,four;
-		cin>>one>>two>>three>>four;
-		cout<<solve(one,two,three)+four/2<<'\n';
+		if(isPrime[i]&&mult<=m)
+		{
+			mult*=i;
+		}
+		dp[i]=mul(dp[i-1],(m/mult));
+		tot[i]=mul(tot[i-1],m);
 	}
+	for(ll i=1;i<=n;++i)
+	{
+		ans=add(ans,sub(tot[i],dp[i]));
+	}
+	cout<<ans<<'\n';
 	return 0;
 }
