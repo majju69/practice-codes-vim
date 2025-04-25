@@ -7,11 +7,10 @@ using namespace std;
 	#define debug(x)
 #endif
 
-typedef long long ll;
-
-inline ll bit(ll a,ll i)
+bool cmp(string &s1,string &s2)
 {
-	return a>>i&1;
+	string f=s1+s2,s=s2+s1;
+	return f<s;
 }
 
 int main()
@@ -19,33 +18,18 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	ll n,freq[20]={0},ans=0;
+	int n;
 	cin>>n;
-	for(ll i=0;i<n;++i)
+	vector<string> a(n);
+	for(auto &v:a)
 	{
-		ll x;
-		cin>>x;
-		for(ll j=0;j<20;++j)
-		{
-			if(bit(x,j))
-			{
-				freq[j]++;
-			}
-		}
+		cin>>v;
 	}
-	for(ll i=0;i<n;++i)
+	sort(a.begin(),a.end(),cmp);
+	for(auto &v:a)
 	{
-		ll x=0;
-		for(ll j=0;j<20;++j)
-		{
-			if(freq[j]>0)
-			{
-				x+=(1LL<<j);
-				freq[j]--;
-			}
-		}
-		ans+=x*x;
+		cout<<v;
 	}
-	cout<<ans<<'\n';
+	cout<<'\n';
 	return 0;
 }
