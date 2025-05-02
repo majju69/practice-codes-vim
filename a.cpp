@@ -7,48 +7,25 @@ using namespace std;
 	#define debug(x)
 #endif
 
-inline int bit(int a,int i)
+typedef long long ll;
+
+vector<vector<ll>> divisors(1000001);
+
+void fillDivisors()
 {
-	return a>>i&1;
+	ll n=divisors.size();
+	for(ll i=2;i<n;i++)
+	{
+		for(ll j=i;j<n;j+=i)
+		{
+			divisors[j].push_back(i);
+		}
+	}
 }
 
-int maxProfit(int n,vector<vector<int>> &edges,vector<int> &score)
+inline ll get(ll x)
 {
-	vector<int> badMask(n,0),dp((1<<n),0);
-	for(auto &edge:edges)
-	{
-		badMask[edge[0]]|=(1<<edge[1]);
-	}
-	for(int mask=1;mask<(1<<n);++mask)
-	{
-		int cnt=__builtin_popcount(mask);
-		if(mask==1)
-		{
-			for(int i=0;i<n;++i)
-			{
-				if(bit(mask,i))
-				{
-					dp[mask]=score[i];
-					break;
-				}
-			}
-		}
-		else
-		{
-			for(int i=0;i<n;++i)
-			{
-				if(bit(mask,i))
-				{
-					int curMask=(mask^(1<<i));
-					if((curMask&badMask[i])==0)
-					{
-						dp[mask]=max(dp[mask],dp[curMask]+cnt*score[i]);
-					}
-				}
-			}
-		}
-	}
-	return dp.back();
+	return x*(x-1)*(x-2);
 }
 
 int main()
@@ -56,18 +33,34 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n,m;
-	cin>>n>>m;
-	vector<vector<int>> edges(m,vector<int>(2,0));
-	vector<int> score(n);
-	for(auto &edge:edges)
+	fillDivisors();
+	ll tc;
+	cin>>tc;
+	while(tc--)
 	{
-		cin>>edge[0]>>edge[1];
+		ll n,ans=0;
+		map<ll,ll> mp;
+		cin>>n;
+		for(ll i=0;i<n;++i)
+		{
+			ll x;
+			cin>>x;
+			mp[x]++;
+		}
+		for(auto &v:mp)
+		{
+			ll x=v.first;
+			ans+=get(v.second);
+			for(auto &d:divisors[x])
+			{
+				ll y=x/d;
+				if(y%d==0&&mp.count(y)&&mp.count(y/d))
+				{
+					ans+=v.second*mp[y]*mp[y/d];
+				}
+			}
+		}
+		cout<<ans<<'\n';
 	}
-	for(auto &v:score)
-	{
-		cin>>v;
-	}
-	cout<<maxProfit(n,edges,score)<<'\n';
 	return 0;
 }
