@@ -7,25 +7,9 @@ using namespace std;
 	#define debug(x)
 #endif
 
-typedef long long ll;
-
-vector<vector<ll>> divisors(1000001);
-
-void fillDivisors()
+inline int bit(int a,int i)
 {
-	ll n=divisors.size();
-	for(ll i=2;i<n;i++)
-	{
-		for(ll j=i;j<n;j+=i)
-		{
-			divisors[j].push_back(i);
-		}
-	}
-}
-
-inline ll get(ll x)
-{
-	return x*(x-1)*(x-2);
+	return a>>i&1;
 }
 
 int main()
@@ -33,32 +17,56 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	fillDivisors();
-	ll tc;
+	int tc;
 	cin>>tc;
 	while(tc--)
 	{
-		ll n,ans=0;
-		map<ll,ll> mp;
-		cin>>n;
-		for(ll i=0;i<n;++i)
+		int n,m,ans=0;
+		cin>>n>>m;
+		if(n>m)
 		{
-			ll x;
-			cin>>x;
-			mp[x]++;
+			cout<<0<<'\n';
+			continue;
 		}
-		for(auto &v:mp)
+		if(n==0)
 		{
-			ll x=v.first;
-			ans+=get(v.second);
-			for(auto &d:divisors[x])
+			cout<<m+1<<'\n';
+			continue;
+		}
+		for(int i=30;i>=0;--i)
+		{
+			int _n=bit(n,i),_m=bit(m,i);
+			if(_n==0&&_m==1)
 			{
-				ll y=x/d;
-				if(y%d==0&&mp.count(y)&&mp.count(y/d))
+				ans+=(1<<i);
+				continue;
+			}
+			if(_n==1&&_m==1)
+			{
+				continue;
+			}
+			if(_n==0&&_m==0)
+			{
+				bool canSkip=0;
+				for(int j=i-1;j>=0;--j)
 				{
-					ans+=v.second*mp[y]*mp[y/d];
+					if((bit(n,j)==0&&bit(m,j)==0)||(bit(n,j)==1&&bit(m,j)==0))
+					{
+						canSkip=1;
+						break;
+					}
+				}
+				if(canSkip)
+				{
+					continue;
+				}
+				else
+				{
+					ans+=(1<<i);
+					break;
 				}
 			}
+			break;
 		}
 		cout<<ans<<'\n';
 	}
