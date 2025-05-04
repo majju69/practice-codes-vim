@@ -7,9 +7,9 @@ using namespace std;
 	#define debug(x)
 #endif
 
-inline int bit(int a,int i)
+int gcd(int a,int b)
 {
-	return a>>i&1;
+	return ((b==0)?a:gcd(b,a%b));
 }
 
 int main()
@@ -21,54 +21,19 @@ int main()
 	cin>>tc;
 	while(tc--)
 	{
-		int n,m,ans=0;
-		cin>>n>>m;
-		if(n>m)
+		int a,g=-1,cur=-1,mul=1;
+		cin>>a;
+		g=gcd(a,180);
+		cur=a/g;
+		for(int i=1;i<=180;++i)
 		{
-			cout<<0<<'\n';
-			continue;
-		}
-		if(n==0)
-		{
-			cout<<m+1<<'\n';
-			continue;
-		}
-		for(int i=30;i>=0;--i)
-		{
-			int _n=bit(n,i),_m=bit(m,i);
-			if(_n==0&&_m==1)
+			if(2*a<=cur*i*(180-a))
 			{
-				ans+=(1<<i);
-				continue;
+				mul=i;
+				break;
 			}
-			if(_n==1&&_m==1)
-			{
-				continue;
-			}
-			if(_n==0&&_m==0)
-			{
-				bool canSkip=0;
-				for(int j=i-1;j>=0;--j)
-				{
-					if((bit(n,j)==0&&bit(m,j)==0)||(bit(n,j)==1&&bit(m,j)==0))
-					{
-						canSkip=1;
-						break;
-					}
-				}
-				if(canSkip)
-				{
-					continue;
-				}
-				else
-				{
-					ans+=(1<<i);
-					break;
-				}
-			}
-			break;
 		}
-		cout<<ans<<'\n';
+		cout<<(180*mul)/g<<'\n';
 	}
 	return 0;
 }
