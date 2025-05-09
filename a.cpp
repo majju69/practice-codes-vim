@@ -7,31 +7,13 @@ using namespace std;
 	#define debug(x)
 #endif
 
-vector<int> get(vector<int> &a,int k)
+int get(long long n,int x)
 {
-	int n=a.size();
-	vector<int> ans(k,-1e9);
-	vector<vector<int>> dp(n/2+1,vector<int>(k,-1e9));
-	dp[0][0]=0;
-	dp[1][a[0]%k]=a[0];
-	for(int i1=0;i1<n-1;++i1)
+	int ans=0;
+	while(n%x==0)
 	{
-		vector<vector<int>> ndp=dp;
-		for(int i2=1;i2<=n/2;++i2)
-		{
-			for(int i3=0;i3<k;++i3)
-			{
-				ndp[i2][i3]=max({ndp[i2][i3],dp[i2][i3],dp[i2-1][((i3-a[i1+1])%k+k)%k]+a[i1+1]});
-			}
-		}
-		dp=ndp;
-	}
-	for(int i=0;i<k;++i)
-	{
-		for(int j=0;j<=n/2;++j)
-		{
-			ans[i]=max(ans[i],dp[j][i]);
-		}
+		ans++;
+		n/=x;
 	}
 	return ans;
 }
@@ -41,42 +23,39 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n,m,k;
-	cin>>n>>m>>k;
-	vector<vector<int>> a(n,vector<int>(m,0));
-	for(auto &vec:a)
+	int n,k,mx=0,ans=0;
+	vector<int> two,five;
+	cin>>n>>k;
+	for(int i=0;i<n;++i)
 	{
-		for(auto &v:vec)
-		{
-			cin>>v;
-		}
+		long long x;
+		int f=0,t=0;
+		cin>>x;
+		f=get(x,5);
+		t=get(x,2);
+		mx+=f;
+		two.push_back(t);
+		five.push_back(f);
 	}
-	if(m==1)
+	vector<vector<int>> dp(k+1,vector<int>(mx+1,-1e9));
+	dp[0][0]=0;
+	dp[1][five[0]]=two[0];
+	for(int i1=1;i1<n;++i1)
 	{
-		cout<<0<<'\n';
-	}
-	else
-	{
-		vector<vector<int>> mxSum;
-		vector<int> dp(k,0);
-		for(int i=0;i<n;++i)
+		vector<vector<int>> ndp=dp;
+		for(int i2=1;i2<=k;++i2)
 		{
-			mxSum.push_back(get(a[i],k));
-		}
-		dp=mxSum[0];
-		for(int i1=0;i1<n-1;++i1)
-		{
-			vector<int> ndp=dp;
-			for(int i2=0;i2<k;++i2)
+			for(int i3=five[i1];i3<=mx;++i3)
 			{
-				for(int i3=0;i3<k;++i3)
-				{
-					ndp[i2]=max({ndp[i2],dp[i2],dp[((i2-i3)%k+k)%k]+mxSum[i1+1][i3]});
-				}
+				ndp[i2][i3]=max(ndp[i2][i3],dp[i2-1][i3-five[i1]]+two[i1]);
 			}
-			dp=ndp;
 		}
-		cout<<dp[0]<<'\n';
+		dp=ndp;
 	}
+	for(int i=0;i<=mx;++i)
+	{
+		ans=max(ans,min(dp[k][i],i));
+	}
+	cout<<ans<<'\n';
 	return 0;
 }
