@@ -7,15 +7,28 @@ using namespace std;
 	#define debug(x)
 #endif
 
-int get(long long n,int x)
+vector<int> lpf(20000001,0);
+vector<int> primes;
+
+void leastPrimeFactor()
 {
-	int ans=0;
-	while(n%x==0)
-	{
-		ans++;
-		n/=x;
-	}
-	return ans;
+    int n=lpf.size();
+    for(int i=2;i<n;++i)
+    {
+        if(lpf[i]==0)
+        {
+            lpf[i]=i;
+            primes.push_back(i);
+        }
+        for(int j=0;i*primes[j]<n;++j)
+        {
+            lpf[i*primes[j]]=primes[j];
+            if(primes[j]==lpf[i])
+            {
+                break;
+            }
+        }
+    }
 }
 
 int main()
@@ -23,39 +36,54 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n,k,mx=0,ans=0;
-	vector<int> two,five;
-	cin>>n>>k;
-	for(int i=0;i<n;++i)
+	leastPrimeFactor();
+	int tc;
+	cin>>tc;
+	while(tc--)
 	{
-		long long x;
-		int f=0,t=0;
-		cin>>x;
-		f=get(x,5);
-		t=get(x,2);
-		mx+=f;
-		two.push_back(t);
-		five.push_back(f);
-	}
-	vector<vector<int>> dp(k+1,vector<int>(mx+1,-1e9));
-	dp[0][0]=0;
-	dp[1][five[0]]=two[0];
-	for(int i1=1;i1<n;++i1)
-	{
-		vector<vector<int>> ndp=dp;
-		for(int i2=1;i2<=k;++i2)
+		int c,d,x;
+		long long ans=0;
+		cin>>c>>d>>x;
+		for(int i=1;i*i<=x;++i)
 		{
-			for(int i3=five[i1];i3<=mx;++i3)
+			if(x%i==0)
 			{
-				ndp[i2][i3]=max(ndp[i2][i3],dp[i2-1][i3-five[i1]]+two[i1]);
+				int div=x/i;
+				if((div+d)%c==0)
+				{
+					int num=(d+div)/c,cur=1;
+					while(num>1)
+					{
+						int cur_prime=lpf[num];
+						cur*=2;
+						while(num%cur_prime==0)
+						{
+							num/=cur_prime;
+						}
+					}
+					ans+=1ll*cur;
+				}
+				if(i*i!=x)
+				{
+					div=i;
+					if((div+d)%c==0)
+					{
+						int num=(d+div)/c,cur=1;
+						while(num>1)
+						{
+							int cur_prime=lpf[num];
+							cur*=2;
+							while(num%cur_prime==0)
+							{
+								num/=cur_prime;
+							}
+						}
+						ans+=1ll*cur;
+					}
+				}
 			}
 		}
-		dp=ndp;
+		cout<<ans<<'\n';
 	}
-	for(int i=0;i<=mx;++i)
-	{
-		ans=max(ans,min(dp[k][i],i));
-	}
-	cout<<ans<<'\n';
 	return 0;
-}
+}	
