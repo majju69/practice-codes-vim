@@ -4,19 +4,61 @@ using namespace std;
 #ifdef LOCAL
 	#include"debug.h"
 #else
-	#define debug(x) 69
+	#define debug(x)
 #endif
 
-const int mod=1e9+7;
+const int N=1e5;
+int mn[4*N+1],mx[4*N+1],nxt[N],a[N],dp[N];
 
-inline int add(int a,int b)
+void build(int ind,int lo,int hi)
 {
-	return ((a%mod)+(b%mod))%mod;
+	if(lo==hi)
+	{
+		mn[ind]=a[lo];
+		mx[ind]=a[lo];
+		return;
+	}
+	int mid=lo+(hi-lo)/2;
+	build(2*ind+1,lo,mid);
+	build(2*ind+2,mid+1,hi);
+	mn[ind]=min(mn[2*ind+1],mn[2*ind+2]);
+	mx[ind]=max(mx[2*ind+1],mx[2*ind+2]);
 }
 
-inline int bit(int a,int i)
+void update(int ind,int lo,int hi,int i,int val)
 {
-	return a>>i&1;
+	if(lo==hi)
+	{
+		mn[ind]=val;
+		mx[ind]=val;
+		return;
+	}
+	int mid=lo+(hi-lo)/2;
+	if(i<=mid)
+	{
+		update(2*ind+1,lo,mid,i,val);
+	}
+	else
+	{
+		update(2*ind+2,mid+1,hi,i,val);
+	}
+	mn[ind]=min(mn[2*ind+1],mn[2*ind+2]);
+	mx[ind]=max(mx[2*ind+1],mx[2*ind+2]);
+}
+
+pair<int,int> query(int ind,int lo,int hi,int l,int r)
+{
+	if(l>hi||lo>r)
+	{
+		return {1e9+10,-1e9-10};
+	}
+	if(l<=lo&&hi<=r)
+	{
+		return {mn[ind],mx[ind]};
+	}
+	int mid=lo+(hi-lo)/2;
+	pair<int,int> left=query(2*ind+1,lo,mid,l,r),right=query(2*ind+2,mid+1,hi,l,r);
+	return {min(left.first,right.first),max(left.second,right.second)};
 }
 
 int main()
@@ -24,76 +66,57 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n,t,mx=0;
-	cin>>n>>t;
-	vector<pair<int,int>> a(n);
-	for(auto &v:a)
+	int n,s,l;
+	cin>>n>>s>>l;
+	for(int i=0;i<n;++i)
 	{
-		cin>>v.first>>v.second;
-		mx+=v.first;
-		v.second--;
+		cin>>a[i];
 	}
-	if(mx>=t)
+	build(0,0,n-1);
+	for(int i=0;i<n;++i)
 	{
-		int ans=0;
-		vector<vector<vector<int>>> dp((1<<n),vector<vector<int>>(t+1,vector<int>(3,0)));
-		sort(a.begin(),a.end());
-		for(int i=0;i<n;++i)
+		int lo=i,hi=n-1,cur=-1;
+		while(lo<=hi)
 		{
-			if(a[i].first>t)
+			int mid=lo+(hi-lo)/2;
+			pair<int,int> p=query(0,0,n-1,i,mid);
+			if(p.second-p.first<=s)
 			{
-				break;
+				cur=mid;
+				lo=mid+1;
 			}
-			dp[1<<i][a[i].first][a[i].second]=1;
-		}
-		for(int mask=1;mask<(1<<n);++mask)
-		{
-			if(__builtin_popcount(mask)!=1)
+			else
 			{
-				for(int i=0;i<n;++i)
-				{
-					if(bit(mask,i))
-					{
-						for(int j=0;j<=t;++j)
-						{
-							if(j+a[i].first>t)
-							{
-								break;
-							}
-							if(a[i].second==0)
-							{
-								dp[mask][j+a[i].first][0]=add(dp[mask][j+a[i].first][0],dp[mask^(1<<i)][j][1]);
-								dp[mask][j+a[i].first][0]=add(dp[mask][j+a[i].first][0],dp[mask^(1<<i)][j][2]);
-								continue;
-							}
-							if(a[i].second==1)
-							{
-								dp[mask][j+a[i].first][1]=add(dp[mask][j+a[i].first][1],dp[mask^(1<<i)][j][0]);
-								dp[mask][j+a[i].first][1]=add(dp[mask][j+a[i].first][1],dp[mask^(1<<i)][j][2]);
-								continue;
-							}
-							if(a[i].second==2)
-							{
-								dp[mask][j+a[i].first][2]=add(dp[mask][j+a[i].first][2],dp[mask^(1<<i)][j][1]);
-								dp[mask][j+a[i].first][2]=add(dp[mask][j+a[i].first][2],dp[mask^(1<<i)][j][0]);
-								continue;
-							}
-						}
-					}
-				}
+				hi=mid-1;
 			}
 		}
-		for(int mask=1;mask<(1<<n);++mask)
-		{
-			ans=add(ans,dp[mask][t][0]);
-			ans=add(ans,dp[mask][t][1]);
-			ans=add(ans,dp[mask][t][2]);
-		}
-		cout<<ans<<'\n';
+		nxt[i]=cur;
 	}
-	else
+	for(int i=n-1;i>=0;--i)
 	{
-		cout<<0<<'\n';
+		int lo=i+l-1,hi=nxt[i];
+		if(lo>hi)
+		{
+			dp[i]=1e9;
+		}
+		else
+		{
+			if(hi==n-1)
+			{
+				dp[i]=1;
+			}
+			else
+			{
+				pair<int,int> p=query(0,0,n-1,lo+1,hi+1);
+				dp[i]=p.first+1;
+			}
+		}
+		update(0,0,n-1,i,dp[i]);
 	}
+	if(dp[0]>n)
+	{
+		dp[0]=-1;
+	}
+	cout<<dp[0]<<'\n';
 	return 0;
-}	
+}
