@@ -7,6 +7,11 @@ using namespace std;
 	#define debug(x)
 #endif
 
+inline long long get(int n)
+{
+	return 1ll*n*(n-1)/2;
+}
+
 int main()
 {
 	ios_base::sync_with_stdio(false);
@@ -16,74 +21,48 @@ int main()
 	cin>>tc;
 	while(tc--)
 	{
-		int n,mx=0,l=-1,r=-1;
-		vector<int> a,idx[5];
-		cin>>n;
-		for(int i=0;i<n;++i)
+		int n;
+		long long m,ans=0;
+		cin>>n>>m;
+		vector<long long> cnt(n+1,0),dp(n+1,0);
+		for(int i=1;i<=n;++i)
 		{
-			int x;
-			cin>>x;
-			a.push_back(x);
-			idx[x+2].push_back(i);
+			cnt[i]=get(n/i);
 		}
-		for(int i=0;i<n;++i)
+		for(int i=n;i>=1;--i)
 		{
-			if(a[i]==0)
+			if(cnt[i]==0)
 			{
 				continue;
 			}
-			int cur_idx=upper_bound(idx[2].begin(),idx[2].end(),i)-idx[2].begin();
-			if(cur_idx>=(int)idx[2].size())
+			dp[i]=cnt[i];
+			for(int j=2*i;j<=n;j+=i)
 			{
-				cur_idx=n-1;
+				dp[i]-=dp[j];
+			}
+		}
+		for(int i=n;i>=2;--i)
+		{
+			int cost=i,batchSize=i-1;
+			long long reqBatches=m/batchSize,maxBatches=dp[i]/batchSize;
+			if(reqBatches<=maxBatches)
+			{
+				long long takenBatches=reqBatches;
+				ans+=takenBatches*cost;
+				m-=takenBatches*batchSize;
 			}
 			else
 			{
-				cur_idx=idx[2][cur_idx]-1;
-			}
-			int cnt_neg2=(upper_bound(idx[0].begin(),idx[0].end(),cur_idx)-lower_bound(idx[0].begin(),idx[0].end(),i)),cnt_neg1=(upper_bound(idx[1].begin(),idx[1].end(),cur_idx)-lower_bound(idx[1].begin(),idx[1].end(),i));
-			if((cnt_neg2+cnt_neg1)&1)
-			{
-				if(cnt_neg2+cnt_neg1==1&&a[i]<0)
-				{
-					continue;
-				}
-				int rem1=-1,rem2=-1;
-				if(cnt_neg1>0)
-				{
-					rem1=idx[1][lower_bound(idx[1].begin(),idx[1].end(),cur_idx+1)-idx[1].begin()-1]-1;
-				}
-				if(cnt_neg2>0)
-				{
-					rem2=idx[0][lower_bound(idx[0].begin(),idx[0].end(),cur_idx+1)-idx[0].begin()-1]-1;
-				}
-				if(rem2>rem1)
-				{
-					cur_idx=rem2;
-					cnt_neg2--;
-				}
-				else
-				{
-					cur_idx=rem1;
-					cnt_neg1--;
-				}
-			}
-			int cnt_2=(upper_bound(idx[4].begin(),idx[4].end(),cur_idx)-lower_bound(idx[4].begin(),idx[4].end(),i));
-			if(cnt_neg2+cnt_2>mx)
-			{
-				mx=cnt_neg2+cnt_2;
-				l=i;
-				r=cur_idx;
+				long long takenBatches=maxBatches;
+				ans+=takenBatches*cost;
+				m-=takenBatches*batchSize;
 			}
 		}
-		if(mx==0)
+		if(m>0)
 		{
-			cout<<0<<' '<<n<<'\n';
+			ans=-1;
 		}
-		else
-		{
-			cout<<l<<' '<<n-1-r<<'\n';
-		}
+		cout<<ans<<'\n';
 	}
 	return 0;
 }
