@@ -7,116 +7,83 @@ using namespace std;
 	#define debug(x)
 #endif
 
-const int N=1e5;
-int mn[4*N+1],mx[4*N+1],nxt[N],a[N],dp[N];
-
-void build(int ind,int lo,int hi)
-{
-	if(lo==hi)
-	{
-		mn[ind]=a[lo];
-		mx[ind]=a[lo];
-		return;
-	}
-	int mid=lo+(hi-lo)/2;
-	build(2*ind+1,lo,mid);
-	build(2*ind+2,mid+1,hi);
-	mn[ind]=min(mn[2*ind+1],mn[2*ind+2]);
-	mx[ind]=max(mx[2*ind+1],mx[2*ind+2]);
-}
-
-void update(int ind,int lo,int hi,int i,int val)
-{
-	if(lo==hi)
-	{
-		mn[ind]=val;
-		mx[ind]=val;
-		return;
-	}
-	int mid=lo+(hi-lo)/2;
-	if(i<=mid)
-	{
-		update(2*ind+1,lo,mid,i,val);
-	}
-	else
-	{
-		update(2*ind+2,mid+1,hi,i,val);
-	}
-	mn[ind]=min(mn[2*ind+1],mn[2*ind+2]);
-	mx[ind]=max(mx[2*ind+1],mx[2*ind+2]);
-}
-
-pair<int,int> query(int ind,int lo,int hi,int l,int r)
-{
-	if(l>hi||lo>r)
-	{
-		return {1e9+10,-1e9-10};
-	}
-	if(l<=lo&&hi<=r)
-	{
-		return {mn[ind],mx[ind]};
-	}
-	int mid=lo+(hi-lo)/2;
-	pair<int,int> left=query(2*ind+1,lo,mid,l,r),right=query(2*ind+2,mid+1,hi,l,r);
-	return {min(left.first,right.first),max(left.second,right.second)};
-}
-
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n,s,l;
-	cin>>n>>s>>l;
-	for(int i=0;i<n;++i)
+	int tc;
+	cin>>tc;
+	while(tc--)
 	{
-		cin>>a[i];
-	}
-	build(0,0,n-1);
-	for(int i=0;i<n;++i)
-	{
-		int lo=i,hi=n-1,cur=-1;
-		while(lo<=hi)
+		int n,mx=0,l=-1,r=-1;
+		vector<int> a,idx[5];
+		cin>>n;
+		for(int i=0;i<n;++i)
 		{
-			int mid=lo+(hi-lo)/2;
-			pair<int,int> p=query(0,0,n-1,i,mid);
-			if(p.second-p.first<=s)
+			int x;
+			cin>>x;
+			a.push_back(x);
+			idx[x+2].push_back(i);
+		}
+		for(int i=0;i<n;++i)
+		{
+			if(a[i]==0)
 			{
-				cur=mid;
-				lo=mid+1;
+				continue;
+			}
+			int cur_idx=upper_bound(idx[2].begin(),idx[2].end(),i)-idx[2].begin();
+			if(cur_idx>=(int)idx[2].size())
+			{
+				cur_idx=n-1;
 			}
 			else
 			{
-				hi=mid-1;
+				cur_idx=idx[2][cur_idx]-1;
+			}
+			int cnt_neg2=(upper_bound(idx[0].begin(),idx[0].end(),cur_idx)-lower_bound(idx[0].begin(),idx[0].end(),i)),cnt_neg1=(upper_bound(idx[1].begin(),idx[1].end(),cur_idx)-lower_bound(idx[1].begin(),idx[1].end(),i));
+			if((cnt_neg2+cnt_neg1)&1)
+			{
+				if(cnt_neg2+cnt_neg1==1&&a[i]<0)
+				{
+					continue;
+				}
+				int rem1=-1,rem2=-1;
+				if(cnt_neg1>0)
+				{
+					rem1=idx[1][lower_bound(idx[1].begin(),idx[1].end(),cur_idx+1)-idx[1].begin()-1]-1;
+				}
+				if(cnt_neg2>0)
+				{
+					rem2=idx[0][lower_bound(idx[0].begin(),idx[0].end(),cur_idx+1)-idx[0].begin()-1]-1;
+				}
+				if(rem2>rem1)
+				{
+					cur_idx=rem2;
+					cnt_neg2--;
+				}
+				else
+				{
+					cur_idx=rem1;
+					cnt_neg1--;
+				}
+			}
+			int cnt_2=(upper_bound(idx[4].begin(),idx[4].end(),cur_idx)-lower_bound(idx[4].begin(),idx[4].end(),i));
+			if(cnt_neg2+cnt_2>mx)
+			{
+				mx=cnt_neg2+cnt_2;
+				l=i;
+				r=cur_idx;
 			}
 		}
-		nxt[i]=cur;
-	}
-	for(int i=n-1;i>=0;--i)
-	{
-		int lo=i+l-1,hi=nxt[i];
-		if(lo>hi)
+		if(mx==0)
 		{
-			dp[i]=1e9;
+			cout<<0<<' '<<n<<'\n';
 		}
 		else
 		{
-			if(hi==n-1)
-			{
-				dp[i]=1;
-			}
-			else
-			{
-				pair<int,int> p=query(0,0,n-1,lo+1,hi+1);
-				dp[i]=p.first+1;
-			}
+			cout<<l<<' '<<n-1-r<<'\n';
 		}
-		update(0,0,n-1,i,dp[i]);
 	}
-	if(dp[0]>n)
-	{
-		dp[0]=-1;
-	}
-	cout<<dp[0]<<'\n';
 	return 0;
 }
