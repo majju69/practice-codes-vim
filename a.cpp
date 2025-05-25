@@ -7,6 +7,23 @@ using namespace std;
 	#define debug(x)
 #endif
 
+const int mod=1e9+7;
+
+inline int mul(int a,long long b)
+{
+	return (1ll*(a%mod)*(b%mod))%mod;
+}
+
+inline int add(int a,int b)
+{
+	return ((a%mod)+(b%mod))%mod;
+}
+
+inline bool bit(long long a,int i)
+{
+	return a>>i&1;
+}
+
 int main()
 {
 	ios_base::sync_with_stdio(false);
@@ -16,32 +33,40 @@ int main()
 	cin>>tc;
 	while(tc--)
 	{
-		int n;
-		long long dp[]={0,0,0};
+		int n,freq[60],ans=0;
+		memset(freq,0,sizeof(freq));
 		cin>>n;
-		vector<int> a(n),b(n);
+		long long *a=new long long[n];
 		for(int i=0;i<n;++i)
 		{
-			cin>>a[i]>>b[i];
-		}
-		dp[1]=b[0];
-		dp[2]=2*b[0];
-		for(int i=1;i<n;++i)
-		{
-			long long ndp[]={(long long)2e18,(long long)2e18,(long long)2e18};
-			for(int j=0;j<3;++j)
+			cin>>a[i];
+			for(int j=0;j<60;++j)
 			{
-				for(int k=0;k<3;++k)
+				if(bit(a[i],j))
 				{
-					if(a[i-1]+k!=a[i]+j)
-					{
-						ndp[j]=min(ndp[j],dp[k]+j*b[i]);
-					}
+					freq[j]++;
 				}
 			}
-			memcpy(dp,ndp,sizeof(dp));
 		}
-		cout<<min({dp[0],dp[1],dp[2]})<<'\n';
+		for(int i=0;i<n;++i)
+		{
+			int _or=0,_and=0;
+			for(int j=0;j<60;++j)
+			{
+				if(bit(a[i],j))
+				{
+					_and=add(_and,mul(freq[j],(1LL<<j)));
+					_or=add(_or,mul(n,(1LL<<j)));
+				}
+				else
+				{
+					_or=add(_or,mul(freq[j],(1LL<<j)));
+				}
+			}
+			ans=add(ans,mul(_or,_and));
+		}
+		cout<<ans<<'\n';
+		delete []a;
 	}
 	return 0;
 }
