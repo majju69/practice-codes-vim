@@ -7,21 +7,29 @@ using namespace std;
 	#define debug(x)
 #endif
 
-const int mod=1e9+7;
+const int N=1e5+10,BLK=317;
+int a[N],freq[1<<20];
+long long ans[N];
 
-inline int mul(int a,long long b)
+struct Query
 {
-	return (1ll*(a%mod)*(b%mod))%mod;
-}
+	int lt,rt,blk,idx;
+}qry[N];
 
-inline int add(int a,int b)
+bool cmp(Query a,Query b)
 {
-	return ((a%mod)+(b%mod))%mod;
-}
-
-inline bool bit(long long a,int i)
-{
-	return a>>i&1;
+	if(a.blk==b.blk)
+	{
+		if(a.blk&1)
+		{
+			return a.rt<b.rt;
+		}
+		else
+		{
+			return a.rt>b.rt;
+		}
+	}
+	return a.blk<b.blk;
 }
 
 int main()
@@ -29,44 +37,56 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int tc;
-	cin>>tc;
-	while(tc--)
+	int n,q,k,i1=0,i2=-1;
+	long long cur_ans=0;
+	cin>>n>>q>>k;
+	for(int i=1;i<=n;++i)
 	{
-		int n,freq[60],ans=0;
-		memset(freq,0,sizeof(freq));
-		cin>>n;
-		long long *a=new long long[n];
-		for(int i=0;i<n;++i)
+		cin>>a[i];
+		a[i]^=a[i-1];
+	}
+	for(int i=0;i<q;++i)
+	{
+		int l,r;
+		cin>>l>>r;
+		l--;
+		qry[i].lt=l;
+		qry[i].rt=r;
+		qry[i].blk=l/BLK;
+		qry[i].idx=i;
+	}
+	sort(qry,qry+q,cmp);
+	for(int i=0;i<q;++i)
+	{
+		while(qry[i].lt<i1)
 		{
-			cin>>a[i];
-			for(int j=0;j<60;++j)
-			{
-				if(bit(a[i],j))
-				{
-					freq[j]++;
-				}
-			}
+			i1--;
+			cur_ans+=freq[a[i1]^k];
+			freq[a[i1]]++;
 		}
-		for(int i=0;i<n;++i)
+		while(qry[i].rt>i2)
 		{
-			int _or=0,_and=0;
-			for(int j=0;j<60;++j)
-			{
-				if(bit(a[i],j))
-				{
-					_and=add(_and,mul(freq[j],(1LL<<j)));
-					_or=add(_or,mul(n,(1LL<<j)));
-				}
-				else
-				{
-					_or=add(_or,mul(freq[j],(1LL<<j)));
-				}
-			}
-			ans=add(ans,mul(_or,_and));
+			i2++;
+			cur_ans+=freq[a[i2]^k];
+			freq[a[i2]]++;
 		}
-		cout<<ans<<'\n';
-		delete []a;
+		while(qry[i].lt>i1)
+		{
+			freq[a[i1]]--;
+			cur_ans-=freq[a[i1]^k];
+			i1++;
+		}
+		while(qry[i].rt<i2)
+		{
+			freq[a[i2]]--;
+			cur_ans-=freq[a[i2]^k];
+			i2--;
+		}
+		ans[qry[i].idx]=cur_ans;
+	}
+	for(int i=0;i<q;++i)
+	{
+		cout<<ans[i]<<'\n';
 	}
 	return 0;
 }
