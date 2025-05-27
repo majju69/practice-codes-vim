@@ -7,29 +7,13 @@ using namespace std;
 	#define debug(x)
 #endif
 
-const int N=1e5+10,BLK=317;
-int a[N],freq[1<<20];
-long long ans[N];
-
-struct Query
+inline long long get(int n)
 {
-	int lt,rt,blk,idx;
-}qry[N];
-
-bool cmp(Query a,Query b)
-{
-	if(a.blk==b.blk)
+	if(n<=1)
 	{
-		if(a.blk&1)
-		{
-			return a.rt<b.rt;
-		}
-		else
-		{
-			return a.rt>b.rt;
-		}
+		return 0;
 	}
-	return a.blk<b.blk;
+	return 1ll*n*(n-1)/2;
 }
 
 int main()
@@ -37,56 +21,13 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n,q,k,i1=0,i2=-1;
-	long long cur_ans=0;
-	cin>>n>>q>>k;
-	for(int i=1;i<=n;++i)
+	int a,b,c,d;
+	long long ans=0;
+	cin>>a>>b>>c>>d;
+	for(int z=c;z<=d;++z)
 	{
-		cin>>a[i];
-		a[i]^=a[i-1];
+		ans+=get(z-a-b+2)-get(z-2*b+1)-get(z-a-c+1)+get(z-b-c);
 	}
-	for(int i=0;i<q;++i)
-	{
-		int l,r;
-		cin>>l>>r;
-		l--;
-		qry[i].lt=l;
-		qry[i].rt=r;
-		qry[i].blk=l/BLK;
-		qry[i].idx=i;
-	}
-	sort(qry,qry+q,cmp);
-	for(int i=0;i<q;++i)
-	{
-		while(qry[i].lt<i1)
-		{
-			i1--;
-			cur_ans+=freq[a[i1]^k];
-			freq[a[i1]]++;
-		}
-		while(qry[i].rt>i2)
-		{
-			i2++;
-			cur_ans+=freq[a[i2]^k];
-			freq[a[i2]]++;
-		}
-		while(qry[i].lt>i1)
-		{
-			freq[a[i1]]--;
-			cur_ans-=freq[a[i1]^k];
-			i1++;
-		}
-		while(qry[i].rt<i2)
-		{
-			freq[a[i2]]--;
-			cur_ans-=freq[a[i2]^k];
-			i2--;
-		}
-		ans[qry[i].idx]=cur_ans;
-	}
-	for(int i=0;i<q;++i)
-	{
-		cout<<ans[i]<<'\n';
-	}
+	cout<<1ll*(b-a+1)*(c-b+1)*(d-c+1)-ans<<'\n';
 	return 0;
 }
