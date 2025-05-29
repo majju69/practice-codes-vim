@@ -7,13 +7,44 @@ using namespace std;
 	#define debug(x)
 #endif
 
-inline long long get(int n)
+typedef long long ll;
+
+ll dp[20][3][5];
+
+ll solve(int idx,bool last,int cnt,string &s)
 {
-	if(n<=1)
+	if(idx>=(int)s.size())
 	{
-		return 0;
+		return 1;
 	}
-	return 1ll*n*(n-1)/2;
+	if(dp[idx][last][cnt]!=-1)
+	{
+		return dp[idx][last][cnt];
+	}
+	int till=(last?(s[idx]-'0'):9);
+	ll ans=0;
+	for(int i=0;i<=till;++i)
+	{
+		if(i==0)
+		{
+			ans+=solve(idx+1,(last&&i==till),cnt,s);
+		}
+		else
+		{
+			if(cnt<3)
+			{
+				ans+=solve(idx+1,(last&&i==till),cnt+1,s);
+			}
+		}
+	}
+	return dp[idx][last][cnt]=ans;
+}
+
+ll countNumbers(ll n)
+{
+	string s=to_string(n);
+	memset(dp,-1,sizeof(dp));
+	return solve(0,1,0,s);
 }
 
 int main()
@@ -21,13 +52,13 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int a,b,c,d;
-	long long ans=0;
-	cin>>a>>b>>c>>d;
-	for(int z=c;z<=d;++z)
+	int tc;
+	cin>>tc;
+	while(tc--)
 	{
-		ans+=get(z-a-b+2)-get(z-2*b+1)-get(z-a-c+1)+get(z-b-c);
+		ll l,r;
+		cin>>l>>r;
+		cout<<countNumbers(r)-countNumbers(l-1)<<'\n';
 	}
-	cout<<1ll*(b-a+1)*(c-b+1)*(d-c+1)-ans<<'\n';
 	return 0;
 }
