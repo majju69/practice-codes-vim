@@ -7,58 +7,100 @@ using namespace std;
 	#define debug(x)
 #endif
 
-typedef long long ll;
-
-ll dp[20][3][5];
-
-ll solve(int idx,bool last,int cnt,string &s)
+class SegmentTree
 {
-	if(idx>=(int)s.size())
+
+private:
+
+	vector<int> seg;
+
+public:
+
+	SegmentTree(int n)
 	{
-		return 1;
+		seg.resize(4*n+1);
 	}
-	if(dp[idx][last][cnt]!=-1)
+
+	void update(int ind,int lo,int hi,int i)
 	{
-		return dp[idx][last][cnt];
-	}
-	int till=(last?(s[idx]-'0'):9);
-	ll ans=0;
-	for(int i=0;i<=till;++i)
-	{
-		if(i==0)
+		if(lo==hi)
 		{
-			ans+=solve(idx+1,(last&&i==till),cnt,s);
+			seg[ind]=1;
+			return;
+		}
+		int mid=lo+(hi-lo)/2;
+		if(i<=mid)
+		{
+			update(2*ind+1,lo,mid,i);
 		}
 		else
 		{
-			if(cnt<3)
-			{
-				ans+=solve(idx+1,(last&&i==till),cnt+1,s);
-			}
+			update(2*ind+2,mid+1,hi,i);
 		}
+		seg[ind]=seg[2*ind+1]+seg[2*ind+2];
 	}
-	return dp[idx][last][cnt]=ans;
-}
 
-ll countNumbers(ll n)
-{
-	string s=to_string(n);
-	memset(dp,-1,sizeof(dp));
-	return solve(0,1,0,s);
-}
+	int query(int ind,int lo,int hi,int l,int r)
+	{
+		if(l>hi||lo>r)
+		{
+			return 0;
+		}
+		if(l<=lo&&hi<=r)
+		{
+			return seg[ind];
+		}
+		int mid=lo+(hi-lo)/2;
+		return query(2*ind+1,lo,mid,l,r)+query(2*ind+2,mid+1,hi,l,r);
+	}
+
+};
 
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int tc;
-	cin>>tc;
-	while(tc--)
+	int n,k,d;
+	cin>>n>>k>>d;
+	vector<int> a(n),dp(n);
+	SegmentTree st(n);
+	for(auto &v:a)
 	{
-		ll l,r;
-		cin>>l>>r;
-		cout<<countNumbers(r)-countNumbers(l-1)<<'\n';
+		cin>>v;
 	}
+	sort(a.begin(),a.end());
+	for(int i=n-k;i>=0;--i)
+	{
+		if(a[n-1]-a[i]<=d)
+		{
+			dp[i]=1;
+			st.update(0,0,n-1,i);
+		}
+	}
+	for(int i=n-k-1;i>=0;--i)
+	{
+		if(dp[i])
+		{
+			continue;
+		}
+		int lb=i+k,ub=upper_bound(a.begin(),a.end(),a[i]+d)-a.begin();
+		if(ub>=n)
+		{
+			dp[i]=1;
+			st.update(0,0,n-1,i);
+			continue;
+		}
+		if(lb<=ub)
+		{
+			int sum=st.query(0,0,n-1,lb,ub);
+			if(sum>0)
+			{
+				dp[i]=1;
+				st.update(0,0,n-1,i);
+			}
+		}
+	}
+	cout<<((dp[0]!=0)?"YES":"NO")<<'\n';
 	return 0;
 }
