@@ -7,100 +7,75 @@ using namespace std;
 	#define debug(x)
 #endif
 
-class SegmentTree
+inline int ask(int u)
 {
+	cout<<"? 1 1 "<<u+1<<endl;
+	int x;
+	cin>>x;
+	return x;
+}
 
-private:
+inline void change(int u)
+{
+	cout<<"? 2 "<<u+1<<endl;
+}
 
-	vector<int> seg;
-
-public:
-
-	SegmentTree(int n)
+inline void reply(vector<int> &a)
+{
+	cout<<"! ";
+	for(auto &v:a)
 	{
-		seg.resize(4*n+1);
+		cout<<v<<' ';
 	}
-
-	void update(int ind,int lo,int hi,int i)
-	{
-		if(lo==hi)
-		{
-			seg[ind]=1;
-			return;
-		}
-		int mid=lo+(hi-lo)/2;
-		if(i<=mid)
-		{
-			update(2*ind+1,lo,mid,i);
-		}
-		else
-		{
-			update(2*ind+2,mid+1,hi,i);
-		}
-		seg[ind]=seg[2*ind+1]+seg[2*ind+2];
-	}
-
-	int query(int ind,int lo,int hi,int l,int r)
-	{
-		if(l>hi||lo>r)
-		{
-			return 0;
-		}
-		if(l<=lo&&hi<=r)
-		{
-			return seg[ind];
-		}
-		int mid=lo+(hi-lo)/2;
-		return query(2*ind+1,lo,mid,l,r)+query(2*ind+2,mid+1,hi,l,r);
-	}
-
-};
+	cout<<endl;
+}
 
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n,k,d;
-	cin>>n>>k>>d;
-	vector<int> a(n),dp(n);
-	SegmentTree st(n);
-	for(auto &v:a)
+	int tc;
+	cin>>tc;
+	while(tc--)
 	{
-		cin>>v;
-	}
-	sort(a.begin(),a.end());
-	for(int i=n-k;i>=0;--i)
-	{
-		if(a[n-1]-a[i]<=d)
+		int n,s=0;
+		cin>>n;
+		vector<int> ans(n,0);
+		for(int i=1;i<n;++i)
 		{
-			dp[i]=1;
-			st.update(0,0,n-1,i);
+			int x;
+			cin>>x>>x;
 		}
-	}
-	for(int i=n-k-1;i>=0;--i)
-	{
-		if(dp[i])
+		s=ask(0);
+		if(s==0)
 		{
-			continue;
+			change(0);
+			s=ask(0);
 		}
-		int lb=i+k,ub=upper_bound(a.begin(),a.end(),a[i]+d)-a.begin();
-		if(ub>=n)
+		if(s==-2||s==2)
 		{
-			dp[i]=1;
-			st.update(0,0,n-1,i);
-			continue;
-		}
-		if(lb<=ub)
-		{
-			int sum=st.query(0,0,n-1,lb,ub);
-			if(sum>0)
+			int root_s=s/2;
+			change(0);
+			ans[0]=-root_s;
+			for(int i=1;i<n;++i)
 			{
-				dp[i]=1;
-				st.update(0,0,n-1,i);
+				ans[i]=ask(i);
 			}
+			reply(ans);
+			continue;
 		}
+		if(s==1||s==-1)
+		{
+			ans[0]=s;
+			for(int i=1;i<n;++i)
+			{
+				ans[i]=ask(i)-s;
+			}
+			reply(ans);
+			continue;
+		}
+		assert(0);
 	}
-	cout<<((dp[0]!=0)?"YES":"NO")<<'\n';
 	return 0;
 }
