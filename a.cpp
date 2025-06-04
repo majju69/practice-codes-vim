@@ -12,104 +12,51 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n=0,mx=0,cnt=0;
-	string s;
-	vector<int> a={0};
-	map<int,vector<int>> mp;
-	cin>>s;
-	n=s.size();
-	for(auto &v:s)
+	int tc;
+	cin>>tc;
+	while(tc--)
 	{
-		a.push_back((v=='(')?1:-1);
-	}
-	for(int i=1;i<=n;++i)
-	{
-		a[i]+=a[i-1];
-	}
-	for(int i=0;i<=n;++i)
-	{
-		mp[a[i]].push_back(i);
-	}
-	for(int i=1;i<=n;++i)
-	{
-		if(s[i-1]=='(')
+		int n,ans=1;
+		map<long long,vector<pair<int,int>>> mp;
+		cin>>n;
+		vector<int> a(n);
+		for(auto &v:a)
 		{
-			if(mp.count(a[i-1]-1))
+			cin>>v;
+		}
+		for(int i=0;i<n-1;++i)
+		{
+			for(int j=i+1;j<n;++j)
 			{
-				vector<int> &vec=mp[a[i-1]-1];
-				int idx=upper_bound(vec.begin(),vec.end(),i)-vec.begin();
-				if(idx>=(int)vec.size())
+				int x=a[j]-a[i];
+				for(int d=1;d*d<=x;++d)
 				{
-					if(mp.count(a[i-1]))
+					if(x%d==0)
 					{
-						int len=mp[a[i-1]].back()-i+1;
-						if(len>mx)
+						int d1=x/d,d2=d;
+						if((d1&1)==(d2&1))
 						{
-							mx=len;
-							cnt=1;
-						}
-						else
-						{
-							if(len==mx)
+							long long u=(d1+d2)>>1;
+							if(u*u-a[j]>=0)
 							{
-								cnt++;
+								mp[u*u-a[j]].push_back({i,j});
 							}
-						}
-					}
-				}
-				else
-				{
-					if(mp.count(a[i-1]))
-					{
-						vector<int> &vec1=mp[a[i-1]];
-						int idx1=lower_bound(vec1.begin(),vec1.end(),vec[idx])-vec1.begin()-1;
-						if(idx1>=0&&idx1<(int)vec1.size()&&vec1[idx1]>=i)
-						{
-							int len=vec1[idx1]-i+1;
-							if(len>mx)
-							{
-								mx=len;
-								cnt=1;
-							}
-							else
-							{
-								if(len==mx)
-								{
-									cnt++;
-								}
-							}
-						}
-					}
-				}
-			}
-			else
-			{
-				if(mp.count(a[i-1]))
-				{
-					int len=mp[a[i-1]].back()-i+1;
-					if(len>mx)
-					{
-						mx=len;
-						cnt=1;
-					}
-					else
-					{
-						if(len==mx)
-						{
-							cnt++;
 						}
 					}
 				}
 			}
 		}
-	}
-	if(mx==0)
-	{
-		cout<<"0 1\n";
-	}
-	else
-	{
-		cout<<mx<<' '<<cnt<<'\n';
+		for(auto &v:mp)
+		{
+			set<int> st;
+			for(auto &p:v.second)
+			{
+				st.insert(p.first);
+				st.insert(p.second);
+			}
+			ans=max(ans,(int)st.size());
+		}
+		cout<<ans<<'\n';
 	}
 	return 0;
 }
