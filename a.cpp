@@ -7,75 +7,109 @@ using namespace std;
 	#define debug(x)
 #endif
 
-inline int ask(int u)
-{
-	cout<<"? 1 1 "<<u+1<<endl;
-	int x;
-	cin>>x;
-	return x;
-}
-
-inline void change(int u)
-{
-	cout<<"? 2 "<<u+1<<endl;
-}
-
-inline void reply(vector<int> &a)
-{
-	cout<<"! ";
-	for(auto &v:a)
-	{
-		cout<<v<<' ';
-	}
-	cout<<endl;
-}
-
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int tc;
-	cin>>tc;
-	while(tc--)
+	int n=0,mx=0,cnt=0;
+	string s;
+	vector<int> a={0};
+	map<int,vector<int>> mp;
+	cin>>s;
+	n=s.size();
+	for(auto &v:s)
 	{
-		int n,s=0;
-		cin>>n;
-		vector<int> ans(n,0);
-		for(int i=1;i<n;++i)
+		a.push_back((v=='(')?1:-1);
+	}
+	for(int i=1;i<=n;++i)
+	{
+		a[i]+=a[i-1];
+	}
+	for(int i=0;i<=n;++i)
+	{
+		mp[a[i]].push_back(i);
+	}
+	for(int i=1;i<=n;++i)
+	{
+		if(s[i-1]=='(')
 		{
-			int x;
-			cin>>x>>x;
-		}
-		s=ask(0);
-		if(s==0)
-		{
-			change(0);
-			s=ask(0);
-		}
-		if(s==-2||s==2)
-		{
-			int root_s=s/2;
-			change(0);
-			ans[0]=-root_s;
-			for(int i=1;i<n;++i)
+			if(mp.count(a[i-1]-1))
 			{
-				ans[i]=ask(i);
+				vector<int> &vec=mp[a[i-1]-1];
+				int idx=upper_bound(vec.begin(),vec.end(),i)-vec.begin();
+				if(idx>=(int)vec.size())
+				{
+					if(mp.count(a[i-1]))
+					{
+						int len=mp[a[i-1]].back()-i+1;
+						if(len>mx)
+						{
+							mx=len;
+							cnt=1;
+						}
+						else
+						{
+							if(len==mx)
+							{
+								cnt++;
+							}
+						}
+					}
+				}
+				else
+				{
+					if(mp.count(a[i-1]))
+					{
+						vector<int> &vec1=mp[a[i-1]];
+						int idx1=lower_bound(vec1.begin(),vec1.end(),vec[idx])-vec1.begin()-1;
+						if(idx1>=0&&idx1<(int)vec1.size()&&vec1[idx1]>=i)
+						{
+							int len=vec1[idx1]-i+1;
+							if(len>mx)
+							{
+								mx=len;
+								cnt=1;
+							}
+							else
+							{
+								if(len==mx)
+								{
+									cnt++;
+								}
+							}
+						}
+					}
+				}
 			}
-			reply(ans);
-			continue;
-		}
-		if(s==1||s==-1)
-		{
-			ans[0]=s;
-			for(int i=1;i<n;++i)
+			else
 			{
-				ans[i]=ask(i)-s;
+				if(mp.count(a[i-1]))
+				{
+					int len=mp[a[i-1]].back()-i+1;
+					if(len>mx)
+					{
+						mx=len;
+						cnt=1;
+					}
+					else
+					{
+						if(len==mx)
+						{
+							cnt++;
+						}
+					}
+				}
 			}
-			reply(ans);
-			continue;
 		}
-		assert(0);
+	}
+	if(mx==0)
+	{
+		cout<<"0 1\n";
+	}
+	else
+	{
+		cout<<mx<<' '<<cnt<<'\n';
 	}
 	return 0;
 }
