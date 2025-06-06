@@ -7,13 +7,13 @@ using namespace std;
 	#define debug(x)
 #endif
 
-inline int get(int x,int m)
+bool cmp(pair<pair<int,int>,int> a,pair<pair<int,int>,int> b)
 {
-	if(x<0)
+	if(a.first.second==b.first.second)
 	{
-		return ((x%m)+m)%m;
+		return a.first.first<b.first.first;
 	}
-	return x%m;
+	return a.first.second<b.first.second;
 }
 
 int main()
@@ -26,77 +26,68 @@ int main()
 	while(tc--)
 	{
 		int n;
-		bool ok=0;
-		map<int,int> mp;
+		set<int> st;
 		cin>>n;
+		vector<pair<pair<int,int>,int>> a(n);
+		vector<pair<int,int>> orignal;
+		vector<int> l(n,-1),r(n,1e9+10);
 		for(int i=0;i<n;++i)
 		{
-			int x;
-			cin>>x;
-			mp[x]++;
-			if(mp[x]>=n/2)
-			{
-				ok=1;
-			}
+			cin>>a[i].first.first>>a[i].first.second;
+			a[i].second=i;
+			orignal.push_back(a[i].first);
 		}
-		if(ok)
+		sort(a.begin(),a.end());
+		for(int i=0;i<n;++i)
 		{
-			cout<<-1<<'\n';
+			int left=1e9+10,right=1e9+10;
+			if(i+1<n&&a[i+1].first.first==a[i].first.first)
+			{
+				right=a[i+1].first.second;
+			}
+			if((int)st.size()>0)
+			{
+				auto it=st.lower_bound(a[i].first.second);
+				if(it!=st.end())
+				{
+					left=*it;
+				}
+			}
+			r[a[i].second]=min(left,right);
+			st.insert(a[i].first.second);
 		}
-		else
+		st.clear();
+		sort(a.begin(),a.end(),cmp);
+		for(int i=n-1;i>=0;--i)
 		{
-			int ans=1;
-			vector<int> a;
-			map<int,vector<pair<int,int>>> mp1;
-			for(auto &v:mp)
+			int left=-1,right=-1;
+			if(i-1>=0&&a[i-1].first.second==a[i].first.second)
 			{
-				a.push_back(v.first);
+				left=a[i-1].first.first;
 			}
-			for(int i=0;i<(int)a.size()-1;++i)
+			if((int)st.size()>0)
 			{
-				for(int j=i+1;j<(int)a.size();++j)
+				auto it=st.begin();
+				if(*it<=a[i].first.first)
 				{
-					int x=a[j]-a[i];
-					for(int d=1;d*d<=x;++d)
-					{
-						if(x%d==0)
-						{
-							mp1[x/d].push_back({i,j});
-							if(d*d!=x)
-							{
-								mp1[d].push_back({i,j});
-							}
-						}
-					}
+					auto it1=--st.upper_bound(a[i].first.first);
+					right=*it1;
+					assert(right<=a[i].first.first);
 				}
 			}
-			for(auto &v:mp1)
+			l[a[i].second]=max(left,right);
+			st.insert(a[i].first.first);
+		}
+		for(int i=0;i<n;++i)
+		{
+			if(l[i]>=1&&r[i]<=1e9)
 			{
-				set<int> idx;
-				map<int,vector<int>> mod_class;
-				for(auto &p:v.second)
-				{
-					idx.insert(p.first);
-					idx.insert(p.second);
-				}
-				for(auto &i:idx)
-				{
-					mod_class[get(a[i],v.first)].push_back(a[i]);
-				}
-				for(auto &c:mod_class)
-				{
-					int cnt=0;
-					for(auto &v1:c.second)
-					{
-						cnt+=mp[v1];
-					}
-					if(cnt>=n/2)
-					{
-						ans=max(ans,v.first);
-					}
-				}
+				cout<<r[i]-l[i]-orignal[i].second+orignal[i].first<<'\n';
 			}
-			cout<<ans<<'\n';
+			else
+			{
+				cout<<0<<'\n';
+			}
 		}
 	}
 	return 0;
