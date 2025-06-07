@@ -7,14 +7,54 @@ using namespace std;
 	#define debug(x)
 #endif
 
-bool cmp(pair<pair<int,int>,int> a,pair<pair<int,int>,int> b)
+class SegmentTree
 {
-	if(a.first.second==b.first.second)
+
+private:
+
+	vector<int> seg;
+
+public:
+
+	SegmentTree(int n)
 	{
-		return a.first.first<b.first.first;
+		seg.resize(4*n+1);
 	}
-	return a.first.second<b.first.second;
-}
+
+	void update(int ind,int lo,int hi,int i)
+	{
+		if(lo==hi)
+		{
+			seg[ind]++;
+			return;
+		}
+		int mid=lo+(hi-lo)/2;
+		if(i<=mid)
+		{
+			update(2*ind+1,lo,mid,i);
+		}
+		else
+		{
+			update(2*ind+2,mid+1,hi,i);
+		}
+		seg[ind]=seg[2*ind+1]+seg[2*ind+2];
+	}
+
+	int query(int ind,int lo,int hi,int l,int r)
+	{
+		if(l>hi||lo>r)
+		{
+			return 0;
+		}
+		if(l<=lo&&hi<=r)
+		{
+			return seg[ind];
+		}
+		int mid=lo+(hi-lo)/2;
+		return query(2*ind+1,lo,mid,l,r)+query(2*ind+2,mid+1,hi,l,r);
+	}
+
+};
 
 int main()
 {
@@ -26,68 +66,41 @@ int main()
 	while(tc--)
 	{
 		int n;
-		set<int> st;
+		bool ok=0;
 		cin>>n;
-		vector<pair<pair<int,int>,int>> a(n);
-		vector<pair<int,int>> orignal;
-		vector<int> l(n,-1),r(n,1e9+10);
-		for(int i=0;i<n;++i)
+		vector<int> a(n);
+		vector<bool> present(n,0);
+		for(auto &v:a)
 		{
-			cin>>a[i].first.first>>a[i].first.second;
-			a[i].second=i;
-			orignal.push_back(a[i].first);
-		}
-		sort(a.begin(),a.end());
-		for(int i=0;i<n;++i)
-		{
-			int left=1e9+10,right=1e9+10;
-			if(i+1<n&&a[i+1].first.first==a[i].first.first)
+			cin>>v;
+			v--;
+			if(present[v])
 			{
-				right=a[i+1].first.second;
-			}
-			if((int)st.size()>0)
-			{
-				auto it=st.lower_bound(a[i].first.second);
-				if(it!=st.end())
-				{
-					left=*it;
-				}
-			}
-			r[a[i].second]=min(left,right);
-			st.insert(a[i].first.second);
-		}
-		st.clear();
-		sort(a.begin(),a.end(),cmp);
-		for(int i=n-1;i>=0;--i)
-		{
-			int left=-1,right=-1;
-			if(i-1>=0&&a[i-1].first.second==a[i].first.second)
-			{
-				left=a[i-1].first.first;
-			}
-			if((int)st.size()>0)
-			{
-				auto it=st.begin();
-				if(*it<=a[i].first.first)
-				{
-					auto it1=--st.upper_bound(a[i].first.first);
-					right=*it1;
-					assert(right<=a[i].first.first);
-				}
-			}
-			l[a[i].second]=max(left,right);
-			st.insert(a[i].first.first);
-		}
-		for(int i=0;i<n;++i)
-		{
-			if(l[i]>=1&&r[i]<=1e9)
-			{
-				cout<<r[i]-l[i]-orignal[i].second+orignal[i].first<<'\n';
+				ok=1;
 			}
 			else
 			{
-				cout<<0<<'\n';
+				present[v]=1;
 			}
+		}
+		if(ok)
+		{
+			cout<<"YES\n";
+		}
+		else
+		{
+			int cnt=0;
+			SegmentTree st(n);
+			for(auto &v:a)
+			{
+				st.update(0,0,n-1,v);
+				if(v!=n-1)
+				{
+					cnt+=st.query(0,0,n-1,v+1,n-1);
+					cnt&=1;
+				}
+			}
+			cout<<((cnt==0)?"YES":"NO")<<'\n';
 		}
 	}
 	return 0;
