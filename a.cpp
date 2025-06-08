@@ -7,101 +7,57 @@ using namespace std;
 	#define debug(x)
 #endif
 
-class SegmentTree
+typedef long long ll;
+
+ll solve(vector<ll> &a)
 {
-
-private:
-
-	vector<int> seg;
-
-public:
-
-	SegmentTree(int n)
+	ll n=a.size();
+	if(n==0)
 	{
-		seg.resize(4*n+1);
+		return 0;
 	}
-
-	void update(int ind,int lo,int hi,int i)
+	ll mn=*min_element(a.begin(),a.end());
+	if(n<=mn)
 	{
-		if(lo==hi)
+		return n;
+	}
+	ll sum=mn;
+	vector<ll> tmp;
+	for(auto &v:a)
+	{
+		if(v>mn)
 		{
-			seg[ind]++;
-			return;
-		}
-		int mid=lo+(hi-lo)/2;
-		if(i<=mid)
-		{
-			update(2*ind+1,lo,mid,i);
+			tmp.push_back(v-mn);
 		}
 		else
 		{
-			update(2*ind+2,mid+1,hi,i);
+			sum+=solve(tmp);
+			if(sum>n)
+			{
+				break;
+			}
+			tmp.clear();
 		}
-		seg[ind]=seg[2*ind+1]+seg[2*ind+2];
 	}
-
-	int query(int ind,int lo,int hi,int l,int r)
+	if(sum<n)
 	{
-		if(l>hi||lo>r)
-		{
-			return 0;
-		}
-		if(l<=lo&&hi<=r)
-		{
-			return seg[ind];
-		}
-		int mid=lo+(hi-lo)/2;
-		return query(2*ind+1,lo,mid,l,r)+query(2*ind+2,mid+1,hi,l,r);
+		sum+=solve(tmp);
 	}
-
-};
+	return min(n,sum);
+}
 
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int tc;
-	cin>>tc;
-	while(tc--)
+	ll n;
+	cin>>n;
+	vector<ll> a(n);
+	for(auto &v:a)
 	{
-		int n;
-		bool ok=0;
-		cin>>n;
-		vector<int> a(n);
-		vector<bool> present(n,0);
-		for(auto &v:a)
-		{
-			cin>>v;
-			v--;
-			if(present[v])
-			{
-				ok=1;
-			}
-			else
-			{
-				present[v]=1;
-			}
-		}
-		if(ok)
-		{
-			cout<<"YES\n";
-		}
-		else
-		{
-			int cnt=0;
-			SegmentTree st(n);
-			for(auto &v:a)
-			{
-				st.update(0,0,n-1,v);
-				if(v!=n-1)
-				{
-					cnt+=st.query(0,0,n-1,v+1,n-1);
-					cnt&=1;
-				}
-			}
-			cout<<((cnt==0)?"YES":"NO")<<'\n';
-		}
+		cin>>v;
 	}
+	cout<<solve(a)<<'\n';
 	return 0;
 }
