@@ -9,94 +9,122 @@ using namespace std;
 
 typedef long long ll;
 
-ll mult[19];
+int dp[20][2][2][1000];
 
-inline bool bit(int a,int i)
-{
-	return a>>i&1;
-}
-
-inline int get(int x)
-{
-	return (x>5)*((x-5)>>1);
-}
-
-ll dp[20][3][7][9][2][2][16];
-
-ll solve(int i,int rem3,int rem7,int rem9,bool put,bool last,int mask,string &s)
+int solve(int i,bool first,bool last,int mask,string &s,string &t)
 {
 	if(i>=(int)s.size())
 	{
-		bool ok=(put&&(rem3!=0||!bit(mask,0))&&(rem7!=0||!bit(mask,1))&&(rem9!=0||!bit(mask,2)));
-		return ok;
-	}
-	if(dp[i][rem3][rem7][rem9][put][last][mask]!=-1)
-	{
-		return dp[i][rem3][rem7][rem9][put][last][mask];
-	}
-	ll ans=0;
-	int till=(last?(s[i]-'0'):9);
-	if(!put)
-	{
-		ans+=solve(i+1,rem3,rem7,rem9,0,(last&&(till==0)),mask,s);
-	}
-	for(int j=3;j<=till;j+=2)
-	{
-		if(i==(int)s.size()-1&&j==5)
+		if(mask==0)
 		{
-			continue;
+			return 10;
 		}
-		ll m=mult[(int)s.size()-1-i];
-		int mod3=((j%3)*(m%3))%3,mod7=((j%7)*(m%7))%7,mod9=((j%9)*(m%9))%9;
-		ans+=solve(i+1,(rem3+mod3)%3,(rem7+mod7)%7,(rem9+mod9)%9,1,(last&&(j==till)),((j!=5)?(mask|(1<<get(j))):mask),s);
+		int mn=10,mx=-1;
+		for(int j=0;j<=9;++j)
+		{
+			if(mask>>j&1)
+			{
+				mx=max(mx,j);
+				mn=min(mn,j);
+			}
+		}
+		return mx-mn;
 	}
-	return dp[i][rem3][rem7][rem9][put][last][mask]=ans;
+	if(dp[i][first][last][mask]!=-1)
+	{
+		return dp[i][first][last][mask];
+	}
+	int ans=10,from=(first?(s[i]-'0'):0),till=(last?(t[i]-'0'):9);
+	for(int j=from;j<=till;++j)
+	{
+		if(j==0)
+		{
+			if(mask==0)
+			{
+				ans=min(ans,solve(i+1,(first&&(j==from)),(last&&(j==till)),mask,s,t));
+			}
+			else
+			{
+				ans=min(ans,solve(i+1,(first&&(j==from)),(last&&(j==till)),(mask|1),s,t));
+			}
+		}
+		else
+		{
+			ans=min(ans,solve(i+1,(first&&(j==from)),(last&&(j==till)),(mask|(1<<j)),s,t));
+		}
+	}
+	return dp[i][first][last][mask]=ans;
 }
 
-ll countTotal(ll n)
+int get_min(string &s,string &t)
 {
-	string s=to_string(n);
 	memset(dp,-1,sizeof(dp));
-	return solve(0,0,0,0,0,1,0,s);
+	return solve(0,1,1,0,s,t);
 }
 
-inline ll countRange(ll a,ll b)
+void print(int i,bool first,bool last,int mask,string &s,string &t)
 {
-	return countTotal(b)-countTotal(a-1);
+	if(i>=(int)s.size())
+	{
+		return;
+	}
+	int from=(first?(s[i]-'0'):0),till=(last?(t[i]-'0'):9);
+	for(int j=from;j<=till;++j)
+	{
+		if(j==0)
+		{
+			if(mask==0)
+			{
+				if(solve(i+1,(first&&(j==from)),(last&&(j==till)),mask,s,t)==dp[i][first][last][mask])
+				{
+					print(i+1,(first&&(j==from)),(last&&(j==till)),mask,s,t);
+					return;
+				}
+			}
+			else
+			{
+				if(solve(i+1,(first&&(j==from)),(last&&(j==till)),(mask|1),s,t)==dp[i][first][last][mask])
+				{
+					cout<<j;
+					print(i+1,(first&&(j==from)),(last&&(j==till)),(mask|1),s,t);
+					return;
+				}
+			}
+		}
+		else
+		{
+			if(solve(i+1,(first&&(j==from)),(last&&(j==till)),(mask|(1<<j)),s,t)==dp[i][first][last][mask])
+			{
+				cout<<j;
+				print(i+1,(first&&(j==from)),(last&&(j==till)),(mask|(1<<j)),s,t);
+				return;
+			}
+		}
+	}
 }
+
 
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	mult[0]=1;
-	for(int i=1;i<=18;++i)
-	{
-		mult[i]=mult[i-1]*10;
-	}
-	ll tc;
+	int tc;
 	cin>>tc;
 	while(tc--)
 	{
-		ll a,b,k,lo=-1,hi=-1,ans=-1;
-		cin>>a>>b>>k;
-		lo=a;
-		hi=b;
-		while(lo<=hi)
+		ll a,b;
+		cin>>a>>b;
+		string s=to_string(a),t=to_string(b);
+		reverse(s.begin(),s.end());
+		while((int)s.size()<(int)t.size())
 		{
-			ll mid=lo+(hi-lo)/2;
-			if(countRange(a,mid)>=k)
-			{
-				ans=mid;
-				hi=mid-1;
-			}
-			else
-			{
-				lo=mid+1;
-			}
+			 s.push_back('0');
 		}
-		cout<<ans<<'\n';
+		reverse(s.begin(),s.end());
+		get_min(s,t);
+		print(0,1,1,0,s,t);
+		cout<<'\n';
 	}
 	return 0;
-}	
+}
