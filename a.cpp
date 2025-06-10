@@ -7,102 +7,31 @@ using namespace std;
 	#define debug(x)
 #endif
 
-typedef long long ll;
-
-int dp[20][2][2][1000];
-
-int solve(int i,bool first,bool last,int mask,string &s,string &t)
+int get(vector<int> &left,vector<int> &right)
 {
-	if(i>=(int)s.size())
+	int n=left.size(),cnt=1,ans=1,i=1,j=0;
+	if(n==0)
 	{
-		if(mask==0)
-		{
-			return 10;
-		}
-		int mn=10,mx=-1;
-		for(int j=0;j<=9;++j)
-		{
-			if(mask>>j&1)
-			{
-				mx=max(mx,j);
-				mn=min(mn,j);
-			}
-		}
-		return mx-mn;
+		return 0;
 	}
-	if(dp[i][first][last][mask]!=-1)
+	sort(left.begin(),left.end());
+	sort(right.begin(),right.end());
+	while(i<n&&j<n)
 	{
-		return dp[i][first][last][mask];
-	}
-	int ans=10,from=(first?(s[i]-'0'):0),till=(last?(t[i]-'0'):9);
-	for(int j=from;j<=till;++j)
-	{
-		if(j==0)
+		if(left[i]<=right[j])
 		{
-			if(mask==0)
-			{
-				ans=min(ans,solve(i+1,(first&&(j==from)),(last&&(j==till)),mask,s,t));
-			}
-			else
-			{
-				ans=min(ans,solve(i+1,(first&&(j==from)),(last&&(j==till)),(mask|1),s,t));
-			}
+			cnt++;
+			ans=max(ans,cnt);
+			i++;
 		}
 		else
 		{
-			ans=min(ans,solve(i+1,(first&&(j==from)),(last&&(j==till)),(mask|(1<<j)),s,t));
+			cnt--;
+			j++;
 		}
 	}
-	return dp[i][first][last][mask]=ans;
+	return ans;
 }
-
-int get_min(string &s,string &t)
-{
-	memset(dp,-1,sizeof(dp));
-	return solve(0,1,1,0,s,t);
-}
-
-void print(int i,bool first,bool last,int mask,string &s,string &t)
-{
-	if(i>=(int)s.size())
-	{
-		return;
-	}
-	int from=(first?(s[i]-'0'):0),till=(last?(t[i]-'0'):9);
-	for(int j=from;j<=till;++j)
-	{
-		if(j==0)
-		{
-			if(mask==0)
-			{
-				if(solve(i+1,(first&&(j==from)),(last&&(j==till)),mask,s,t)==dp[i][first][last][mask])
-				{
-					print(i+1,(first&&(j==from)),(last&&(j==till)),mask,s,t);
-					return;
-				}
-			}
-			else
-			{
-				if(solve(i+1,(first&&(j==from)),(last&&(j==till)),(mask|1),s,t)==dp[i][first][last][mask])
-				{
-					cout<<j;
-					print(i+1,(first&&(j==from)),(last&&(j==till)),(mask|1),s,t);
-					return;
-				}
-			}
-		}
-		else
-		{
-			if(solve(i+1,(first&&(j==from)),(last&&(j==till)),(mask|(1<<j)),s,t)==dp[i][first][last][mask])
-			{
-				cout<<j;
-				print(i+1,(first&&(j==from)),(last&&(j==till)),(mask|(1<<j)),s,t);
-				return;
-			}
-		}
-	}
-}
-
 
 int main()
 {
@@ -113,18 +42,35 @@ int main()
 	cin>>tc;
 	while(tc--)
 	{
-		ll a,b;
-		cin>>a>>b;
-		string s=to_string(a),t=to_string(b);
-		reverse(s.begin(),s.end());
-		while((int)s.size()<(int)t.size())
+		int n,m,mx=0;
+		vector<int> left,right;
+		cin>>n>>m;
+		vector<pair<int,int>> a(n);
+		for(auto &v:a)
 		{
-			 s.push_back('0');
+			cin>>v.first>>v.second;
 		}
-		reverse(s.begin(),s.end());
-		get_min(s,t);
-		print(0,1,1,0,s,t);
-		cout<<'\n';
+		for(auto &v:a)
+		{
+			if(v.first!=1)
+			{
+				left.push_back(v.first);
+				right.push_back(v.second);
+			}
+		}
+		mx=max(mx,get(left,right));
+		left.clear();
+		right.clear();
+		for(auto &v:a)
+		{
+			if(v.second!=m)
+			{
+				left.push_back(v.first);
+				right.push_back(v.second);
+			}
+		}
+		mx=max(mx,get(left,right));
+		cout<<mx<<'\n';
 	}
 	return 0;
 }
