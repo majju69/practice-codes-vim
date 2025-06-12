@@ -7,30 +7,23 @@ using namespace std;
 	#define debug(x)
 #endif
 
-int get(vector<int> &left,vector<int> &right)
+typedef long long ll;
+
+void dfs(ll node,vector<bool> &vis,vector<ll> adj[],vector<bool> &good,vector<ll> &cur,ll &ok)
 {
-	int n=left.size(),cnt=1,ans=1,i=1,j=0;
-	if(n==0)
+	vis[node]=1;
+	cur.push_back(node);
+	if(good[node])
 	{
-		return 0;
+		ok=1;
 	}
-	sort(left.begin(),left.end());
-	sort(right.begin(),right.end());
-	while(i<n&&j<n)
+	for(auto &v:adj[node])
 	{
-		if(left[i]<=right[j])
+		if(!vis[v])
 		{
-			cnt++;
-			ans=max(ans,cnt);
-			i++;
-		}
-		else
-		{
-			cnt--;
-			j++;
+			dfs(v,vis,adj,good,cur,ok);
 		}
 	}
-	return ans;
 }
 
 int main()
@@ -38,39 +31,108 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int tc;
+	ll tc;
 	cin>>tc;
 	while(tc--)
 	{
-		int n,m,mx=0;
-		vector<int> left,right;
-		cin>>n>>m;
-		vector<pair<int,int>> a(n);
-		for(auto &v:a)
+		ll n,k,q;
+		map<ll,vector<ll>> mp_fwd,mp_bck;
+		cin>>n>>k;
+		vector<ll> pos(n),mod_class(n);
+		vector<ll> adj[2*n];
+		vector<bool> vis(2*n,0),good(2*n,0);
+		for(auto &v:pos)
 		{
-			cin>>v.first>>v.second;
+			cin>>v;
 		}
-		for(auto &v:a)
+		for(auto &v:mod_class)
 		{
-			if(v.first!=1)
+			cin>>v;
+		}
+		for(ll i=0;i<n;++i)
+		{
+			mp_fwd[((pos[i]-mod_class[i])%k+k)%k].push_back(i);
+			mp_bck[(pos[i]+mod_class[i])%k].push_back(i);
+		}
+		for(ll i=0;i<n;++i)
+		{
+			ll cur_fwd=((pos[i]-mod_class[i])%k+k)%k,cur_bck=(pos[i]+mod_class[i])%k;
+			vector<ll> &vec_fwd=mp_fwd[cur_fwd],&vec_bck=mp_bck[cur_bck];
+			auto it_fwd=upper_bound(vec_fwd.begin(),vec_fwd.end(),i);
+			if(it_fwd==vec_fwd.end())
 			{
-				left.push_back(v.first);
-				right.push_back(v.second);
+				good[2*i+1]=1;
+			}
+			else
+			{
+				adj[2*i+1].push_back(2*(*it_fwd));
+				adj[2*(*it_fwd)].push_back(2*i+1);
+			}
+			if(vec_bck[0]>=i)
+			{
+				good[2*i]=1;
+			}
+			else
+			{
+				auto it=--lower_bound(vec_bck.begin(),vec_bck.end(),i);
+				adj[2*i].push_back(2*(*it)+1);
+				adj[2*(*it)+1].push_back(2*i);
 			}
 		}
-		mx=max(mx,get(left,right));
-		left.clear();
-		right.clear();
-		for(auto &v:a)
+		for(ll i=0;i<2*n;++i)
 		{
-			if(v.second!=m)
+			if(!vis[i])
 			{
-				left.push_back(v.first);
-				right.push_back(v.second);
+				ll ok=0;
+				vector<ll> cur;
+				dfs(i,vis,adj,good,cur,ok);
+				if(ok)
+				{
+					for(auto &v:cur)
+					{
+						good[v]=1;
+					}
+				}
 			}
 		}
-		mx=max(mx,get(left,right));
-		cout<<mx<<'\n';
+		cin>>q;
+		while(q--)
+		{
+			ll x,_x=-1;
+			cin>>x;
+			_x=x;
+			x%=k;
+			if(!mp_fwd.count(x))
+			{
+				cout<<"YES\n";
+			}
+			else
+			{
+				vector<ll> &vec=mp_fwd[x];
+				if(pos[vec.back()]<_x)
+				{
+					cout<<"YES\n";
+				}
+				else
+				{
+					ll lo=0,hi=(ll)vec.size()-1,ans=-1;
+					while(lo<=hi)
+					{
+						ll mid=lo+(hi-lo)/2;
+						if(pos[vec[mid]]>=_x)
+						{
+							ans=mid;
+							hi=mid-1;
+						}
+						else
+						{
+							lo=mid+1;
+						}
+					}
+					cout<<((ans==-1||good[2*vec[ans]])?"YES":"NO")<<'\n';
+				}
+			}
+		}
 	}
 	return 0;
 }
