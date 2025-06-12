@@ -1,3 +1,4 @@
+// SAME AS HARD VERSION
 #include <bits/stdc++.h>
 using namespace std;
 
