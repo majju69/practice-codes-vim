@@ -7,48 +7,140 @@ using namespace std;
 	#define debug(x)
 #endif
 
-vector<int> primes={3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97,101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,199,211,223,227,229,233,239,241,251,257,263,269,271,277,281,283,293,307,311,313,317,331,337,347,349,353,359,367,373,379,383,389,397,401,409,419,421,431,433,439,443,449,457,461,463,467,479,487,491,499,503,509,521,523};
-
-bool is_prime(int n)
+class DisjointSet
 {
-	if(n<=1)
+
+private:
+	
+	vector<int> ultimateParent,rank,size;
+
+public:
+	
+	DisjointSet(int n)
 	{
-		return 0;
-	}
-	for(int i=2;i*i<=n;++i)
-	{
-		if(n%i==0)
+		ultimateParent.resize(n+1);
+		rank.resize(n+1,0);
+		size.resize(n+1,1);
+		for(int i=0;i<=n;++i)
 		{
-			return 0;
+			ultimateParent[i]=i;
 		}
 	}
-	return 1;
-}
+
+	int findUltimateParent(int node)
+	{
+		if(ultimateParent[node]==node)
+		{
+			return node;
+		}
+		return ultimateParent[node]=findUltimateParent(ultimateParent[node]);
+	}
+
+	int getSize(int node)
+	{
+		return size[node];
+	}
+
+	int getRank(int node)
+	{
+		return rank[node];
+	}
+
+	void unionByRank(int u,int v)
+	{
+		int ultimateParentOfU=findUltimateParent(u),ultimateParentOfV=findUltimateParent(v);
+		if(ultimateParentOfU==ultimateParentOfV)
+		{
+			return;
+		}
+		if(rank[ultimateParentOfU]<rank[ultimateParentOfV])
+		{
+			ultimateParent[ultimateParentOfU]=ultimateParentOfV;
+		}
+		else if(rank[ultimateParentOfU]>rank[ultimateParentOfV])
+		{
+			ultimateParent[ultimateParentOfV]=ultimateParentOfU;
+		}
+		else
+		{
+			ultimateParent[ultimateParentOfV]=ultimateParentOfU;
+			rank[ultimateParentOfU]++;
+		}
+	}
+
+	void unionBySize(int u,int v)
+	{
+		int ultimateParentOfU=findUltimateParent(u),ultimateParentOfV=findUltimateParent(v);
+		if(ultimateParentOfU==ultimateParentOfV)
+		{
+			return;
+		}
+		if(size[ultimateParentOfU]<size[ultimateParentOfV])
+		{
+			ultimateParent[ultimateParentOfU]=ultimateParentOfV;
+			size[ultimateParentOfV]+=size[ultimateParentOfU];
+		}
+		else
+		{
+			ultimateParent[ultimateParentOfV]=ultimateParentOfU;
+			size[ultimateParentOfU]+=size[ultimateParentOfV];
+		}
+	}
+
+};
 
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n;
-	cin>>n;
-	if(n<=7)
+	int n,m,idx=0,ans=0;
+	cin>>n>>m;
+	vector<int> mn(n,0),mx(n,0);
+	DisjointSet ds(n);
+	iota(mn.begin(),mn.end(),0);
+	iota(mx.begin(),mx.end(),0);
+	for(int i=0;i<m;++i)
 	{
-		cout<<"1\n"<<n<<'\n';
+		int u,v,mn_u=-1,mn_v=-1,mx_u=-1,mx_v=-1;
+		cin>>u>>v;
+		u--;
+		v--;
+		mn_u=mn[ds.findUltimateParent(u)];
+		mn_v=mn[ds.findUltimateParent(v)];
+		mx_u=mx[ds.findUltimateParent(u)];
+		mx_v=mx[ds.findUltimateParent(v)];
+		ds.unionBySize(u,v);
+		mn[ds.findUltimateParent(u)]=min({mn_u,mn_v,u,v});
+		mx[ds.findUltimateParent(u)]=max({mx_u,mx_v,u,v});
 	}
-	else
+	while(idx<n)
 	{
-		cout<<"3\n3 ";
-		int ans=-1;
-		for(auto &p:primes)
+		if(ds.getSize(ds.findUltimateParent(idx))==mx[ds.findUltimateParent(idx)]-mn[ds.findUltimateParent(idx)]+1)
 		{
-			if(is_prime(n-3-p))
-			{
-				ans=p;
-				break;
-			}
+			idx++;
 		}
-		cout<<ans<<' '<<n-3-ans<<'\n';
+		else
+		{
+			int cur=idx+1;
+			while(ds.getSize(ds.findUltimateParent(idx))!=mx[ds.findUltimateParent(idx)]-mn[ds.findUltimateParent(idx)]+1)
+			{
+				if(ds.findUltimateParent(idx)==ds.findUltimateParent(cur))
+				{
+					cur++;
+					continue;
+				}
+				int u=idx,v=cur;
+				int mn_u=mn[ds.findUltimateParent(u)],mn_v=mn[ds.findUltimateParent(v)],mx_u=mx[ds.findUltimateParent(u)],mx_v=mx[ds.findUltimateParent(v)];
+				ds.unionBySize(u,v);
+				ans++;
+				mn[ds.findUltimateParent(u)]=min({mn_u,mn_v,u,v});
+				mx[ds.findUltimateParent(u)]=max({mx_u,mx_v,u,v});
+				cur++;
+			}
+			idx=cur;
+		}
 	}
+	cout<<ans<<'\n';
 	return 0;
 }
