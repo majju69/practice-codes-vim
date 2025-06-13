@@ -1,4 +1,3 @@
-// SAME AS HARD VERSION
 #include <bits/stdc++.h>
 using namespace std;
 
@@ -8,23 +7,22 @@ using namespace std;
 	#define debug(x)
 #endif
 
-typedef long long ll;
+vector<int> primes={3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97,101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,199,211,223,227,229,233,239,241,251,257,263,269,271,277,281,283,293,307,311,313,317,331,337,347,349,353,359,367,373,379,383,389,397,401,409,419,421,431,433,439,443,449,457,461,463,467,479,487,491,499,503,509,521,523};
 
-void dfs(ll node,vector<bool> &vis,vector<ll> adj[],vector<bool> &good,vector<ll> &cur,ll &ok)
+bool is_prime(int n)
 {
-	vis[node]=1;
-	cur.push_back(node);
-	if(good[node])
+	if(n<=1)
 	{
-		ok=1;
+		return 0;
 	}
-	for(auto &v:adj[node])
+	for(int i=2;i*i<=n;++i)
 	{
-		if(!vis[v])
+		if(n%i==0)
 		{
-			dfs(v,vis,adj,good,cur,ok);
+			return 0;
 		}
 	}
+	return 1;
 }
 
 int main()
@@ -32,108 +30,25 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	ll tc;
-	cin>>tc;
-	while(tc--)
+	int n;
+	cin>>n;
+	if(n<=7)
 	{
-		ll n,k,q;
-		map<ll,vector<ll>> mp_fwd,mp_bck;
-		cin>>n>>k;
-		vector<ll> pos(n),mod_class(n);
-		vector<ll> adj[2*n];
-		vector<bool> vis(2*n,0),good(2*n,0);
-		for(auto &v:pos)
+		cout<<"1\n"<<n<<'\n';
+	}
+	else
+	{
+		cout<<"3\n3 ";
+		int ans=-1;
+		for(auto &p:primes)
 		{
-			cin>>v;
-		}
-		for(auto &v:mod_class)
-		{
-			cin>>v;
-		}
-		for(ll i=0;i<n;++i)
-		{
-			mp_fwd[((pos[i]-mod_class[i])%k+k)%k].push_back(i);
-			mp_bck[(pos[i]+mod_class[i])%k].push_back(i);
-		}
-		for(ll i=0;i<n;++i)
-		{
-			ll cur_fwd=((pos[i]-mod_class[i])%k+k)%k,cur_bck=(pos[i]+mod_class[i])%k;
-			vector<ll> &vec_fwd=mp_fwd[cur_fwd],&vec_bck=mp_bck[cur_bck];
-			auto it_fwd=upper_bound(vec_fwd.begin(),vec_fwd.end(),i);
-			if(it_fwd==vec_fwd.end())
+			if(is_prime(n-3-p))
 			{
-				good[2*i+1]=1;
-			}
-			else
-			{
-				adj[2*i+1].push_back(2*(*it_fwd));
-				adj[2*(*it_fwd)].push_back(2*i+1);
-			}
-			if(vec_bck[0]>=i)
-			{
-				good[2*i]=1;
-			}
-			else
-			{
-				auto it=--lower_bound(vec_bck.begin(),vec_bck.end(),i);
-				adj[2*i].push_back(2*(*it)+1);
-				adj[2*(*it)+1].push_back(2*i);
+				ans=p;
+				break;
 			}
 		}
-		for(ll i=0;i<2*n;++i)
-		{
-			if(!vis[i])
-			{
-				ll ok=0;
-				vector<ll> cur;
-				dfs(i,vis,adj,good,cur,ok);
-				if(ok)
-				{
-					for(auto &v:cur)
-					{
-						good[v]=1;
-					}
-				}
-			}
-		}
-		cin>>q;
-		while(q--)
-		{
-			ll x,_x=-1;
-			cin>>x;
-			_x=x;
-			x%=k;
-			if(!mp_fwd.count(x))
-			{
-				cout<<"YES\n";
-			}
-			else
-			{
-				vector<ll> &vec=mp_fwd[x];
-				if(pos[vec.back()]<_x)
-				{
-					cout<<"YES\n";
-				}
-				else
-				{
-					ll lo=0,hi=(ll)vec.size()-1,ans=-1;
-					while(lo<=hi)
-					{
-						ll mid=lo+(hi-lo)/2;
-						if(pos[vec[mid]]>=_x)
-						{
-							ans=mid;
-							hi=mid-1;
-						}
-						else
-						{
-							lo=mid+1;
-						}
-					}
-					cout<<((ans==-1||good[2*vec[ans]])?"YES":"NO")<<'\n';
-				}
-			}
-		}
+		cout<<ans<<' '<<n-3-ans<<'\n';
 	}
 	return 0;
 }
