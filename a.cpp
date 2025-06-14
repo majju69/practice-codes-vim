@@ -7,140 +7,78 @@ using namespace std;
 	#define debug(x)
 #endif
 
-class DisjointSet
+typedef long long ll;
+
+ll dp[5002][5002];
+
+ll solve(int i,int j,int n,vector<int> &a,vector<int> &cold,vector<int> &hot)
 {
-
-private:
-	
-	vector<int> ultimateParent,rank,size;
-
-public:
-	
-	DisjointSet(int n)
+	if(max(i,j)+1>n)
 	{
-		ultimateParent.resize(n+1);
-		rank.resize(n+1,0);
-		size.resize(n+1,1);
-		for(int i=0;i<=n;++i)
+		return 0;
+	}
+	if(dp[i][j]!=-1)
+	{
+		return dp[i][j];
+	}
+	int to_take=max(i,j)+1;
+	ll cpu1=1e18,cpu2=1e18;
+	if(i==0||a[i]!=a[to_take])
+	{
+		cpu1=solve(to_take,j,n,a,cold,hot)+cold[a[to_take]];
+	}
+	else
+	{
+		cpu1=solve(to_take,j,n,a,cold,hot)+hot[a[to_take]];
+	}
+	if(j==0||a[j]!=a[to_take])
+	{
+		cpu2=solve(i,to_take,n,a,cold,hot)+cold[a[to_take]];
+	}
+	else
+	{
+		cpu2=solve(i,to_take,n,a,cold,hot)+hot[a[to_take]];
+	}
+	return dp[i][j]=min(cpu1,cpu2);
+}
+
+ll minTime(int n,vector<int> &a,vector<int> &hot,vector<int> &cold)
+{
+	for(int i=0;i<=n+1;++i)
+	{
+		for(int j=0;j<=n+1;++j)
 		{
-			ultimateParent[i]=i;
+			dp[i][j]=-1;
 		}
 	}
-
-	int findUltimateParent(int node)
-	{
-		if(ultimateParent[node]==node)
-		{
-			return node;
-		}
-		return ultimateParent[node]=findUltimateParent(ultimateParent[node]);
-	}
-
-	int getSize(int node)
-	{
-		return size[node];
-	}
-
-	int getRank(int node)
-	{
-		return rank[node];
-	}
-
-	void unionByRank(int u,int v)
-	{
-		int ultimateParentOfU=findUltimateParent(u),ultimateParentOfV=findUltimateParent(v);
-		if(ultimateParentOfU==ultimateParentOfV)
-		{
-			return;
-		}
-		if(rank[ultimateParentOfU]<rank[ultimateParentOfV])
-		{
-			ultimateParent[ultimateParentOfU]=ultimateParentOfV;
-		}
-		else if(rank[ultimateParentOfU]>rank[ultimateParentOfV])
-		{
-			ultimateParent[ultimateParentOfV]=ultimateParentOfU;
-		}
-		else
-		{
-			ultimateParent[ultimateParentOfV]=ultimateParentOfU;
-			rank[ultimateParentOfU]++;
-		}
-	}
-
-	void unionBySize(int u,int v)
-	{
-		int ultimateParentOfU=findUltimateParent(u),ultimateParentOfV=findUltimateParent(v);
-		if(ultimateParentOfU==ultimateParentOfV)
-		{
-			return;
-		}
-		if(size[ultimateParentOfU]<size[ultimateParentOfV])
-		{
-			ultimateParent[ultimateParentOfU]=ultimateParentOfV;
-			size[ultimateParentOfV]+=size[ultimateParentOfU];
-		}
-		else
-		{
-			ultimateParent[ultimateParentOfV]=ultimateParentOfU;
-			size[ultimateParentOfU]+=size[ultimateParentOfV];
-		}
-	}
-
-};
+	return solve(0,0,n,a,cold,hot);
+}
 
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n,m,idx=0,ans=0;
-	cin>>n>>m;
-	vector<int> mn(n,0),mx(n,0);
-	DisjointSet ds(n);
-	iota(mn.begin(),mn.end(),0);
-	iota(mx.begin(),mx.end(),0);
-	for(int i=0;i<m;++i)
+	int tc;
+	cin>>tc;
+	while(tc--)
 	{
-		int u,v,mn_u=-1,mn_v=-1,mx_u=-1,mx_v=-1;
-		cin>>u>>v;
-		u--;
-		v--;
-		mn_u=mn[ds.findUltimateParent(u)];
-		mn_v=mn[ds.findUltimateParent(v)];
-		mx_u=mx[ds.findUltimateParent(u)];
-		mx_v=mx[ds.findUltimateParent(v)];
-		ds.unionBySize(u,v);
-		mn[ds.findUltimateParent(u)]=min({mn_u,mn_v,u,v});
-		mx[ds.findUltimateParent(u)]=max({mx_u,mx_v,u,v});
-	}
-	while(idx<n)
-	{
-		if(ds.getSize(ds.findUltimateParent(idx))==mx[ds.findUltimateParent(idx)]-mn[ds.findUltimateParent(idx)]+1)
+		int n,k;
+		cin>>n>>k;
+		vector<int> a(n+1),cold(k+1),hot(k+1);
+		for(int i=1;i<=n;++i)
 		{
-			idx++;
+			cin>>a[i];
 		}
-		else
+		for(int i=1;i<=k;++i)
 		{
-			int cur=idx+1;
-			while(ds.getSize(ds.findUltimateParent(idx))!=mx[ds.findUltimateParent(idx)]-mn[ds.findUltimateParent(idx)]+1)
-			{
-				if(ds.findUltimateParent(idx)==ds.findUltimateParent(cur))
-				{
-					cur++;
-					continue;
-				}
-				int u=idx,v=cur;
-				int mn_u=mn[ds.findUltimateParent(u)],mn_v=mn[ds.findUltimateParent(v)],mx_u=mx[ds.findUltimateParent(u)],mx_v=mx[ds.findUltimateParent(v)];
-				ds.unionBySize(u,v);
-				ans++;
-				mn[ds.findUltimateParent(u)]=min({mn_u,mn_v,u,v});
-				mx[ds.findUltimateParent(u)]=max({mx_u,mx_v,u,v});
-				cur++;
-			}
-			idx=cur;
+			cin>>cold[i];
 		}
+		for(int i=1;i<=k;++i)
+		{
+			cin>>hot[i];
+		}
+		cout<<minTime(n,a,hot,cold)<<'\n';
 	}
-	cout<<ans<<'\n';
 	return 0;
 }
