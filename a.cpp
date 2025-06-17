@@ -7,47 +7,38 @@ using namespace std;
 	#define debug(x)
 #endif
 
-void bfs(vector<int> &src,vector<int> &dist,vector<int> adj[])
+typedef long long ll;
+const int N=2e5+10,LOG=19;
+
+int lookup[N][LOG];
+
+void buildSparseTable(vector<int> &a)
 {
-	queue<pair<int,int>> q;
-	for(auto &v:src)
+	int n=a.size();
+	for(int i=0;i<n;++i)
 	{
-		dist[v]=0;
-		q.push({v,0});
+		lookup[i][0]=a[i];
 	}
-	while(q.size())
+	for(int j=1;(1<<j)<=n;++j)
 	{
-		int node=q.front().first,dis=q.front().second;
-		q.pop();
-		for(auto &v:adj[node])
+		for(int i=0;(i+(1<<j)-1)<n;++i)
 		{
-			if(dist[v]>1+dis)
+			if(lookup[i][j-1]>lookup[i+(1<<(j-1))][j-1])
 			{
-				dist[v]=1+dis;
-				q.push({v,1+dis});
+				lookup[i][j]=lookup[i][j-1];
+			}
+			else
+			{
+				lookup[i][j]=lookup[i+(1<<(j-1))][j-1];
 			}
 		}
 	}
 }
 
-void dfs(int node,int dest,int p,vector<int> adj[],vector<int> &path)
+inline int query(int l,int r)
 {
-	path.push_back(node);
-	if(path.back()==dest)
-	{
-		return;
-	}
-	for(auto &v:adj[node])
-	{
-		if(v!=p)
-		{
-			dfs(v,dest,node,adj,path);
-		}
-	}
-	if(path.back()!=dest)
-	{
-		path.pop_back();
-	}
+	int j=31-__builtin_clz(r-l+1);
+	return max(lookup[l][j],lookup[r-(1<<j)+1][j]);
 }
 
 int main()
@@ -55,63 +46,69 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n,node1=0,node2=0,node3=-1;
-	cin>>n;
-	vector<int> *adj=new vector<int>[n],src={0},dist1(n,1e9),dist2(n,1e9),dist3(n,1e9),path;
-	for(int i=1;i<n;++i)
+	int tc;
+	cin>>tc;
+	while(tc--)
 	{
-		int u,v;
-		cin>>u>>v;
-		u--;
-		v--;
-		adj[u].push_back(v);
-		adj[v].push_back(u);
-	}
-	bfs(src,dist1,adj);
-	for(int i=0;i<n;++i)
-	{
-		if(dist1[i]>dist1[node1])
+		int n,x;
+		ll s,sum=0,ans=0;
+		map<ll,vector<int>> mp;
+		cin>>n>>s>>x;
+		vector<int> a(n);
+		for(int i=0;i<n;++i)
 		{
-			node1=i;
+			cin>>a[i];
+			sum+=a[i];
+			mp[sum].push_back(i);
 		}
-	}
-	src={node1};
-	bfs(src,dist2,adj);
-	for(int i=0;i<n;++i)
-	{
-		if(dist2[i]>dist2[node2])
+		buildSparseTable(a);
+		sum=0;
+		for(int i=0;i<n;++i)
 		{
-			node2=i;
-		}
-	}
-	dfs(node1,node2,-1,adj,path);
-	src.clear();
-	for(auto &v:path)
-	{
-		if(v!=node1&&v!=node2)
-		{
-			src.push_back(v);
-		}
-	}
-	bfs(src,dist3,adj);
-	for(int i=0;i<n;++i)
-	{
-		if(i!=node1&&i!=node2)
-		{
-			if(node3==-1)
+			ll req=s+sum;
+			if(!mp.count(req))
 			{
-				node3=i;
+				sum+=a[i];
+				continue;
 			}
-			else
+			int lo=i,hi=n-1,first_mx=-1,last_mx=-1;
+			vector<int> &vec=mp[req];
+			while(lo<=hi)
 			{
-				if(dist3[node3]<dist3[i])
+				int mid=lo+(hi-lo)/2;
+				if(query(i,mid)>=x)
 				{
-					node3=i;
+					first_mx=mid;
+					hi=mid-1;
+				}
+				else
+				{
+					lo=mid+1;
 				}
 			}
+			lo=i;
+			hi=n-1;
+			while(lo<=hi)
+			{
+				int mid=lo+(hi-lo)/2;
+				if(query(i,mid)<=x)
+				{
+					last_mx=mid;
+					lo=mid+1;
+				}
+				else
+				{
+					hi=mid-1;
+				}
+			}
+			if(first_mx!=-1&&query(i,first_mx)==x)
+			{
+				ll cnt=upper_bound(vec.begin(),vec.end(),last_mx)-lower_bound(vec.begin(),vec.end(),first_mx);
+				ans+=cnt;
+			}
+			sum+=a[i];
 		}
+		cout<<ans<<'\n';
 	}
-	cout<<dist2[node2]+dist3[node3]<<'\n';
-	cout<<node1+1<<' '<<node2+1<<' '<<node3+1<<'\n';
 	return 0;
 }
