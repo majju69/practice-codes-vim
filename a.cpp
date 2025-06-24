@@ -8,37 +8,83 @@ using namespace std;
 #endif
 
 typedef long long ll;
-const int N=2e5+10,LOG=19;
 
-int lookup[N][LOG];
-
-void buildSparseTable(vector<int> &a)
+inline bool bit(int a,int i)
 {
-	int n=a.size();
-	for(int i=0;i<n;++i)
-	{
-		lookup[i][0]=a[i];
-	}
-	for(int j=1;(1<<j)<=n;++j)
-	{
-		for(int i=0;(i+(1<<j)-1)<n;++i)
-		{
-			if(lookup[i][j-1]>lookup[i+(1<<(j-1))][j-1])
-			{
-				lookup[i][j]=lookup[i][j-1];
-			}
-			else
-			{
-				lookup[i][j]=lookup[i+(1<<(j-1))][j-1];
-			}
-		}
-	}
+	return a>>i&1;
 }
 
-inline int query(int l,int r)
+ll dp[20][2][8][9][2][7][512],mult[19];
+
+ll solve(int i,bool last,int mod8,int mod9,bool last50,int mod7,int mask,int k,string &s)
 {
-	int j=31-__builtin_clz(r-l+1);
-	return max(lookup[l][j],lookup[r-(1<<j)+1][j]);
+	if(i>=(int)s.size())
+	{
+		int cnt=0;
+		if(bit(mask,0))
+		{
+			cnt++;
+		}
+		if(mod8%2==0)
+		{
+			cnt+=bit(mask,1);
+		}
+		if(mod9%3==0)
+		{
+			cnt+=bit(mask,2);
+		}
+		if(mod8%4==0)
+		{
+			cnt+=bit(mask,3);
+		}
+		if(last50)
+		{
+			cnt+=bit(mask,4);
+		}
+		if(mod8%2==0&&mod9%3==0)
+		{
+			cnt+=bit(mask,5);
+		}
+		if(mod7==0)
+		{
+			cnt+=bit(mask,6);
+		}
+		if(mod8==0)
+		{
+			cnt+=bit(mask,7);
+		}
+		if(mod9==0)
+		{
+			cnt+=bit(mask,8);
+		}
+		return (cnt>=k);
+	}
+	if(dp[i][last][mod8][mod9][last50][mod7][mask]!=-1)
+	{
+		return dp[i][last][mod8][mod9][last50][mod7][mask];
+	}
+	int till=(last?(s[i]-'0'):9);
+	ll ans=0;
+	for(int j=0;j<=till;++j)
+	{
+		if(j==0)
+		{
+			bool cur=(i==(int)s.size()-1);
+			ans+=solve(i+1,(last&&(j==till)),mod8,mod9,cur,mod7,mask,k,s);
+		}
+		else
+		{
+			ans+=solve(i+1,(last&&(j==till)),(mod8+(mult[((int)s.size()-1-i)]%8)*j)%8,(mod9+(mult[((int)s.size()-1-i)]%9)*j)%9,((i==(int)s.size()-1)&&(j==5)),(mod7+(mult[((int)s.size()-1-i)]%7)*j)%7,(mask|(1<<(j-1))),k,s);
+		}
+	}
+	return  dp[i][last][mod8][mod9][last50][mod7][mask]=ans;
+}
+
+ll getCount(ll n,int k)
+{
+	string s=to_string(n);
+	memset(dp,-1,sizeof(dp));
+	return solve(0,1,0,0,0,0,0,k,s);
 }
 
 int main()
@@ -46,69 +92,19 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
+	mult[0]=1;
+	for(int i=1;i<=18;++i)
+	{
+		mult[i]=10*mult[i-1];
+	}
 	int tc;
 	cin>>tc;
 	while(tc--)
 	{
-		int n,x;
-		ll s,sum=0,ans=0;
-		map<ll,vector<int>> mp;
-		cin>>n>>s>>x;
-		vector<int> a(n);
-		for(int i=0;i<n;++i)
-		{
-			cin>>a[i];
-			sum+=a[i];
-			mp[sum].push_back(i);
-		}
-		buildSparseTable(a);
-		sum=0;
-		for(int i=0;i<n;++i)
-		{
-			ll req=s+sum;
-			if(!mp.count(req))
-			{
-				sum+=a[i];
-				continue;
-			}
-			int lo=i,hi=n-1,first_mx=-1,last_mx=-1;
-			vector<int> &vec=mp[req];
-			while(lo<=hi)
-			{
-				int mid=lo+(hi-lo)/2;
-				if(query(i,mid)>=x)
-				{
-					first_mx=mid;
-					hi=mid-1;
-				}
-				else
-				{
-					lo=mid+1;
-				}
-			}
-			lo=i;
-			hi=n-1;
-			while(lo<=hi)
-			{
-				int mid=lo+(hi-lo)/2;
-				if(query(i,mid)<=x)
-				{
-					last_mx=mid;
-					lo=mid+1;
-				}
-				else
-				{
-					hi=mid-1;
-				}
-			}
-			if(first_mx!=-1&&query(i,first_mx)==x)
-			{
-				ll cnt=upper_bound(vec.begin(),vec.end(),last_mx)-lower_bound(vec.begin(),vec.end(),first_mx);
-				ans+=cnt;
-			}
-			sum+=a[i];
-		}
-		cout<<ans<<'\n';
+		ll l,r;
+		int k;
+		cin>>l>>r>>k;
+		cout<<getCount(r,k)-getCount(l-1,k)<<'\n';
 	}
 	return 0;
 }
