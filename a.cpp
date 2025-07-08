@@ -9,82 +9,39 @@ using namespace std;
 
 typedef long long ll;
 
-inline bool bit(int a,int i)
+const ll mod=1e9+7;
+
+inline ll add(ll a,ll b)
 {
-	return a>>i&1;
+	return ((a%mod)+(b%mod))%mod;
 }
 
-ll dp[20][2][8][9][2][7][512],mult[19];
-
-ll solve(int i,bool last,int mod8,int mod9,bool last50,int mod7,int mask,int k,string &s)
+inline ll mul(ll a,ll b)
 {
-	if(i>=(int)s.size())
-	{
-		int cnt=0;
-		if(bit(mask,0))
-		{
-			cnt++;
-		}
-		if(mod8%2==0)
-		{
-			cnt+=bit(mask,1);
-		}
-		if(mod9%3==0)
-		{
-			cnt+=bit(mask,2);
-		}
-		if(mod8%4==0)
-		{
-			cnt+=bit(mask,3);
-		}
-		if(last50)
-		{
-			cnt+=bit(mask,4);
-		}
-		if(mod8%2==0&&mod9%3==0)
-		{
-			cnt+=bit(mask,5);
-		}
-		if(mod7==0)
-		{
-			cnt+=bit(mask,6);
-		}
-		if(mod8==0)
-		{
-			cnt+=bit(mask,7);
-		}
-		if(mod9==0)
-		{
-			cnt+=bit(mask,8);
-		}
-		return (cnt>=k);
-	}
-	if(dp[i][last][mod8][mod9][last50][mod7][mask]!=-1)
-	{
-		return dp[i][last][mod8][mod9][last50][mod7][mask];
-	}
-	int till=(last?(s[i]-'0'):9);
-	ll ans=0;
-	for(int j=0;j<=till;++j)
-	{
-		if(j==0)
-		{
-			bool cur=(i==(int)s.size()-1);
-			ans+=solve(i+1,(last&&(j==till)),mod8,mod9,cur,mod7,mask,k,s);
-		}
-		else
-		{
-			ans+=solve(i+1,(last&&(j==till)),(mod8+(mult[((int)s.size()-1-i)]%8)*j)%8,(mod9+(mult[((int)s.size()-1-i)]%9)*j)%9,((i==(int)s.size()-1)&&(j==5)),(mod7+(mult[((int)s.size()-1-i)]%7)*j)%7,(mask|(1<<(j-1))),k,s);
-		}
-	}
-	return  dp[i][last][mod8][mod9][last50][mod7][mask]=ans;
+	return ((a%mod)*(b%mod))%mod;
 }
 
-ll getCount(ll n,int k)
+ll gcd(ll a,ll b)
 {
-	string s=to_string(n);
-	memset(dp,-1,sizeof(dp));
-	return solve(0,1,0,0,0,0,0,k,s);
+	return ((b==0)?a:gcd(b,a%b));
+}
+
+inline ll lcm(ll a,ll b)
+{
+	return (a/gcd(a,b))*b;
+}
+
+inline ll get(ll b,ll q,ll y,ll c,ll r,ll z,ll d)
+{
+	if(c-r<b||c+z*r>b+(y-1)*q)
+	{
+		return -1;
+	}
+	ll cn=c+(z-1)*r;
+	// c-d*x>c-r  =>  x<r/d 
+	// cn+d*x<cn+r  =>  x<r/d
+	ll a1=c-d*(r/d-1),a2=cn+d*(r/d-1);	
+	return mul((c-a1+d)/d,(a2-cn+d)/d);
 }
 
 int main()
@@ -92,19 +49,48 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	mult[0]=1;
-	for(int i=1;i<=18;++i)
-	{
-		mult[i]=10*mult[i-1];
-	}
-	int tc;
+	ll tc;
 	cin>>tc;
 	while(tc--)
 	{
-		ll l,r;
-		int k;
-		cin>>l>>r>>k;
-		cout<<getCount(r,k)-getCount(l-1,k)<<'\n';
+		ll b,q,y,c,r,z;
+		cin>>b>>q>>y>>c>>r>>z;
+		if(r%q||c<b||c+(z-1)*r>b+(y-1)*q||(c-b)%q)		// b+(x-1)*q=c
+		{
+			cout<<0<<'\n';
+		}
+		else
+		{
+			ll ans=0;
+			for(ll i=1;i*i<=r;++i)
+			{
+				if(r%i==0)
+				{
+					ll d1=i,d2=r/i;
+					if(lcm(d1,q)==r)
+					{
+						ll cur=get(b,q,y,c,r,z,d1);
+						if(cur<0)
+						{
+							ans=-1;
+							break;
+						}
+						ans=add(ans,cur);
+					}
+					if(d2!=d1&&lcm(d2,q)==r)
+					{
+						ll cur=get(b,q,y,c,r,z,d2);
+						if(cur<0)
+						{
+							ans=-1;
+							break;
+						}
+						ans=add(ans,cur);
+					}
+				}
+			}
+			cout<<ans<<'\n';
+		}
 	}
 	return 0;
 }
