@@ -7,41 +7,58 @@ using namespace std;
 	#define debug(x)
 #endif
 
-typedef long long ll;
+const int N=2e5+10,P=2e5+3;
+int a[N],seg[4*N],ans[N];
 
-const ll mod=1e9+7;
-
-inline ll add(ll a,ll b)
-{
-	return ((a%mod)+(b%mod))%mod;
-}
-
-inline ll mul(ll a,ll b)
-{
-	return ((a%mod)*(b%mod))%mod;
-}
-
-ll gcd(ll a,ll b)
+int gcd(int a,int b)
 {
 	return ((b==0)?a:gcd(b,a%b));
 }
 
-inline ll lcm(ll a,ll b)
+void build(int ind,int lo,int hi)
 {
-	return (a/gcd(a,b))*b;
+	if(lo==hi)
+	{
+		seg[ind]=a[lo];
+		return;
+	}
+	int mid=lo+(hi-lo)/2;
+	build(2*ind+1,lo,mid);
+	build(2*ind+2,mid+1,hi);
+	seg[ind]=gcd(seg[2*ind+1],seg[2*ind+2]);
 }
 
-inline ll get(ll b,ll q,ll y,ll c,ll r,ll z,ll d)
+void update(int ind,int lo,int hi,int i)
 {
-	if(c-r<b||c+z*r>b+(y-1)*q)
+	if(lo==hi)
 	{
-		return -1;
+		seg[ind]=P;
+		return;
 	}
-	ll cn=c+(z-1)*r;
-	// c-d*x>c-r  =>  x<r/d 
-	// cn+d*x<cn+r  =>  x<r/d
-	ll a1=c-d*(r/d-1),a2=cn+d*(r/d-1);	
-	return mul((c-a1+d)/d,(a2-cn+d)/d);
+	int mid=lo+(hi-lo)/2;
+	if(i<=mid)
+	{
+		update(2*ind+1,lo,mid,i);
+	}
+	else
+	{
+		update(2*ind+2,mid+1,hi,i);
+	}
+	seg[ind]=gcd(seg[2*ind+1],seg[2*ind+2]);
+}
+
+int query(int ind,int lo,int hi,int l,int r)
+{
+	if(l>hi||lo>r)
+	{
+		return 0;
+	}
+	if(l<=lo&&hi<=r)
+	{
+		return seg[ind];
+	}
+	int mid=lo+(hi-lo)/2;
+	return gcd(query(2*ind+1,lo,mid,l,r),query(2*ind+2,mid+1,hi,l,r));
 }
 
 int main()
@@ -49,48 +66,57 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	ll tc;
-	cin>>tc;
-	while(tc--)
+	int n;
+	cin>>n;
+	for(int i=0;i<n;++i)
 	{
-		ll b,q,y,c,r,z;
-		cin>>b>>q>>y>>c>>r>>z;
-		if(r%q||c<b||c+(z-1)*r>b+(y-1)*q||(c-b)%q)		// b+(x-1)*q=c
+		cin>>a[i];
+	}
+	build(0,0,n-1);
+	if(a[0]==1)
+	{
+		update(0,0,n-1,0);
+		ans[0]=1;
+		a[0]=P;
+	}
+	for(int i=1;i<n;++i)
+	{
+		// len-gcd is inc
+		int lo=0,hi=i;
+		bool bad=0;
+		while(lo<=hi)
 		{
-			cout<<0<<'\n';
+			int mid=lo+(hi-lo)/2;
+			int len=i-mid+1,g=query(0,0,n-1,mid,i);
+			if(len-g==0)
+			{
+				bad=1;
+				break;
+			}
+			else if(len-g>0)
+			{
+				lo=mid+1;
+			}
+			else
+			{
+				hi=mid-1;
+			}
+		}
+		if(bad)
+		{
+			ans[i]=ans[i-1]+1;
+			update(0,0,n-1,i);
+			a[i]=P;
 		}
 		else
 		{
-			ll ans=0;
-			for(ll i=1;i*i<=r;++i)
-			{
-				if(r%i==0)
-				{
-					ll d1=i,d2=r/i;
-					if(lcm(d1,q)==r)
-					{
-						ll cur=get(b,q,y,c,r,z,d1);
-						if(cur<0)
-						{
-							ans=-1;
-							break;
-						}
-						ans=add(ans,cur);
-					}
-					if(d2!=d1&&lcm(d2,q)==r)
-					{
-						ll cur=get(b,q,y,c,r,z,d2);
-						if(cur<0)
-						{
-							ans=-1;
-							break;
-						}
-						ans=add(ans,cur);
-					}
-				}
-			}
-			cout<<ans<<'\n';
+			ans[i]=ans[i-1];
 		}
 	}
+	for(int i=0;i<n;++i)
+	{
+		cout<<ans[i]<<' ';
+	}
+	cout<<'\n';
 	return 0;
-}
+}	
