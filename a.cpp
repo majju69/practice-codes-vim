@@ -7,58 +7,21 @@ using namespace std;
 	#define debug(x)
 #endif
 
-const int N=2e5+10,P=2e5+3;
-int a[N],seg[4*N],ans[N];
+const int mod=998244353;
 
-int gcd(int a,int b)
+inline int mul(int a,int b)
 {
-	return ((b==0)?a:gcd(b,a%b));
+	return (1ll*(a%mod)*(b%mod))%mod;
 }
 
-void build(int ind,int lo,int hi)
+inline int add(int a,int b)
 {
-	if(lo==hi)
-	{
-		seg[ind]=a[lo];
-		return;
-	}
-	int mid=lo+(hi-lo)/2;
-	build(2*ind+1,lo,mid);
-	build(2*ind+2,mid+1,hi);
-	seg[ind]=gcd(seg[2*ind+1],seg[2*ind+2]);
+	return ((a%mod)+(b%mod))%mod;
 }
 
-void update(int ind,int lo,int hi,int i)
+inline int sub(int a,int b)
 {
-	if(lo==hi)
-	{
-		seg[ind]=P;
-		return;
-	}
-	int mid=lo+(hi-lo)/2;
-	if(i<=mid)
-	{
-		update(2*ind+1,lo,mid,i);
-	}
-	else
-	{
-		update(2*ind+2,mid+1,hi,i);
-	}
-	seg[ind]=gcd(seg[2*ind+1],seg[2*ind+2]);
-}
-
-int query(int ind,int lo,int hi,int l,int r)
-{
-	if(l>hi||lo>r)
-	{
-		return 0;
-	}
-	if(l<=lo&&hi<=r)
-	{
-		return seg[ind];
-	}
-	int mid=lo+(hi-lo)/2;
-	return gcd(query(2*ind+1,lo,mid,l,r),query(2*ind+2,mid+1,hi,l,r));
+	return ((a%mod)-(b%mod)+mod)%mod;
 }
 
 int main()
@@ -66,57 +29,81 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int n;
-	cin>>n;
-	for(int i=0;i<n;++i)
+	int tc;
+	cin>>tc;
+	while(tc--)
 	{
-		cin>>a[i];
-	}
-	build(0,0,n-1);
-	if(a[0]==1)
-	{
-		update(0,0,n-1,0);
-		ans[0]=1;
-		a[0]=P;
-	}
-	for(int i=1;i<n;++i)
-	{
-		// len-gcd is inc
-		int lo=0,hi=i;
-		bool bad=0;
-		while(lo<=hi)
+		int n,m,pvs,ans=1;
+		cin>>n>>m>>pvs;
+		for(int i=1;i<n;++i)
 		{
-			int mid=lo+(hi-lo)/2;
-			int len=i-mid+1,g=query(0,0,n-1,mid,i);
-			if(len-g==0)
+			int x;
+			cin>>x;
+			if(ans==0)
 			{
-				bad=1;
-				break;
+				continue;
 			}
-			else if(len-g>0)
+			if(x==pvs)
 			{
-				lo=mid+1;
+				ans=mul(ans,m/pvs);
+			}
+			else if(pvs%x==0)
+			{
+				int num=pvs/x,total=0;
+				vector<int> divisors;
+				if(num%2==0)
+				{
+					divisors.push_back(2);
+					while(num%2==0)
+					{
+						num/=2;
+					}
+				}
+				for(int i=3;i*i<=num;i+=2)
+				{
+					if(num%i==0)
+					{
+						divisors.push_back(i);
+						while(num%i==0)
+						{
+							num/=i;
+						}
+					}
+				}
+				if(num>2)
+				{
+					divisors.push_back(num);
+				}
+				int len=divisors.size();
+				for(int mask=1;mask<(1<<len);++mask)
+				{
+					int cnt=0,cur=x;
+					for(int j=0;j<len;++j)
+					{
+						if(mask>>j&1)
+						{
+							cnt++;
+							cur*=divisors[j];
+						}
+					}
+					if(cnt&1)
+					{
+						total=add(total,m/cur);
+					}
+					else
+					{
+						total=sub(total,m/cur);
+					}
+				}
+				ans=mul(ans,sub(m/x,total));
 			}
 			else
 			{
-				hi=mid-1;
+				ans=0;
 			}
+			pvs=x;
 		}
-		if(bad)
-		{
-			ans[i]=ans[i-1]+1;
-			update(0,0,n-1,i);
-			a[i]=P;
-		}
-		else
-		{
-			ans[i]=ans[i-1];
-		}
+		cout<<ans<<'\n';
 	}
-	for(int i=0;i<n;++i)
-	{
-		cout<<ans[i]<<' ';
-	}
-	cout<<'\n';
 	return 0;
-}	
+}
