@@ -7,21 +7,56 @@ using namespace std;
 	#define debug(x)
 #endif
 
-const int mod=998244353;
+const int N=1e5+10,BLK=318;
+int a[N];
+pair<pair<int,int>,int> pre[N];
 
-inline int mul(int a,int b)
+inline int get_blk(int i)
 {
-	return (1ll*(a%mod)*(b%mod))%mod;
+	return i/BLK;
 }
 
-inline int add(int a,int b)
+void build(int n)
 {
-	return ((a%mod)+(b%mod))%mod;
+	for(int i=n-1;i>=0;--i)
+	{
+		if(i+a[i]>=n||get_blk(i+a[i])>get_blk(i))
+		{
+			pre[i]={{1,min(n,i+a[i])},i};
+		}
+		else
+		{
+			pre[i]={{pre[i+a[i]].first.first+1,pre[i+a[i]].first.second},pre[i+a[i]].second};
+		}
+	}
 }
 
-inline int sub(int a,int b)
+void update(int idx,int val,int n)
 {
-	return ((a%mod)-(b%mod)+mod)%mod;
+	a[idx]=val;
+	for(int i=idx;i>=get_blk(idx)*BLK;--i)
+	{
+		if(i+a[i]>=n||get_blk(i+a[i])>get_blk(i))
+		{
+			pre[i]={{1,min(n,i+a[i])},i};
+		}
+		else
+		{
+			pre[i]={{pre[i+a[i]].first.first+1,pre[i+a[i]].first.second},pre[i+a[i]].second};
+		}
+	}
+}
+
+pair<int,int> query(int idx,int n)
+{
+	int cur=idx,num_jumps=0,last=-1;
+	while(cur<n)
+	{
+		num_jumps+=pre[cur].first.first;
+		last=pre[cur].second;
+		cur=pre[cur].first.second;
+	}
+	return {last+1,num_jumps};
 }
 
 int main()
@@ -29,81 +64,32 @@ int main()
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int tc;
-	cin>>tc;
-	while(tc--)
+	int n,q;
+	cin>>n>>q;
+	for(int i=0;i<n;++i)
 	{
-		int n,m,pvs,ans=1;
-		cin>>n>>m>>pvs;
-		for(int i=1;i<n;++i)
+		cin>>a[i];
+	}
+	build(n);
+	while(q--)
+	{
+		int type;
+		cin>>type;
+		if(type==0)
 		{
-			int x;
-			cin>>x;
-			if(ans==0)
-			{
-				continue;
-			}
-			if(x==pvs)
-			{
-				ans=mul(ans,m/pvs);
-			}
-			else if(pvs%x==0)
-			{
-				int num=pvs/x,total=0;
-				vector<int> divisors;
-				if(num%2==0)
-				{
-					divisors.push_back(2);
-					while(num%2==0)
-					{
-						num/=2;
-					}
-				}
-				for(int i=3;i*i<=num;i+=2)
-				{
-					if(num%i==0)
-					{
-						divisors.push_back(i);
-						while(num%i==0)
-						{
-							num/=i;
-						}
-					}
-				}
-				if(num>2)
-				{
-					divisors.push_back(num);
-				}
-				int len=divisors.size();
-				for(int mask=1;mask<(1<<len);++mask)
-				{
-					int cnt=0,cur=x;
-					for(int j=0;j<len;++j)
-					{
-						if(mask>>j&1)
-						{
-							cnt++;
-							cur*=divisors[j];
-						}
-					}
-					if(cnt&1)
-					{
-						total=add(total,m/cur);
-					}
-					else
-					{
-						total=sub(total,m/cur);
-					}
-				}
-				ans=mul(ans,sub(m/x,total));
-			}
-			else
-			{
-				ans=0;
-			}
-			pvs=x;
+			int idx,val;
+			cin>>idx>>val;
+			idx--;
+			update(idx,val,n);
 		}
-		cout<<ans<<'\n';
+		else
+		{
+			int idx;
+			cin>>idx;
+			idx--;
+			pair<int,int> p=query(idx,n);
+			cout<<p.first<<' '<<p.second<<'\n';
+		}
 	}
 	return 0;
 }
