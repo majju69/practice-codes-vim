@@ -2,74 +2,119 @@
 using namespace std;
 
 #ifdef LOCAL
-	#include"debug.h"
+    #include"debug.h"
 #else
-	#define debug(x)
+    #define debug(x)
 #endif
 
-inline int bit(int a,int i)
+typedef long long ll;
+
+ll gcd(ll a,ll b)
 {
-	return a>>i&1;
+    return ((b==0)?a:gcd(b,a%b));
+}
+
+class SegmentTree
+{
+
+private:
+
+    vector<ll> seg;
+
+public:
+
+    SegmentTree(ll n)
+    {
+        seg.resize(4*n+1);
+    }
+
+    void build(ll ind,ll lo,ll hi,vector<ll> &diff)
+    {
+        if(lo==hi)
+        {
+            seg[ind]=diff[lo];
+            return;
+        }
+        ll mid=lo+(hi-lo)/2;
+        build(2*ind+1,lo,mid,diff);
+        build(2*ind+2,mid+1,hi,diff);
+        seg[ind]=gcd(seg[2*ind+1],seg[2*ind+2]);
+    }
+
+    ll query(ll ind,ll lo,ll hi,ll l,ll r)
+    {
+        if(l>r)
+        {
+            return 0;
+        }
+        if(l>hi||lo>r)
+        {
+            return 0;
+        }
+        if(l<=lo&&hi<=r)
+        {
+            return seg[ind];
+        }
+        ll mid=lo+(hi-lo)/2;
+        return gcd(query(2*ind+1,lo,mid,l,r),query(2*ind+2,mid+1,hi,l,r));
+    }
+
+};
+
+ll maxSubarrayLen(vector<ll> &diff)
+{
+    ll n=diff.size(),l=0,r=0,ans=0;
+    SegmentTree st(n);
+    st.build(0,0,n-1,diff);
+    while(r<n&&l<n)
+    {
+        if(st.query(0,0,n-1,l,r)==1)
+        {
+            l++;
+        }
+        ans=max(ans,r-l+1);
+        r++;
+    }
+    return ans;
 }
 
 int main()
 {
-	ios_base::sync_with_stdio(false);
-	cin.tie(NULL);
-	cout.tie(NULL);
-	int tc;
-	cin>>tc;
-	while(tc--)
-	{
-		int n,m,ans=0;
-		cin>>n>>m;
-		if(n>m)
-		{
-			cout<<0<<'\n';
-			continue;
-		}
-		if(n==0)
-		{
-			cout<<m+1<<'\n';
-			continue;
-		}
-		for(int i=30;i>=0;--i)
-		{
-			int _n=bit(n,i),_m=bit(m,i);
-			if(_n==0&&_m==1)
-			{
-				ans+=(1<<i);
-				continue;
-			}
-			if(_n==1&&_m==1)
-			{
-				continue;
-			}
-			if(_n==0&&_m==0)
-			{
-				bool canSkip=0;
-				for(int j=i-1;j>=0;--j)
-				{
-					if((bit(n,j)==0&&bit(m,j)==0)||(bit(n,j)==1&&bit(m,j)==0))
-					{
-						canSkip=1;
-						break;
-					}
-				}
-				if(canSkip)
-				{
-					continue;
-				}
-				else
-				{
-					ans+=(1<<i);
-					break;
-				}
-			}
-			break;
-		}
-		cout<<ans<<'\n';
-	}
-	return 0;
+    ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+    cout.tie(NULL);
+    ll tc;
+    cin>>tc;
+    while(tc--)
+    {
+        ll n;
+        cin>>n;
+        vector<ll> a(n);
+        for(auto &v:a)
+        {
+            cin>>v;
+        }
+        if(n==1)
+        {
+            cout<<1<<'\n';
+        }
+        else
+        {
+            ll ans=1,cnt=0;
+            vector<ll> diff(n-1);
+            for(ll i=0;i<n-1;++i)
+            {
+                diff[i]=abs(a[i]-a[i+1]);
+                cnt+=(diff[i]==1);
+            }
+            n--;
+            if(cnt==n)
+            {
+                cout<<1<<'\n';
+                continue;
+            }
+            cout<<maxSubarrayLen(diff)+1<<'\n';
+        }
+    }
+    return 0;
 }
-
