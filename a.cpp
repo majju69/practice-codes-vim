@@ -7,32 +7,6 @@ using namespace std;
     #define debug(x)
 #endif
 
-void dfs(int node,int p,vector<int> adj[],vector<bool> &red,vector<int> &near,vector<int> &depth)
-{
-    near[node]=((red[node])?0:1e9);
-    for(auto &v:adj[node])
-    {
-        if(v!=p)
-        {
-            depth[v]=depth[node]+1;
-            dfs(v,node,adj,red,near,depth);
-            near[node]=min(near[node],near[v]+1);
-        }
-    }
-}
-
-void dfs(int node,int p,vector<int> adj[],vector<bool> &red,vector<int> &near)
-{
-    near[node]=min(near[node],near[p]+1);
-    for(auto &v:adj[node])
-    {
-        if(v!=p)
-        {
-            dfs(v,node,adj,red,near);
-        }
-    }
-}
-
 int main()
 {
     ios_base::sync_with_stdio(false);
@@ -42,41 +16,67 @@ int main()
     cin>>tc;
     while(tc--)
     {
-        int n,k;
-        bool ok=0;
-        cin>>n>>k;
-        vector<int> adj[n],near(n,1e9),depth(n,0);
-        vector<bool> red(n,0);
-        for(int i=0;i<k;++i)
+        int n,ans=0;
+        queue<int> q;
+        cin>>n;
+        vector<int> adj[n],adjT[n],indegree(n,0),topoSort;
+        for(int i=0;i<n;++i)
         {
             int x;
             cin>>x;
-            x--;
-            red[x]=1;
-        }
-        for(int i=1;i<n;++i)
-        {
-            int u,v;
-            cin>>u>>v;
-            u--;
-            v--;
-            adj[u].push_back(v);
-            adj[v].push_back(u);
-        }
-        dfs(0,0,adj,red,near,depth);
-        dfs(0,0,adj,red,near);
-        for(int i=1;i<n;++i)
-        {
-            if((int)adj[i].size()==1)
+            while(x--)
             {
-                if(near[i]>depth[i])
+                int u;
+                cin>>u;
+                u--;
+                adj[u].push_back(i);
+                adjT[i].push_back(u);
+                indegree[i]++;
+            }
+        }
+        for(int i=0;i<n;++i)
+        {
+            if(indegree[i]==0)
+            {
+                q.push(i);
+            }
+        }
+        while(q.size())
+        {
+            int node=q.front();
+            q.pop();
+            topoSort.push_back(node);
+            for(auto &v:adj[node])
+            {
+                indegree[v]--;
+                if(indegree[v]==0)
                 {
-                    ok=1;
-                    break;
+                    q.push(v);
                 }
             }
         }
-        cout<<(ok?"YES":"NO")<<'\n';
+        if((int)topoSort.size()!=n)
+        {
+            cout<<-1<<'\n';
+        }
+        else
+        {
+            vector<int> dp(n,1e9);
+            for(auto &v:topoSort)
+            {
+                int cur=1;
+                for(auto &v1:adjT[v])
+                {
+                    cur=max(cur,dp[v1]+(v1>v));
+                }
+                dp[v]=cur;
+            }
+            for(auto &v:dp)
+            {
+                ans=max(ans,v);
+            }
+            cout<<ans<<'\n';
+        }
     }
     return 0;
 }
