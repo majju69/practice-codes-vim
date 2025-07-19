@@ -7,88 +7,54 @@ using namespace std;
     #define debug(x)
 #endif
 
-int gcd(int a,int b)
-{
-    return ((b==0)?a:gcd(b,a%b));
-}
+typedef long long ll;
 
-vector<long long> spf(200001,0);
-
-void smallestPrimeFactor()
+void dfs(ll node,ll p,vector<ll> adj[],vector<ll> &cum_sum,vector<ll> &a)
 {
-    long long n=spf.size();
-    for(long long i=1;i<n;++i)
+    if(cum_sum[node]==-1)
     {
-        spf[i]=i;
-    }
-    for(long long i=4;i<n;i+=2)
-    {
-        spf[i]=2;
-    }
-    for(long long i=3;i*i<n;++i)
-    {
-        if(spf[i]==i)
+        ll mn=1e18;
+        for(auto &v:adj[node])
         {
-            for(long long j=i*i;j<n;j+=i)
+            if(v!=p)
             {
-                if(spf[j]==j)
-                {
-                    spf[j]=i;
-                }
-            }   
+                mn=min(mn,cum_sum[v]);
+            }
         }
-    }
-}
-
-// 1 --> ending  0 --> passing
-void dfs(int node,int p,vector<int> adj[],vector<int> &a,map<pair<int,pair<int,int>>,int> &dp)
-{
-    if(node!=0&&adj[node].size()==1)
-    {
-        int x=a[node];
-        while(x>1)
+        if(mn==1e18)
         {
-            dp[{node,{1,spf[x]}}]=1;
-            x/=spf[x];
+            a[node]=0;
+            cum_sum[node]=cum_sum[p];
         }
-        return;
-    }
-    for(auto &v:adj[node])
-    {
-        if(v!=p)
+        else
         {
-            dfs(v,node,adj,a,dp);
+            a[node]=mn-cum_sum[p];
+            cum_sum[node]=mn;
         }
-    }
-    map<int,vector<int>> mp;
-    int x=a[node];
-    while(x>1)
-    {
-        dp[{node,{1,spf[x]}}]=1;
-        x/=spf[x];
-    }
-    for(auto &v:adj[node])
-    {
-        if(v!=p)
+        for(auto &v:adj[node])
         {
-            int g=gcd(a[node],a[v]);
-            while(g>1)
+            if(v!=p)
             {
-                if(dp.find({v,{1,spf[g]}})!=dp.end())
-                {
-                    dp[{node,{1,spf[g]}}]=max(dp[{v,{1,spf[g]}}]+1,dp[{node,{1,spf[g]}}]);
-                    mp[g].push_back(dp[{v,{1,spf[g]}}]);
-                }
-                g/=spf[g];
+                dfs(v,node,adj,cum_sum,a);
             }
         }
     }
-    for(auto &v:mp)
+    else
     {
-        sort(v.second.rbegin(),v.second.rend());
-        if(v.second.size()>1)
+        if(node==0)
         {
-            dp[{node,{0,v.first}}]=v.second[0]+v.second[1]+1;
+            a[node]=cum_sum[node];
+        }
+        else
+        {
+            a[node]=cum_sum[node]-cum_sum[p];
+        }
+        for(auto &v:adj[node])
+        {
+            if(v!=p)
+            {
+                dfs(v,node,adj,cum_sum,a);
+            }
         }
     }
 }
@@ -98,40 +64,30 @@ int main()
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    smallestPrimeFactor();
-    int n,ans=0;
-    map<pair<int,pair<int,int>>,int> dp;
+    ll n,ans=0;
     cin>>n;
-    vector<int> a(n),adj[n];
-    for(auto &v:a)
+    vector<ll> adj[n],cum_sum(n),a(n);
+    for(ll i=1;i<n;++i)
+    {
+        ll x;
+        cin>>x;
+        x--;
+        adj[i].push_back(x);
+        adj[x].push_back(i);
+    }
+    for(auto &v:cum_sum)
     {
         cin>>v;
-        int x=1;
-        set<int> st;
-        while(v>1)
+    }
+    dfs(0,0,adj,cum_sum,a);
+    for(auto &v:a)
+    {
+        if(v<0)
         {
-            if(st.find(spf[v])==st.end())
-            {
-                st.insert(spf[v]);
-                x*=spf[v];
-            }
-            v/=spf[v];
+            ans=-1;
+            break;
         }
-        v=x;
-    }
-    for(int i=1;i<n;++i)
-    {
-        int u,v;
-        cin>>u>>v;
-        u--;
-        v--;
-        adj[u].push_back(v);
-        adj[v].push_back(u);
-    }
-    dfs(0,0,adj,a,dp);
-    for(auto &v:dp)
-    {
-        ans=max(ans,v.second);
+        ans+=v;
     }
     cout<<ans<<'\n';
     return 0;
