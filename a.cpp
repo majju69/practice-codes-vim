@@ -9,126 +9,133 @@ using namespace std;
 
 typedef long long ll;
 
-class DisjointSet
+const ll mod=998244353;
+
+inline ll add(ll a,ll b)
 {
+    return (a%mod+b%mod)%mod;
+}
 
-private:
+inline ll mul(ll a,ll b)
+{
+    return (a%mod*b%mod)%mod;
+}
 
-    vector<long long> ultimateParent,rank,size;
-
-public:
-
-    DisjointSet(long long n)
+long long power(long long a,long long b)        // Use when mod is of order 10^9 or less
+{
+    long long ans=1;
+    a=a%mod;
+    while(b)
     {
-        ultimateParent.resize(n+1);
-        rank.resize(n+1,0);
-        size.resize(n+1,1);
-        for(long long i=0;i<=n;++i)
+        if(b&1)
         {
-            ultimateParent[i]=i;
+            ans=(ans*a)%mod;
         }
+        a=(a*a)%mod;       
+        b>>=1;
     }
-
-    long long findUltimateParent(long long node)
-    {
-        if(ultimateParent[node]==node)
-        {
-            return node;
-        }
-        return ultimateParent[node]=findUltimateParent(ultimateParent[node]);
-    }
-
-    long long getSize(long long node)
-    {
-        return size[node];
-    }
-
-    long long getRank(long long node)
-    {
-        return rank[node];
-    }
-
-    void unionByRank(long long u,long long v)
-    {
-        long long ultimateParentOfU=findUltimateParent(u),ultimateParentOfV=findUltimateParent(v);
-        if(ultimateParentOfU==ultimateParentOfV)
-        {
-            return ;
-        }
-        if(rank[ultimateParentOfU]<rank[ultimateParentOfV])
-        {
-            ultimateParent[ultimateParentOfU]=ultimateParentOfV;
-        }
-        else if(rank[ultimateParentOfU]>rank[ultimateParentOfV])
-        {
-            ultimateParent[ultimateParentOfV]=ultimateParentOfU;
-        }
-        else
-        {
-            ultimateParent[ultimateParentOfV]=ultimateParentOfU;
-            rank[ultimateParentOfU]++;
-        }
-    }
-
-    void unionBySize(long long u,long long v)
-    {
-        long long ultimateParentOfU=findUltimateParent(u),ultimateParentOfV=findUltimateParent(v);
-        if(ultimateParentOfU==ultimateParentOfV)
-        {
-            return ;
-        }
-        if(size[ultimateParentOfU]<size[ultimateParentOfV])
-        {
-            ultimateParent[ultimateParentOfU]=ultimateParentOfV;
-            size[ultimateParentOfV]+=size[ultimateParentOfU];
-        }
-        else
-        {
-            ultimateParent[ultimateParentOfV]=ultimateParentOfU;
-            size[ultimateParentOfU]+=size[ultimateParentOfV];
-        }
-    }
-
-};
+    return ans%mod;
+}
 
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    ll n,m,ans=0;
-    vector<pair<ll,pair<ll,ll>>> edges;
-    cin>>n>>m;
-    DisjointSet ds(n);
-    vector<pair<ll,ll>> a(n);
-    for(ll i=0;i<n;++i)
+    ll tc;
+    cin>>tc;
+    while(tc--)
     {
-        cin>>a[i].first;
-        a[i].second=i;
-    }
-    sort(a.begin(),a.end());
-    for(ll i=1;i<n;++i)
-    {
-        edges.push_back({a[0].first+a[i].first,{a[0].second,a[i].second}});
-    }
-    for(ll i=0;i<m;++i)
-    {
-        ll u,v,w;
-        cin>>u>>v>>w;
-        u--;
-        v--;
-        edges.push_back({w,{u,v}});
-    }
-    sort(edges.begin(),edges.end());
-    for(auto &edge:edges)
-    {
-        ll u=edge.second.first,v=edge.second.second,w=edge.first;
-        if(ds.findUltimateParent(u)!=ds.findUltimateParent(v))
+        ll n,m,ans=1;
+        cin>>n>>m;
+        vector<ll> adj[n];
+        vector<vector<ll>> colour(2,vector<ll>(n,-1));
+        for(ll i=0;i<m;++i)
         {
-            ds.unionByRank(u,v);
-            ans+=w;
+            ll u,v;
+            cin>>u>>v;
+            u--;
+            v--;
+            adj[u].push_back(v);
+            adj[v].push_back(u);
         }
+        for(ll i=0;i<n;++i)
+        {
+            if(colour[0][i]==-1)
+            {
+                ll cnt[2]={0,0};
+                ll cur_cnt=0;
+                queue<pair<ll,ll>> q;
+                q.push({i,0});
+                colour[0][i]=0;
+                while(q.size())
+                {
+                    ll node=q.front().first,col=q.front().second;
+                    q.pop();
+                    cnt[col]++;
+                    for(auto &v:adj[node])
+                    {
+                        if(colour[0][v]==-1)
+                        {
+                            colour[0][v]=1-col;
+                            q.push({v,1-col});
+                        }
+                        else
+                        {
+                            if(colour[0][v]==colour[0][node])
+                            {
+                                cnt[0]=cnt[1]=-1e18;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if(cnt[0]<0||cnt[1]<0)
+                {
+                    ans=0;
+                    break;
+                }
+                cur_cnt=add(cur_cnt,power(2,cnt[1]));
+                while(q.size())
+                {
+                    q.pop();
+                }
+                cnt[0]=0;
+                cnt[1]=0;
+                q.push({i,1});
+                colour[1][i]=1;
+                while(q.size())
+                {
+                    ll node=q.front().first,col=q.front().second;
+                    q.pop();
+                    cnt[col]++;
+                    for(auto &v:adj[node])
+                    {
+                        if(colour[1][v]==-1)
+                        {
+                            colour[1][v]=1-col;
+                            q.push({v,1-col});
+                        }
+                        else
+                        {
+                            if(colour[1][v]==colour[1][node])
+                            {
+                                cnt[0]=cnt[1]=-1e18;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if(cnt[0]<0||cnt[1]<0)
+                {
+                    ans=0;
+                    break;
+                }
+                cur_cnt=add(cur_cnt,power(2,cnt[1]));
+                ans=mul(ans,cur_cnt);
+            }
+        }
+        cout<<ans<<'\n';
     }
-    cout<<ans<<'\n';
     return 0;
 }
