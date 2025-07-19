@@ -7,48 +7,76 @@ using namespace std;
     #define debug(x)
 #endif
 
+void dfs(int node,int p,vector<int> adj[],vector<bool> &red,vector<int> &near,vector<int> &depth)
+{
+    near[node]=((red[node])?0:1e9);
+    for(auto &v:adj[node])
+    {
+        if(v!=p)
+        {
+            depth[v]=depth[node]+1;
+            dfs(v,node,adj,red,near,depth);
+            near[node]=min(near[node],near[v]+1);
+        }
+    }
+}
+
+void dfs(int node,int p,vector<int> adj[],vector<bool> &red,vector<int> &near)
+{
+    near[node]=min(near[node],near[p]+1);
+    for(auto &v:adj[node])
+    {
+        if(v!=p)
+        {
+            dfs(v,node,adj,red,near);
+        }
+    }
+}
+
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    int q;
-    vector<int> par(500001);
-    deque<int> ans;
-    cin>>q;
-    vector<int> x(q,-1),y(q,-1);
-    for(int i=0;i<q;++i)
+    int tc;
+    cin>>tc;
+    while(tc--)
     {
-        int type;
-        cin>>type;
-        if(type==1)
+        int n,k;
+        bool ok=0;
+        cin>>n>>k;
+        vector<int> adj[n],near(n,1e9),depth(n,0);
+        vector<bool> red(n,0);
+        for(int i=0;i<k;++i)
         {
-            cin>>x[i];
+            int x;
+            cin>>x;
+            x--;
+            red[x]=1;
         }
-        else
+        for(int i=1;i<n;++i)
         {
-            cin>>x[i]>>y[i];
+            int u,v;
+            cin>>u>>v;
+            u--;
+            v--;
+            adj[u].push_back(v);
+            adj[v].push_back(u);
         }
-    }
-    for(int i=0;i<=500000;++i)
-    {
-        par[i]=i;
-    }
-    for(int i=q-1;i>=0;--i)
-    {
-        if(y[i]==-1)
+        dfs(0,0,adj,red,near,depth);
+        dfs(0,0,adj,red,near);
+        for(int i=1;i<n;++i)
         {
-            ans.push_front(par[x[i]]);
+            if((int)adj[i].size()==1)
+            {
+                if(near[i]>depth[i])
+                {
+                    ok=1;
+                    break;
+                }
+            }
         }
-        else
-        {
-            par[x[i]]=par[y[i]];
-        }
+        cout<<(ok?"YES":"NO")<<'\n';
     }
-    for(auto &v:ans)
-    {
-        cout<<v<<' ';
-    }
-    cout<<'\n';
     return 0;
 }
