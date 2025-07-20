@@ -1,54 +1,58 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-void dijkstra(int src,vector<int> adj[],vector<int> &dist)
-{
-    queue<pair<int,int> > q;
-    dist[src]=0;
-    q.push(make_pair(src,0));
-    while(q.size())
-    {
-        int node=q.front().first,dis=q.front().second;
-        q.pop();
-        for(auto &v:adj[node])
-        {
-            if(dist[v]>1+dis)
-            {
-                dist[v]=1+dis;
-                q.push(make_pair(v,dist[v]));
-            }
-        }
-    }
-}
+#ifdef LOCAL
+    #include"debug.h"
+#else
+    #define debug(x)
+#endif
 
 int main()
 {
-    int n,m,s,t,ans=0;
-    cin>>n>>m>>s>>t;
-    vector<int> adj[n],distFwd(n,1e9),distRev(n,1e9);
-    map<pair<int,int>,bool> isEdge;
-    for(int i=0;i<m;++i)
+    ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+    cout.tie(NULL);
+    int n,m,maxx=-1;
+    pair<int,int> ans={-1,-1};
+    cin>>n;
+    vector<int> a(n);
+    for(auto &v:a)
     {
-        int u,v;
-        cin>>u>>v;
-        adj[u-1].push_back(v-1);
-        adj[v-1].push_back(u-1);
-        isEdge[make_pair(min(u,v)-1,max(u,v)-1)]=true;
+        cin>>v;
     }
-    dijkstra(s-1,adj,distFwd);
-    dijkstra(t-1,adj,distRev);
-    for(int i=0;i<n-1;++i)
+    cin>>m;
+    vector<int> b(m);
+    for(auto &v:b)
     {
-        for(int j=i+1;j<n;++j)
+        cin>>v;
+    }
+    maxx=2*(n-m);
+    ans={2*n,2*m};
+    sort(a.begin(),a.end());
+    sort(b.begin(),b.end());
+    for(int i=0;i<n;++i)    // a scores 3 points from i to n-1
+    {
+        int score_a=2*i+3*(n-i),score_b=-1;
+        int d=a[i]-1;
+        int idx=upper_bound(b.begin(),b.end(),d)-b.begin(); // idx....m-1 3 points 0....idx-1 2 points
+        score_b=2*idx+3*(m-idx);
+        if(score_a-score_b>maxx)
         {
-            if(!isEdge[make_pair(i,j)])
+            maxx=score_a-score_b;
+            ans={score_a,score_b};
+        }
+        else if(score_a-score_b==maxx)
+        {
+            if(score_a>ans.first)
             {
-                int minCost=min(distFwd[i]+distRev[j]+1,distFwd[j]+distRev[i]+1);
-                ans+=(minCost>=distFwd[t-1]);
+                ans={score_a,score_b};
             }
         }
+        else
+        {
+            continue;
+        }
     }
-    cout<<ans<<endl;
+    cout<<ans.first<<':'<<ans.second<<'\n';
     return 0;
 }
-
