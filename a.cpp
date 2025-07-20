@@ -7,63 +7,62 @@ using namespace std;
     #define debug(x)
 #endif
 
-typedef long long ll;
+bool cmp(pair<pair<int,int>,int> a,pair<pair<int,int>,int> b)
+{
+    if(a.first.second==b.first.second)
+    {
+        return a.first.first<b.first.first;
+    }
+    return a.first.second>b.first.second;
+}
 
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    ll n,k,maxx=-1,num=1e18;
-    cin>>n>>k;
-    vector<ll> a(n),pre(n);
-    for(auto &v:a)
+    int n,k,totalMoney=0;
+    set<pair<int,int>> st;  //{tableSize,tableIndex}
+    vector<pair<int,int>> acceptedRequests; //{groupIndex,tableIndex}
+    cin>>n;
+    vector<pair<pair<int,int>,int>> requests(n);   //{{groupSize,groupPay},groupIndex}
+    for(int i=0;i<n;++i)
     {
-        cin>>v;
+        int groupSize,groupPay;
+        cin>>groupSize>>groupPay;
+        requests[i].first.first=groupSize;
+        requests[i].first.second=groupPay;
+        requests[i].second=i+1;
     }
-    sort(a.begin(),a.end());
-    pre[0]=a[0];
-    for(ll i=1;i<n;++i)
+    cin>>k;
+    for(int i=1;i<=k;++i)
     {
-        pre[i]=pre[i-1]+a[i];
+        int tableSize;
+        cin>>tableSize;
+        st.insert({tableSize,i});
     }
-    for(ll i=0;i<n;++i)
+    sort(requests.begin(),requests.end(),cmp);
+    for(auto &v:requests)
     {
-        // idx-->a[i]-a[idx] idx+1-->a[i]-a[idx+1] ...... i-->a[i]-a[i]
-        // total=(i-idx+1)*a[i]-pre[i]+pre[idx-1]
-        ll lo=0,hi=i,idx=-1;
-        while(lo<=hi)
+        if(st.size()==0)
         {
-            ll mid=lo+(hi-lo)/2;
-            ll sum=(i-mid+1)*a[i]-pre[i];
-            if(mid!=0)
-            {
-                sum+=pre[mid-1];
-            }
-            if(sum<=k)
-            {
-                idx=mid;
-                hi=mid-1;
-            }
-            else
-            {
-                lo=mid+1;
-            }
+            break;
         }
-        if(i-idx+1>maxx)
+        int groupSize=v.first.first,groupPay=v.first.second,groupIndex=v.second;
+        pair<int,int> dummy={groupSize,0};
+        auto it=st.lower_bound(dummy);
+        if(it!=st.end())
         {
-            maxx=i-idx+1;
-            num=a[i];
-        }
-        else if(i-idx+1==maxx)
-        {
-            num=min(num,a[i]);
-        }
-        else
-        {
-            continue;
+            pair<int,int> accepted=*it;
+            acceptedRequests.push_back({groupIndex,accepted.second});
+            totalMoney+=groupPay;
+            st.erase(it);
         }
     }
-    cout<<maxx<<' '<<num<<'\n';
+    cout<<acceptedRequests.size()<<' '<<totalMoney<<'\n';
+    for(auto &v:acceptedRequests)
+    {
+        cout<<v.first<<' '<<v.second<<'\n';
+    }
     return 0;
 }
