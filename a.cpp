@@ -1,73 +1,142 @@
-#include<bits/stdc++.h>
+#include <bits/stdc++.h>
 using namespace std;
 
-void fillSubordinates(int node,vector<int> adj[],vector<int> &subordinates)
+#ifdef LOCAL
+    #include"debug.h"
+#else
+    #define debug(x)
+#endif
+
+typedef long long ll;
+
+class DisjointSet
 {
-    if(adj[node].size()==0)
+
+private:
+
+    vector<long long> ultimateParent,rank,size;
+
+public:
+
+    DisjointSet(long long n)
     {
-        subordinates[node]=0;
-        return;
-    }
-    int curNodeSubordinates=0;
-    for(auto &v:adj[node])
-    {
-        if(subordinates[v]==-1)
+        ultimateParent.resize(n+1);
+        rank.resize(n+1,0);
+        size.resize(n+1,1);
+        for(long long i=0;i<=n;++i)
         {
-            fillSubordinates(v,adj,subordinates);
+            ultimateParent[i]=i;
         }
-        curNodeSubordinates+=(1+subordinates[v]);
     }
-    subordinates[node]=curNodeSubordinates;
-    return;
-}
 
-void dfs(int node,vector<int> adj[],vector<int> &ans)
-{
-    ans.push_back(node);
-    for(auto &v:adj[node])
+    long long findUltimateParent(long long node)
     {
-        dfs(v,adj,ans);
-    }
-}
-
-int main()
-{
-    int n,q;
-    cin>>n>>q;
-    vector<int> adj[n],subordinates(n,-1),ans;
-    unordered_map<int,int> index;
-    for(int i=1;i<n;++i)
-    {
-        int x;
-        cin>>x;
-        adj[x-1].push_back(i);
-    }
-    for(int i=0;i<n;++i)
-    {
-        sort(adj[i].begin(),adj[i].end());
-    }
-    fillSubordinates(0,adj,subordinates);
-    dfs(0,adj,ans);
-    for(int i=0;i<n;++i)
-    {
-        index[ans[i]]=i;
-    }
-    while(q--)
-    {
-        int x,y;
-        cin>>x>>y;
-        x--;
-        y--;
-        if(y>subordinates[x])
+        if(ultimateParent[node]==node)
         {
-            cout<<"-1\n";
+            return node;
+        }
+        return ultimateParent[node]=findUltimateParent(ultimateParent[node]);
+    }
+
+    long long getSize(long long node)
+    {
+        return size[node];
+    }
+
+    long long getRank(long long node)
+    {
+        return rank[node];
+    }
+
+    void unionByRank(long long u,long long v)
+    {
+        long long ultimateParentOfU=findUltimateParent(u),ultimateParentOfV=findUltimateParent(v);
+        if(ultimateParentOfU==ultimateParentOfV)
+        {
+            return ;
+        }
+        if(rank[ultimateParentOfU]<rank[ultimateParentOfV])
+        {
+            ultimateParent[ultimateParentOfU]=ultimateParentOfV;
+        }
+        else if(rank[ultimateParentOfU]>rank[ultimateParentOfV])
+        {
+            ultimateParent[ultimateParentOfV]=ultimateParentOfU;
         }
         else
         {
-            cout<<ans[index[x]+y]+1<<endl;
+            ultimateParent[ultimateParentOfV]=ultimateParentOfU;
+            rank[ultimateParentOfU]++;
         }
     }
-    cout<<endl;
+
+    void unionBySize(long long u,long long v)
+    {
+        long long ultimateParentOfU=findUltimateParent(u),ultimateParentOfV=findUltimateParent(v);
+        if(ultimateParentOfU==ultimateParentOfV)
+        {
+            return ;
+        }
+        if(size[ultimateParentOfU]<size[ultimateParentOfV])
+        {
+            ultimateParent[ultimateParentOfU]=ultimateParentOfV;
+            size[ultimateParentOfV]+=size[ultimateParentOfU];
+        }
+        else
+        {
+            ultimateParent[ultimateParentOfV]=ultimateParentOfU;
+            size[ultimateParentOfU]+=size[ultimateParentOfV];
+        }
+    }
+
+};
+
+int main()
+{
+    ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+    cout.tie(NULL);
+    ll n,maxSum=0;
+    cin>>n;
+    vector<ll> a(n),idx(n),ans(n),segmentSums(n,0);
+    vector<bool> isPresent(n,false);
+    DisjointSet ds(n);
+    for(auto &v:a)
+    {
+        cin>>v;
+    }
+    for(auto &v:idx)
+    {
+        cin>>v;
+        v--;
+    }
+    for(ll i=n-1;i>=0;--i)
+    {
+        ans[i]=maxSum;
+        ll currentSum=a[idx[i]];
+        if(idx[i]>=1)
+        {
+            if(isPresent[idx[i]-1])
+            {
+                currentSum+=segmentSums[ds.findUltimateParent(idx[i]-1)];
+                ds.unionByRank(idx[i],idx[i]-1);
+            }
+        }
+        if(idx[i]<n-1)
+        {
+            if(isPresent[idx[i]+1])
+            {
+                currentSum+=segmentSums[ds.findUltimateParent(idx[i]+1)];
+                ds.unionByRank(idx[i],idx[i]+1);
+            }
+        }
+        isPresent[idx[i]]=true;
+        segmentSums[ds.findUltimateParent(idx[i])]=currentSum;
+        maxSum=max(maxSum,currentSum);
+    }
+    for(auto &v:ans)
+    {
+        cout<<v<<'\n';
+    }
     return 0;
 }
-
