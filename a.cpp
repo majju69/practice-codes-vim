@@ -1,52 +1,73 @@
-#include <bits/stdc++.h>
+#include<bits/stdc++.h>
 using namespace std;
 
-#ifdef LOCAL
-    #include"debug.h"
-#else
-    #define debug(x)
-#endif
+void fillSubordinates(int node,vector<int> adj[],vector<int> &subordinates)
+{
+    if(adj[node].size()==0)
+    {
+        subordinates[node]=0;
+        return;
+    }
+    int curNodeSubordinates=0;
+    for(auto &v:adj[node])
+    {
+        if(subordinates[v]==-1)
+        {
+            fillSubordinates(v,adj,subordinates);
+        }
+        curNodeSubordinates+=(1+subordinates[v]);
+    }
+    subordinates[node]=curNodeSubordinates;
+    return;
+}
+
+void dfs(int node,vector<int> adj[],vector<int> &ans)
+{
+    ans.push_back(node);
+    for(auto &v:adj[node])
+    {
+        dfs(v,adj,ans);
+    }
+}
 
 int main()
 {
-    ios_base::sync_with_stdio(false);
-    cin.tie(NULL);
-    cout.tie(NULL);
-    int r,g,b,ans=0;
-    string ord="rgbm";
-    cin>>r>>g>>b;
-    sort(ord.begin(),ord.end());
-    do
+    int n,q;
+    cin>>n>>q;
+    vector<int> adj[n],subordinates(n,-1),ans;
+    unordered_map<int,int> index;
+    for(int i=1;i<n;++i)
     {
-        int tmp_r=r,tmp_g=g,tmp_b=b,cur_ans=0;
-        for(auto &v:ord)
+        int x;
+        cin>>x;
+        adj[x-1].push_back(i);
+    }
+    for(int i=0;i<n;++i)
+    {
+        sort(adj[i].begin(),adj[i].end());
+    }
+    fillSubordinates(0,adj,subordinates);
+    dfs(0,adj,ans);
+    for(int i=0;i<n;++i)
+    {
+        index[ans[i]]=i;
+    }
+    while(q--)
+    {
+        int x,y;
+        cin>>x>>y;
+        x--;
+        y--;
+        if(y>subordinates[x])
         {
-            if(v=='r')
-            {
-                cur_ans+=(tmp_r/3);
-                tmp_r%=3;
-            }
-            else if(v=='g')
-            {
-                cur_ans+=(tmp_g/3);
-                tmp_g%=3;
-            }
-            else if(v=='b')
-            {
-                cur_ans+=(tmp_b/3);
-                tmp_b%=3;
-            }
-            else
-            {
-                int minn=min({tmp_b,tmp_g,tmp_r});
-                cur_ans+=minn;
-                tmp_r-=minn;
-                tmp_g-=minn;
-                tmp_b-=minn;
-            }
+            cout<<"-1\n";
         }
-        ans=max(cur_ans,ans);
-    }while(next_permutation(ord.begin(),ord.end()));
-    cout<<ans<<'\n';
+        else
+        {
+            cout<<ans[index[x]+y]+1<<endl;
+        }
+    }
+    cout<<endl;
     return 0;
 }
+
