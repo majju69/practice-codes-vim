@@ -2,67 +2,65 @@
 using namespace std;
 
 #ifdef LOCAL
-    #include"debug.h"
+	#include"debug.h"
 #else
-    #define debug(x)
+	#define debug(x)
 #endif
 
-bool cmp(pair<pair<int,int>,int> a,pair<pair<int,int>,int> b)
+typedef long long ll;
+
+inline ll bit(ll a,ll i)
 {
-    if(a.first.second==b.first.second)
-    {
-        return a.first.first<b.first.first;
-    }
-    return a.first.second>b.first.second;
+	return a>>i&1;
 }
 
 int main()
 {
-    ios_base::sync_with_stdio(false);
-    cin.tie(NULL);
-    cout.tie(NULL);
-    int n,k,totalMoney=0;
-    set<pair<int,int>> st;  //{tableSize,tableIndex}
-    vector<pair<int,int>> acceptedRequests; //{groupIndex,tableIndex}
-    cin>>n;
-    vector<pair<pair<int,int>,int>> requests(n);   //{{groupSize,groupPay},groupIndex}
-    for(int i=0;i<n;++i)
-    {
-        int groupSize,groupPay;
-        cin>>groupSize>>groupPay;
-        requests[i].first.first=groupSize;
-        requests[i].first.second=groupPay;
-        requests[i].second=i+1;
-    }
-    cin>>k;
-    for(int i=1;i<=k;++i)
-    {
-        int tableSize;
-        cin>>tableSize;
-        st.insert({tableSize,i});
-    }
-    sort(requests.begin(),requests.end(),cmp);
-    for(auto &v:requests)
-    {
-        if(st.size()==0)
-        {
-            break;
-        }
-        int groupSize=v.first.first,groupPay=v.first.second,groupIndex=v.second;
-        pair<int,int> dummy={groupSize,0};
-        auto it=st.lower_bound(dummy);
-        if(it!=st.end())
-        {
-            pair<int,int> accepted=*it;
-            acceptedRequests.push_back({groupIndex,accepted.second});
-            totalMoney+=groupPay;
-            st.erase(it);
-        }
-    }
-    cout<<acceptedRequests.size()<<' '<<totalMoney<<'\n';
-    for(auto &v:acceptedRequests)
-    {
-        cout<<v.first<<' '<<v.second<<'\n';
-    }
-    return 0;
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+	ll n,q;
+	vector<ll> cnt(31,0);
+	cin>>n>>q;
+	for(ll i=0;i<n;++i)
+	{
+		ll x;
+		cin>>x;
+		cnt[__builtin_ctzll(x)]++;
+	}
+	while(q--)
+	{
+		ll x,ans=0;
+		vector<ll> tmp=cnt;
+		cin>>x;
+		for(ll i=30;i>=0;--i)
+		{
+			if(bit(x,i))
+			{
+				ll req=1;
+				for(ll j=i;j>=0;--j)
+				{
+					if(tmp[j]>=req)
+					{
+						ans+=req;
+						tmp[j]-=req;
+						req=0;
+						break;
+					}
+					req-=tmp[j];
+					ans+=tmp[j];
+					tmp[j]=0;
+					req<<=1;
+				}
+				if(req!=0)
+				{
+					ans=-1;
+					break;
+				}
+			}
+		}
+		cout<<ans<<'\n';
+	}
+	return 0;
 }
+
