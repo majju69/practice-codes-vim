@@ -1,108 +1,54 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-class DisjointSet
+void dijkstra(int src,vector<int> adj[],vector<int> &dist)
 {
-
-private:
-
-    vector<int> ultimateParent,rank,size;
-
-public:
-
-    DisjointSet(int n)
+    queue<pair<int,int> > q;
+    dist[src]=0;
+    q.push(make_pair(src,0));
+    while(q.size())
     {
-        ultimateParent.resize(n+1);
-        rank.resize(n+1,0);
-        size.resize(n+1,1);
-        for(int i=0;i<=n;++i)
+        int node=q.front().first,dis=q.front().second;
+        q.pop();
+        for(auto &v:adj[node])
         {
-            ultimateParent[i]=i;
+            if(dist[v]>1+dis)
+            {
+                dist[v]=1+dis;
+                q.push(make_pair(v,dist[v]));
+            }
         }
     }
-
-    int findUltimateParent(int node)
-    {
-        if(ultimateParent[node]==node)
-        {
-            return node;
-        }
-        return ultimateParent[node]=findUltimateParent(ultimateParent[node]);
-    }
-
-    int getSize(int node)
-    {
-        return size[node];
-    }
-
-    int getRank(int node)
-    {
-        return rank[node];
-    }
-
-    void unionByRank(int u,int v)
-    {
-        int ultimateParentOfU=findUltimateParent(u),ultimateParentOfV=findUltimateParent(v);
-        if(ultimateParentOfU==ultimateParentOfV)
-        {
-            return ;
-        }
-        if(rank[ultimateParentOfU]<rank[ultimateParentOfV])
-        {
-            ultimateParent[ultimateParentOfU]=ultimateParentOfV;
-        }
-        else if(rank[ultimateParentOfU]>rank[ultimateParentOfV])
-        {
-            ultimateParent[ultimateParentOfV]=ultimateParentOfU;
-        }
-        else
-        {
-            ultimateParent[ultimateParentOfV]=ultimateParentOfU;
-            rank[ultimateParentOfU]++;
-        }
-    }
-
-    void unionBySize(int u,int v)
-    {
-        int ultimateParentOfU=findUltimateParent(u),ultimateParentOfV=findUltimateParent(v);
-        if(ultimateParentOfU==ultimateParentOfV)
-        {
-            return ;
-        }
-        if(size[ultimateParentOfU]<size[ultimateParentOfV])
-        {
-            ultimateParent[ultimateParentOfU]=ultimateParentOfV;
-            size[ultimateParentOfV]+=size[ultimateParentOfU];
-        }
-        else
-        {
-            ultimateParent[ultimateParentOfV]=ultimateParentOfU;
-            size[ultimateParentOfU]+=size[ultimateParentOfV];
-        }
-    }
-
-};
+}
 
 int main()
 {
-    int n;
-    string s,t;
-    vector<pair<char,char> > spells;
-    DisjointSet ds(26);
-    cin>>n>>s>>t;
-    for(int i=0;i<n;++i)
+    int n,m,s,t,ans=0;
+    cin>>n>>m>>s>>t;
+    vector<int> adj[n],distFwd(n,1e9),distRev(n,1e9);
+    map<pair<int,int>,bool> isEdge;
+    for(int i=0;i<m;++i)
     {
-        if(ds.findUltimateParent(s[i]-'a')!=ds.findUltimateParent(t[i]-'a'))
+        int u,v;
+        cin>>u>>v;
+        adj[u-1].push_back(v-1);
+        adj[v-1].push_back(u-1);
+        isEdge[make_pair(min(u,v)-1,max(u,v)-1)]=true;
+    }
+    dijkstra(s-1,adj,distFwd);
+    dijkstra(t-1,adj,distRev);
+    for(int i=0;i<n-1;++i)
+    {
+        for(int j=i+1;j<n;++j)
         {
-            spells.push_back(make_pair(s[i],t[i]));
-            ds.unionByRank(s[i]-'a',t[i]-'a');
+            if(!isEdge[make_pair(i,j)])
+            {
+                int minCost=min(distFwd[i]+distRev[j]+1,distFwd[j]+distRev[i]+1);
+                ans+=(minCost>=distFwd[t-1]);
+            }
         }
     }
-    cout<<spells.size()<<endl;
-    for(int i=0;i<spells.size();++i)
-    {
-        cout<<spells[i].first<<' '<<spells[i].second<<endl;
-    }
+    cout<<ans<<endl;
     return 0;
 }
 
