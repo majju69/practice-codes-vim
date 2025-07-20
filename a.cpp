@@ -1,153 +1,57 @@
-#include<bits/stdc++.h>
+#include <bits/stdc++.h>
 using namespace std;
 
-class DisjointSet
+void dijkstra(int src,vector<int> adj[],vector<int> &dist)
 {
-
-private:
-
-    vector<int> ultimateParent,rank,size;
-
-public:
-
-    DisjointSet(int n)
+    queue<pair<int,int> > q;
+    dist[src]=0;
+    q.push(make_pair(src,0));
+    while(q.size())
     {
-        ultimateParent.resize(n+1);
-        rank.resize(n+1,0);
-        size.resize(n+1,1);
-        for(int i=0;i<=n;++i)
+        int node=q.front().first,dis=q.front().second;
+        q.pop();
+        for(auto &v:adj[node])
         {
-            ultimateParent[i]=i;
+            if(dist[v]>1+dis)
+            {
+                dist[v]=1+dis;
+                q.push(make_pair(v,dist[v]));
+            }
         }
-    }
-
-    int findUltimateParent(int node)
-    {
-        if(ultimateParent[node]==node)
-        {
-            return node;
-        }
-        return ultimateParent[node]=findUltimateParent(ultimateParent[node]);
-    }
-
-    int getSize(int node)
-    {
-        return size[node];
-    }
-
-    int getRank(int node)
-    {
-        return rank[node];
-    }
-
-    void unionByRank(int u,int v)
-    {
-        int ultimateParentOfU=findUltimateParent(u),ultimateParentOfV=findUltimateParent(v);
-        if(ultimateParentOfU==ultimateParentOfV)
-        {
-            return ;
-        }
-        if(rank[ultimateParentOfU]<rank[ultimateParentOfV])
-        {
-            ultimateParent[ultimateParentOfU]=ultimateParentOfV;
-        }
-        else if(rank[ultimateParentOfU]>rank[ultimateParentOfV])
-        {
-            ultimateParent[ultimateParentOfV]=ultimateParentOfU;
-        }
-        else
-        {
-            ultimateParent[ultimateParentOfV]=ultimateParentOfU;
-            rank[ultimateParentOfU]++;
-        }
-    }
-
-    void unionBySize(int u,int v)
-    {
-        int ultimateParentOfU=findUltimateParent(u),ultimateParentOfV=findUltimateParent(v);
-        if(ultimateParentOfU==ultimateParentOfV)
-        {
-            return ;
-        }
-        if(size[ultimateParentOfU]<size[ultimateParentOfV])
-        {
-            ultimateParent[ultimateParentOfU]=ultimateParentOfV;
-            size[ultimateParentOfV]+=size[ultimateParentOfU];
-        }
-        else
-        {
-            ultimateParent[ultimateParentOfV]=ultimateParentOfU;
-            size[ultimateParentOfU]+=size[ultimateParentOfV];
-        }
-    }
-
-};
-
-void dfsPath(int node,int bee,vector<int> adj[],vector<bool> &vis,vector<int> &path)
-{
-    path.push_back(node);
-    vis[node]=true;
-    if(node==bee)
-    {
-        return ;
-    }
-    for(auto &v:adj[node])
-    {
-        if(!vis[v])
-        {
-            dfsPath(v,bee,adj,vis,path);
-        }
-    }
-    if(path.back()!=bee)
-    {
-        path.pop_back();
     }
 }
 
 int main()
 {
-    int n,x,y,a=0,b=0;
-    cin>>n>>x>>y;
-    x--;
-    y--;
-    vector<int> adj[n],path;
-    vector<bool> vis(n,false);
-    map<pair<int,int>,bool> isInPath;
-    DisjointSet ds(n);
-    for(int i=0;i<n-1;++i)
-    {
-        int u,v;
-        cin>>u>>v;
-        u--;
-        v--;
-        adj[u].push_back(v);
-        adj[v].push_back(u);
-        isInPath[make_pair(min(u,v),max(u,v))]=false;
-    }
-    dfsPath(x,y,adj,vis,path);
-    for(int i=0;i<path.size()-1;++i)
-    {
-        int u=min(path[i],path[i+1]),v=max(path[i],path[i+1]);
-        isInPath[make_pair(u,v)]=true;
-    }
-        
+    int n;
+    cin>>n;
+    vector<int> adj[n],dist(n,INT_MAX);
     for(int i=0;i<n;++i)
     {
-        for(auto &v:adj[i])
+        int x;
+        cin>>x;
+        if(i!=x-1)
         {
-            int v1=min(i,v),v2=max(i,v);
-            if(!isInPath[make_pair(v1,v2)])
-            {
-                ds.unionBySize(v1,v2);
-            }
+            adj[i].push_back(x-1);
         }
     }
     for(int i=0;i<n;++i)
     {
-        a+=(ds.findUltimateParent(i)==ds.findUltimateParent(x));
-        b+=(ds.findUltimateParent(i)==ds.findUltimateParent(y));
+        if(i!=0)
+        {
+            adj[i].push_back(i-1);
+        }
+        if(i!=n-1)
+        {
+            adj[i].push_back(i+1);
+        }
     }
-    cout<<(long long)n*(n-1)-(long long)a*b<<endl;
+    dijkstra(0,adj,dist);
+    for(int i=0;i<n;++i)
+    {
+        cout<<dist[i]<<' ';
+    }
+    cout<<endl;
     return 0;
 }
 
