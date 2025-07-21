@@ -1,150 +1,84 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-class DisjointSet
+const int MAX_N=1e5;
+int removed[MAX_N],subtree[MAX_N];
+
+void init(int n)
 {
-
-private:
-
-    vector<int> ultimateParent,rank,size;
-
-public:
-
-    DisjointSet(int n)
+    for(int i=0;i<n;++i)
     {
-        ultimateParent.resize(n+1);
-        rank.resize(n+1,0);
-        size.resize(n+1,1);
-        for(int i=0;i<=n;++i)
+        removed[i]=subtree[i]=0;
+    }
+}
+
+int getSize(int node,vector<int> adj[],int par=-1)
+{
+    subtree[node]=1;
+    for(auto &v:adj[node])
+    {
+        if(v!=par&&!removed[v])
         {
-            ultimateParent[i]=i;
+            subtree[node]+=getSize(v,adj,node);
         }
     }
+    return subtree[node];
+}
 
-    int findUltimateParent(int node)
+int getCentroid(int node,int sz,vector<int> adj[],int par=-1)
+{
+    for(auto &v:adj[node])
     {
-        if(ultimateParent[node]==node)
+        if(!removed[v]&&v!=par)
         {
-            return node;
-        }
-        return ultimateParent[node]=findUltimateParent(ultimateParent[node]);
-    }
-
-    int getSize(int node)
-    {
-        return size[node];
-    }
-
-    int getRank(int node)
-    {
-        return rank[node];
-    }
-
-    void unionByRank(int u,int v)
-    {
-        int ultimateParentOfU=findUltimateParent(u),ultimateParentOfV=findUltimateParent(v);
-        if(ultimateParentOfU==ultimateParentOfV)
-        {
-            return ;
-        }
-        if(rank[ultimateParentOfU]<rank[ultimateParentOfV])
-        {
-            ultimateParent[ultimateParentOfU]=ultimateParentOfV;
-        }
-        else if(rank[ultimateParentOfU]>rank[ultimateParentOfV])
-        {
-            ultimateParent[ultimateParentOfV]=ultimateParentOfU;
-        }
-        else
-        {
-            ultimateParent[ultimateParentOfV]=ultimateParentOfU;
-            rank[ultimateParentOfU]++;
+            if(subtree[v]*2>sz)
+            {
+                return getCentroid(v,sz,adj,node);
+            }
         }
     }
+    return node;
+}
 
-    void unionBySize(int u,int v)
+void build(int node,vector<int> adj[],string &s,char ch)
+{
+    int centroid=getCentroid(node,getSize(node,adj),adj);
+    s[centroid]=ch;
+    ch=(char)(ch+1);
+    removed[centroid]=1;
+    for(auto &v:adj[centroid])
     {
-        int ultimateParentOfU=findUltimateParent(u),ultimateParentOfV=findUltimateParent(v);
-        if(ultimateParentOfU==ultimateParentOfV)
+        if(!removed[v])
         {
-            return ;
-        }
-        if(size[ultimateParentOfU]<size[ultimateParentOfV])
-        {
-            ultimateParent[ultimateParentOfU]=ultimateParentOfV;
-            size[ultimateParentOfV]+=size[ultimateParentOfU];
-        }
-        else
-        {
-            ultimateParent[ultimateParentOfV]=ultimateParentOfU;
-            size[ultimateParentOfU]+=size[ultimateParentOfV];
+            build(v,adj,s,ch);
         }
     }
-
-};
+}
 
 int main()
 {
-    int n,m,dx[]={-1,1,0,0},dy[]={0,0,-1,1};
-    cin>>n>>m;
-    vector<string> str(n),ans;
-    DisjointSet ds(n*m);
-    for(int i=0;i<n;++i)
+    ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+    cout.tie(NULL);
+    int n;
+    char ch='A';
+    cin>>n;
+    init(n);
+    vector<int> adj[n];
+    string s(n,'Z');
+    for(int i=0;i<n-1;++i)
     {
-        cin>>str[i];
+        int u,v;
+        cin>>u>>v;
+        adj[u-1].push_back(v-1);
+        adj[v-1].push_back(u-1);
     }
-    for(int x=0;x<n;++x)
+    build(0,adj,s,ch);
+    for(auto &v:s)
     {
-        for(int y=0;y<m;++y)
-        {
-            if(str[x][y]=='.')
-            {
-                for(int i=0;i<4;++i)
-                {
-                    int r=x+dx[i],c=y+dy[i];
-                    if(r>=0&&r<n&&c>=0&&c<m&&str[r][c]=='.')
-                    {
-                        ds.unionBySize(r*m+c,x*m+y);
-                    }
-                }
-            }
-        }
+        cout<<v<<' ';
     }
-    for(int x=0;x<n;++x)
-    {
-        string s;
-        for(int y=0;y<m;++y)
-        {
-            if(str[x][y]=='.')
-            {
-                s.push_back('.');
-            }
-            else
-            {
-                int cnt=1;
-                unordered_set<int> distinctComp;
-                for(int i=0;i<4;++i)
-                {
-                    int r=x+dx[i],c=y+dy[i];
-                    if(r>=0&&r<n&&c>=0&&c<m&&str[r][c]=='.')
-                    {
-                        distinctComp.insert(ds.findUltimateParent(r*m+c));
-                    }
-                }
-                for(auto &v:distinctComp)
-                {
-                    cnt+=ds.getSize(v);
-                }
-                cnt%=10;
-                s.push_back((char)(cnt+'0'));
-            }
-        }
-        ans.push_back(s);
-    }
-    for(int i=0;i<n;++i)
-    {
-        cout<<ans[i]<<endl;
-    }
+    cout<<'\n';
     return 0;
 }
 
