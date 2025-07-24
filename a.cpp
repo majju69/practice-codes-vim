@@ -2,57 +2,94 @@
 using namespace std;
 
 #ifdef LOCAL
-	#include"debug.h"
+    #include"debug.h"
 #else
-	#define debug(x)
+    #define debug(x)
 #endif
 
-typedef long long ll;
+const int mod=1e9+7;
 
-inline ll get(ll n)
+inline int add(int a,int b)
 {
-	if(n<=0)
-	{
-		return 0;
-	}
-	return ((n*(n+1))>>1);
+    return ((a%mod)+(b%mod))%mod;
+}
+
+inline int get(int n)
+{
+    if(n==0)
+    {
+        return 0;
+    }
+    return 32-__builtin_clz(n);
+}
+
+bool cmp(int a,int b)
+{
+    return get(a)<get(b);
 }
 
 int main()
 {
-	ios_base::sync_with_stdio(false);
-	cin.tie(NULL);
-	cout.tie(NULL);
-	ll n,k,lo=0,hi=-1,ans=-1;
-	cin>>n>>k;
-	// k+(k-2)+(k-3)+....+(x) 
-	// k-2-x+1+1=mid
-	// x=k-mid
-	lo=1;
-	hi=k-1;
-	while(lo<=hi)
-	{
-		ll mid=lo+(hi-lo)/2;
-		ll sum=k;
-		if(mid>=2)
-		{
-			sum+=(get(k-2)-get(k-mid-1));
-		}
-		if(sum>=n)
-		{
-			ans=mid;
-			hi=mid-1;
-		}
-		else
-		{
-			lo=mid+1;
-		}
-	}
-	if(n==1)
-	{
-		ans=0;
-	}
-	cout<<ans<<'\n';
-	return 0;
+    ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+    cout.tie(NULL);
+    int n,p,ans=0;
+    set<int> st;
+    cin>>n>>p;
+    vector<int> a(n),fib(p),pre(p);
+    for(auto &v:a)
+    {
+        cin>>v;
+    }
+    sort(a.begin(),a.end(),cmp);
+    fib[0]=1;
+    fib[1]=1;
+    for(int i=2;i<p;++i)
+    {
+        fib[i]=add(fib[i-1],fib[i-2]);
+    }
+    pre[0]=fib[0];
+    for(int i=1;i<p;++i)
+    {
+        pre[i]=add(fib[i],pre[i-1]);
+    }
+    for(auto &v:a)
+    {
+        int x=v;
+        bool ok=1;
+        while(x)
+        {
+            if(st.count(x))
+            {
+                ok=0;
+                break;
+            }
+            if(x&1)
+            {
+                x>>=1;
+            }
+            else
+            {
+                if((x&3)==0)
+                {
+                    x>>=2;
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+        if(ok)
+        {
+            st.insert(v);
+            if(p<=30&&v>=(1<<p))
+            {
+                continue;
+            }
+            ans=add(ans,pre[p-get(v)]);
+        }
+    }
+    cout<<ans<<'\n';
+    return 0;
 }
-
