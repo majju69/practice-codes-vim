@@ -5,27 +5,37 @@ using namespace std;
     #include"debug.h"
 #else
     #define debug(x)
-#endif
+#endif 
 
-const int mod=1e9+7;
-
-inline int add(int a,int b)
+int get(string &s)
 {
-    return ((a%mod)+(b%mod))%mod;
-}
-
-inline int get(int n)
-{
-    if(n==0)
+    int n=s.size(),ans=0;
+    vector<int> a(n),pre(n),suf(n);
+    for(int i=0;i<n;++i)
     {
-        return 0;
+        a[i]=2*(s[i]=='(')-1;
+        pre[i]=a[i];
+        if(i>0)
+        {
+            a[i]+=a[i-1];
+            pre[i]=min(a[i],pre[i-1]);
+        }
     }
-    return 32-__builtin_clz(n);
-}
-
-bool cmp(int a,int b)
-{
-    return get(a)<get(b);
+    suf[n-1]=a[n-1];
+    for(int i=n-2;i>=0;--i)
+    {
+        suf[i]=min(suf[i+1],a[i]);
+    }
+    for(int i=0;i<n;++i)
+    {
+        int left=((i==0)?0:a[i-1]);
+        if(suf[i]>=left)
+        {
+            int sum=a[n-1]-left;
+            ans+=((i==0)||(sum+pre[i-1]>=0));
+        }
+    }
+    return ans;
 }
 
 int main()
@@ -33,63 +43,32 @@ int main()
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    int n,p,ans=0;
-    set<int> st;
-    cin>>n>>p;
-    vector<int> a(n),fib(p),pre(p);
-    for(auto &v:a)
+    int n;
+    string s;
+    cin>>n>>s;
+    if((n&1)||(count(s.begin(),s.end(),'(')!=(n>>1)))
     {
-        cin>>v;
+        cout<<0<<'\n'<<"1 1\n";
     }
-    sort(a.begin(),a.end(),cmp);
-    fib[0]=1;
-    fib[1]=1;
-    for(int i=2;i<p;++i)
+    else
     {
-        fib[i]=add(fib[i-1],fib[i-2]);
-    }
-    pre[0]=fib[0];
-    for(int i=1;i<p;++i)
-    {
-        pre[i]=add(fib[i],pre[i-1]);
-    }
-    for(auto &v:a)
-    {
-        int x=v;
-        bool ok=1;
-        while(x)
+        int _i=0,_j=0,cnt=0;
+        for(int i=0;i<n;++i)
         {
-            if(st.count(x))
+            for(int j=i;j<n;++j)
             {
-                ok=0;
-                break;
-            }
-            if(x&1)
-            {
-                x>>=1;
-            }
-            else
-            {
-                if((x&3)==0)
+                swap(s[i],s[j]);
+                int x=get(s);
+                if(x>cnt)
                 {
-                    x>>=2;
+                    cnt=x;
+                    _i=i;
+                    _j=j;
                 }
-                else
-                {
-                    break;
-                }
+                swap(s[i],s[j]);
             }
         }
-        if(ok)
-        {
-            st.insert(v);
-            if(p<=30&&v>=(1<<p))
-            {
-                continue;
-            }
-            ans=add(ans,pre[p-get(v)]);
-        }
+        cout<<cnt<<'\n'<<_i+1<<' '<<_j+1<<'\n';
     }
-    cout<<ans<<'\n';
     return 0;
 }
