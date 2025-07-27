@@ -5,70 +5,184 @@ using namespace std;
     #include"debug.h"
 #else
     #define debug(x)
-#endif 
+#endif
 
-int get(string &s)
+typedef long long ll;
+
+inline bool isSetBit(ll a,ll i)
 {
-    int n=s.size(),ans=0;
-    vector<int> a(n),pre(n),suf(n);
-    for(int i=0;i<n;++i)
+    return ((a&(1LL<<i))!=0);
+}
+
+vector<ll> merge(vector<ll> &a,vector<ll> &b)
+{
+    vector<ll> ans(20);
+    for(ll i=0;i<20;++i)
     {
-        a[i]=2*(s[i]=='(')-1;
-        pre[i]=a[i];
-        if(i>0)
-        {
-            a[i]+=a[i-1];
-            pre[i]=min(a[i],pre[i-1]);
-        }
-    }
-    suf[n-1]=a[n-1];
-    for(int i=n-2;i>=0;--i)
-    {
-        suf[i]=min(suf[i+1],a[i]);
-    }
-    for(int i=0;i<n;++i)
-    {
-        int left=((i==0)?0:a[i-1]);
-        if(suf[i]>=left)
-        {
-            int sum=a[n-1]-left;
-            ans+=((i==0)||(sum+pre[i-1]>=0));
-        }
+        ans[i]=a[i]+b[i];
     }
     return ans;
 }
+
+class SegmentTree
+{
+
+private:
+
+    vector<vector<ll>> seg;
+    vector<ll> lazy;
+
+public:
+
+    SegmentTree(ll n)
+    {
+        for(ll i=0;i<=4*n;++i)
+        {
+            vector<ll> tmp(20,0);
+            seg.push_back(tmp);
+            lazy.push_back(0);
+        }
+    }
+
+    void build(ll ind,ll lo,ll hi,vector<ll> &a)
+    {
+        if(lo==hi)
+        {
+            vector<ll> tmp(20,0);
+            for(ll i=0;i<20;++i)
+            {
+                if(isSetBit(a[lo],i))
+                {
+                    tmp[i]=1;
+                }
+            }
+            seg[ind]=tmp;
+            return;
+        }
+        ll mid=lo+(hi-lo)/2;
+        build(2*ind+1,lo,mid,a);
+        build(2*ind+2,mid+1,hi,a);
+        seg[ind]=merge(seg[2*ind+1],seg[2*ind+2]);
+    }
+
+    void update(ll ind,ll lo,ll hi,ll l,ll r,ll val)
+    {
+        if(lazy[ind]!=0)
+        {
+            for(ll i=0;i<20;++i)
+            {
+                if(isSetBit(lazy[ind],i))
+                {
+                    seg[ind][i]=(hi-lo+1)-seg[ind][i];
+                }
+            }
+            if(lo!=hi)
+            {
+                lazy[2*ind+1]=(lazy[2*ind+1]^lazy[ind]);
+                lazy[2*ind+2]=(lazy[2*ind+2]^lazy[ind]);
+            }
+            lazy[ind]=0;
+        }
+        if(l>hi||lo>r)
+        {
+            return;
+        }
+        if(l<=lo&&hi<=r)
+        {
+            for(ll i=0;i<20;++i)
+            {
+                if(isSetBit(val,i))
+                {
+                    seg[ind][i]=(hi-lo+1)-seg[ind][i];
+                }
+            }
+            if(lo!=hi)
+            {
+                lazy[2*ind+1]=(lazy[2*ind+1]^val);
+                lazy[2*ind+2]=(lazy[2*ind+2]^val);
+            }
+            return;
+        }
+        ll mid=lo+(hi-lo)/2;
+        update(2*ind+1,lo,mid,l,r,val);
+        update(2*ind+2,mid+1,hi,l,r,val);
+        seg[ind]=merge(seg[2*ind+1],seg[2*ind+2]);
+    }
+
+    vector<ll> query(ll ind,ll lo,ll hi,ll l,ll r)
+    {
+        if(lazy[ind]!=0)
+        {
+            for(ll i=0;i<20;++i)
+            {
+                if(isSetBit(lazy[ind],i))
+                {
+                    seg[ind][i]=(hi-lo+1)-seg[ind][i];
+                }
+            }
+            if(lo!=hi)
+            {
+                lazy[2*ind+1]=(lazy[2*ind+1]^lazy[ind]);
+                lazy[2*ind+2]=(lazy[2*ind+2]^lazy[ind]);
+            }
+            lazy[ind]=0;
+        }
+        if(l>hi||lo>r)
+        {
+            vector<ll> tmp(20,0);
+            return tmp;
+        }
+        if(l<=lo&&hi<=r)
+        {
+            return seg[ind];
+        }
+        ll mid=lo+(hi-lo)/2;
+        vector<ll> left=query(2*ind+1,lo,mid,l,r),right=query(2*ind+2,mid+1,hi,l,r);
+        return merge(left,right);
+    }
+
+};
 
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    int n;
-    string s;
-    cin>>n>>s;
-    if((n&1)||(count(s.begin(),s.end(),'(')!=(n>>1)))
+    ll n,q;
+    cin>>n;
+    vector<ll> a(n);
+    for(auto &v:a)
     {
-        cout<<0<<'\n'<<"1 1\n";
+        cin>>v;
     }
-    else
+    SegmentTree st(n);
+    st.build(0,0,n-1,a);
+    cin>>q;
+    while(q--)
     {
-        int _i=0,_j=0,cnt=0;
-        for(int i=0;i<n;++i)
+        ll type;
+        cin>>type;
+        if(type==1)
         {
-            for(int j=i;j<n;++j)
+            ll l,r,ans=0;
+            cin>>l>>r;
+            l--;
+            r--;
+            vector<ll> vec=st.query(0,0,n-1,l,r);
+            for(ll i=0;i<20;++i)
             {
-                swap(s[i],s[j]);
-                int x=get(s);
-                if(x>cnt)
-                {
-                    cnt=x;
-                    _i=i;
-                    _j=j;
-                }
-                swap(s[i],s[j]);
+                ans+=vec[i]*(1LL<<i);
             }
+            cout<<ans<<'\n';
         }
-        cout<<cnt<<'\n'<<_i+1<<' '<<_j+1<<'\n';
+        else
+        {
+            ll l,r,x;
+            cin>>l>>r>>x;
+            l--;
+            r--;
+            st.update(0,0,n-1,l,r,x);
+        }
     }
     return 0;
 }
