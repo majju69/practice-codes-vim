@@ -12,39 +12,48 @@ int main()
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    int n,m,mx=-1e9,len=-1,ans=1e9;
-    cin>>n>>m;
-    vector<pair<int,int>> a(n),b(m),res;
-    vector<int> suf;
-    for(auto &v:a)
+    int tc;
+    cin>>tc;
+    while(tc--)
     {
-        cin>>v.first>>v.second;
-    }
-    for(auto &v:b)
-    {
-        cin>>v.first>>v.second;
-    }
-    for(int i=0;i<n;++i)
-    {
-        for(int j=0;j<m;++j)
+        int n,k,ans=1e9;
+        cin>>n>>k;
+        vector<int> a(n+1);
+        vector<vector<int>> dp(n+1,vector<int>(n+1,-1e9));
+        for(int i=1;i<=n;++i)
         {
-            res.push_back({max(0,b[j].first-a[i].first+1),max(0,b[j].second-a[i].second+1)});
+            cin>>a[i];
         }
+        for(int i=1;i<=n;++i)
+        {
+            a[i]=i-a[i];
+        }
+        dp[1][0]=(a[1]==0);
+        dp[1][1]=0;
+        for(int i=2;i<=n;++i)
+        {
+            dp[i][0]=max(dp[i-1][0]+(a[i]==0),(int)(a[i]==0));
+            dp[i][i]=0;
+            for(int j=1;j<i;++j)
+            {
+                dp[i][j]=max({dp[i-1][j]+(a[i]==j),(int)(a[i]==j),dp[i-1][j-1]});
+            }
+        }
+        for(int i=1;i<=n;++i)
+        {
+            for(int j=0;j<=n;++j)
+            {
+                if(dp[i][j]>=k)
+                {
+                    ans=min(ans,j);
+                }
+            }
+        }
+        if(ans>n)
+        {
+            ans=-1;
+        }
+        cout<<ans<<'\n';
     }
-    sort(res.begin(),res.end());
-    len=res.size();
-    suf.resize(len);
-    for(int i=len-1;i>=0;--i)
-    {
-        mx=max(mx,res[i].second);
-        suf[i]=mx;
-    }
-    ans=suf[0];
-    for(int i=0;i<len;++i)
-    {
-        int right=((i+1>=len)?0:suf[i+1]);
-        ans=min(ans,res[i].first+right);
-    }
-    cout<<ans<<'\n';
     return 0;
 }
