@@ -7,52 +7,124 @@ using namespace std;
     #define debug(x)
 #endif
 
+class DisjointSet
+{
+
+private:
+
+    vector<int> ultimateParent,rank,size;
+
+public:
+
+    DisjointSet(int n)
+    {
+        ultimateParent.resize(n+1);
+        rank.resize(n+1,0);
+        size.resize(n+1,1);
+        for(int i=0;i<=n;++i)
+        {
+            ultimateParent[i]=i;
+        }
+    }
+
+    int findUltimateParent(int node)
+    {
+        if(ultimateParent[node]==node)
+        {
+            return node;
+        }
+        return ultimateParent[node]=findUltimateParent(ultimateParent[node]);
+    }
+
+    int getSize(int node)
+    {
+        return size[node];
+    }
+
+    int getRank(int node)
+    {
+        return rank[node];
+    }
+
+    void unionByRank(int u,int v)
+    {
+        int ultimateParentOfU=findUltimateParent(u),ultimateParentOfV=findUltimateParent(v);
+        if(ultimateParentOfU==ultimateParentOfV)
+        {
+            return ;
+        }
+        if(rank[ultimateParentOfU]<rank[ultimateParentOfV])
+        {
+            ultimateParent[ultimateParentOfU]=ultimateParentOfV;
+        }
+        else if(rank[ultimateParentOfU]>rank[ultimateParentOfV])
+        {
+            ultimateParent[ultimateParentOfV]=ultimateParentOfU;
+        }
+        else
+        {
+            ultimateParent[ultimateParentOfV]=ultimateParentOfU;
+            rank[ultimateParentOfU]++;
+        }
+    }
+
+    void unionBySize(int u,int v)
+    {
+        int ultimateParentOfU=findUltimateParent(u),ultimateParentOfV=findUltimateParent(v);
+        if(ultimateParentOfU==ultimateParentOfV)
+        {
+            return ;
+        }
+        if(size[ultimateParentOfU]<size[ultimateParentOfV])
+        {
+            ultimateParent[ultimateParentOfU]=ultimateParentOfV;
+            size[ultimateParentOfV]+=size[ultimateParentOfU];
+        }
+        else
+        {
+            ultimateParent[ultimateParentOfV]=ultimateParentOfU;
+            size[ultimateParentOfU]+=size[ultimateParentOfV];
+        }
+    }
+
+};
+
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    int q;
-    map<int,int> mp;
-    cin>>q;
-    vector<int> ans(q,-1);
-    vector<pair<pair<int,int>,pair<int,int>>> a(q);
-    for(int i=0;i<q;++i)
+    int n,q;
+    cin>>n>>q;
+    DisjointSet ds(n),ds1(n),ds2(n);
+    vector<int> mx(n);
+    iota(mx.begin(),mx.end(),0);
+    while(q--)
     {
-        int _a,t,x;
-        cin>>_a>>t>>x;
-        a[i].first.first=t;
-        a[i].first.second=_a;
-        a[i].second.first=x;
-        a[i].second.second=i;
-    }
-    if(q==6)
-    {
-        cout<<"1\n2\n1";
-        return 0;
-    }
-    sort(a.begin(),a.end());
-    for(auto &v:a)
-    {
-        int _a=v.first.second,x=v.second.first,i=v.second.second;
-        if(_a==1)
+        int type,u,v;
+        cin>>type>>u>>v;
+        u--;
+        v--;
+        if(type==1)
         {
-            mp[x]++;
+            ds1.unionByRank(u,v);
+            ds2.unionByRank(u,v);
         }
-        else if(v.first.second==2)
+        else if(type==2)
         {
-            mp[x]--;
+            int cur=u;
+            while(ds.findUltimateParent(cur)!=ds.findUltimateParent(v))
+            {
+                int nxt=mx[ds.findUltimateParent(cur)]+1;
+                int mx1=nxt-1,mx2=mx[ds.findUltimateParent(nxt)];
+                ds.unionByRank(cur,nxt);
+                ds2.unionByRank(cur,nxt);
+                mx[ds.findUltimateParent(cur)]=max(mx1,mx2);
+            }
         }
         else
         {
-            ans[i]=mp[x];
-        }
-    }
-    for(auto &v:ans)
-    {
-        if(v!=-1)
-        {
-            cout<<v<<'\n';
+            cout<<((ds2.findUltimateParent(u)==ds2.findUltimateParent(v))?"YES":"NO")<<'\n';
         }
     }
     return 0;
