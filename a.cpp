@@ -7,130 +7,64 @@ using namespace std;
     #define debug(x)
 #endif
 
-vector<vector<int>> divisors(100001);
-
-void fillDivisors()
-{
-    int n=divisors.size();
-    divisors[0].push_back(0);
-    divisors[1].push_back(1);
-    for(int i=2;i<n;i++)
-    {
-        divisors[i].push_back(1);
-    }
-    for(int i=2;i<n;i++)
-    {
-        for(int j=i;j<n;j+=i)
-        {
-            divisors[j].push_back(i);
-        }
-    }
-}
-
-bool check(int mid,int m,vector<int> &a)
-{
-    int n=a.size(),i1=0,i2=-1,total=0;
-    vector<int> cnt(m+1,0);
-    for(int i=0;i<n;++i)
-    {
-        if(a[i]-a[i1]<=mid)
-        {
-            for(auto &d:divisors[a[i]])
-            {
-                if(d<=m)
-                {
-                    cnt[d]++;
-                    total+=(cnt[d]==1);
-                    if(total==m)
-                    {
-                        return 1;
-                    }
-                }
-            }
-            i2=i;
-        }
-        else
-        {
-            break;
-        }
-    }
-    while(i2<n)
-    {
-        for(auto &d:divisors[a[i1]])
-        {
-            if(d<=m)
-            {
-                if(mid==0)
-                {
-                    debug(d);
-                }
-                total-=(cnt[d]==1);
-                cnt[d]--;
-            }
-        }
-        i1++;
-        int _i2=i2;
-        for(int i=i2+1;i<n;++i)
-        {
-            if(a[i]-a[i1]<=mid)
-            {
-                for(auto &d:divisors[a[i]])
-                {
-                    if(d<=m)
-                    {
-                        cnt[d]++;
-                        total+=(cnt[d]==1);
-                        if(total==m)
-                        {
-                            return 1;
-                        }
-                    }
-                }
-                _i2=i;
-            }
-            else
-            {
-                break;
-            }
-        }
-        i2=max(i1,_i2);
-    }
-    return 0;
-}
+typedef long long ll;
 
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    fillDivisors();
-    int tc;
-    cin>>tc;
-    while(tc--)
+    #ifdef LOCAL
+        freopen("input.txt","r",stdin);
+        freopen("output.txt","w",stdout);
+        freopen("error.txt", "w", stderr);
+    #endif
+    ll n,k,ans=0;
+    map<ll,ll> mp1,mp2,mp3;
+    cin>>n>>k;
+    for(ll i=0;i<n;++i)
     {
-        int n,m,lo=0,hi=-1,ans=-1;
-        cin>>n>>m;
-        vector<int> a(n);
-        for(auto &v:a)
+        ll x;
+        cin>>x;
+        mp1[x]++;
+        if(x%k==0)
         {
-            cin>>v;
-        }
-        sort(a.begin(),a.end());
-        hi=a[n-1]-a[0];
-        while(lo<=hi)
-        {
-            int mid=lo+(hi-lo)/2;
-            if(check(mid,m,a))
+            if(mp1.find(x/k)!=mp1.end())
             {
-                ans=mid;
-                hi=mid-1;
+                mp2[x]+=mp1[x/k];
             }
-            else
+            if(mp2.find(x/k)!=mp2.end())
             {
-                lo=mid+1;
+                mp3[x]+=mp2[x/k];
             }
         }
-        cout<<ans<<'\n';
     }
+    if(k!=1)
+    {
+        for(auto &v:mp3)
+        {
+            if(v.first!=0)
+            {
+                ans+=v.second;
+            }
+        }
+        for(auto &v:mp1)
+        {
+            if(v.first==0)
+            {
+                ll x=v.second;
+                ans+=(x*(x-1)*(x-2)/6);
+            }
+        }
+    }
+    else
+    {
+        for(auto &v:mp1)
+        {
+            ll x=v.second;
+            ans+=(x*(x-1)*(x-2)/6);
+        }
+    }
+    cout<<ans<<'\n';
     return 0;
 }
