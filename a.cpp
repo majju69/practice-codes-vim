@@ -7,74 +7,70 @@ using namespace std;
     #define debug(x)
 #endif
 
+vector<int> lpf(10000001,0),primes,pre(10000001,0);
+
+void leastPrimeFactor()
+{
+    int n=lpf.size();
+    for(int i=2;i<n;++i)
+    {
+        if(lpf[i]==0)
+        {
+            lpf[i]=i;
+            primes.push_back(i);
+        }
+        for(int j=0;i*primes[j]<n;++j)
+        {
+            lpf[i*primes[j]]=primes[j];
+            if(primes[j]==lpf[i])
+            {
+                break;
+            }
+        }
+    }
+}
+
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    int n,w,h,mx=0,idx=-1;
-    cin>>n>>w>>h;
-    vector<int> dp(n,1);
-    vector<pair<pair<int,int>,int>> a(n);
-    for(int i=0;i<n;++i)
+    leastPrimeFactor();
+    int n,q;
+    cin>>n;
+    while(n--)
     {
-        cin>>a[i].first.first>>a[i].first.second;
-        a[i].second=i;
-    }
-    sort(a.begin(),a.end());
-    for(int i=n-2;i>=0;--i)
-    {
-        for(int j=n-1;j>i;--j)
+        int x;
+        cin>>x;
+        while(x>1)
         {
-            if(a[j].first.first>a[i].first.first&&a[j].first.second>a[i].first.second)
+            int cur=lpf[x];
+            pre[cur]++;
+            while(x%cur==0)
             {
-                dp[i]=max(dp[i],1+dp[j]);
+                x/=cur;
             }
         }
     }
-    for(int i=0;i<n;++i)
+    for(int i=1;i<10000001;++i)
     {
-        if(a[i].first.first>w&&a[i].first.second>h)
-        {
-            if(dp[i]>mx)
-            {
-                mx=dp[i];
-                idx=i;
-            }
-        }
+        pre[i]+=pre[i-1];
     }
-    cout<<mx<<'\n';
-    if(idx!=-1)
+    cin>>q;
+    while(q--)
     {
-        int cur=idx;
-        vector<int> ans;
-        ans.push_back(a[cur].second);
-        while(1)
+        int l,r;
+        cin>>l>>r;
+        if(l>primes.back())
         {
-            int nxt=-1;
-            for(int i=cur+1;i<n;++i)
-            {
-                if(a[i].first.first>a[cur].first.first&&a[i].first.second>a[cur].first.second)
-                {
-                    if(dp[i]==dp[cur]-1)
-                    {
-                        nxt=i;
-                        break;
-                    }
-                }
-            }
-            if(nxt==-1)
-            {
-                break;
-            }
-            cur=nxt;
-            ans.push_back(a[cur].second);
+            cout<<0<<'\n';
+            continue;
         }
-        for(auto &v:ans)
+        if(r>primes.back())
         {
-            cout<<v+1<<' ';
+            r=1e7;
         }
-        cout<<'\n';
+        cout<<pre[r]-pre[l-1]<<'\n';
     }
     return 0;
 }
