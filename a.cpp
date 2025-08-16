@@ -12,79 +12,69 @@ int main()
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    int tc;
-    cin>>tc;
-    while(tc--)
+    int n,w,h,mx=0,idx=-1;
+    cin>>n>>w>>h;
+    vector<int> dp(n,1);
+    vector<pair<pair<int,int>,int>> a(n);
+    for(int i=0;i<n;++i)
     {
-        int n;
-        map<int,int> plus_x,plus_y;
-        cin>>n;
-        vector<int> x(n),y(n),xo,yo,pp,pm,mp,mm;
-        for(int i=0;i<n;++i)
+        cin>>a[i].first.first>>a[i].first.second;
+        a[i].second=i;
+    }
+    sort(a.begin(),a.end());
+    for(int i=n-2;i>=0;--i)
+    {
+        for(int j=n-1;j>i;--j)
         {
-            cin>>x[i]>>y[i];
-        }
-        xo=x;
-        yo=y;
-        sort(x.begin(),x.end());
-        sort(y.begin(),y.end());
-        for(int i=n/2;i<n;++i)
-        {
-            plus_x[x[i]]++;
-            plus_y[y[i]]++;
-        }
-        for(int i=0;i<n;++i)
-        {
-            bool _x=0,_y=0;
-            if(plus_x.count(xo[i]))
+            if(a[j].first.first>a[i].first.first&&a[j].first.second>a[i].first.second)
             {
-                _x=1;
-                plus_x[xo[i]]--;
-                if(plus_x[xo[i]]==0)
+                dp[i]=max(dp[i],1+dp[j]);
+            }
+        }
+    }
+    for(int i=0;i<n;++i)
+    {
+        if(a[i].first.first>w&&a[i].first.second>h)
+        {
+            if(dp[i]>mx)
+            {
+                mx=dp[i];
+                idx=i;
+            }
+        }
+    }
+    cout<<mx<<'\n';
+    if(idx!=-1)
+    {
+        int cur=idx;
+        vector<int> ans;
+        ans.push_back(a[cur].second);
+        while(1)
+        {
+            int nxt=-1;
+            for(int i=cur+1;i<n;++i)
+            {
+                if(a[i].first.first>a[cur].first.first&&a[i].first.second>a[cur].first.second)
                 {
-                    plus_x.erase(xo[i]);
+                    if(dp[i]==dp[cur]-1)
+                    {
+                        nxt=i;
+                        break;
+                    }
                 }
             }
-            if(plus_y.count(yo[i]))
+            if(nxt==-1)
             {
-                _y=1;
-                plus_y[yo[i]]--;
-                if(plus_y[yo[i]]==0)
-                {
-                    plus_y.erase(yo[i]);
-                }
+                break;
             }
-            if(_x&&_y)
-            {
-                pp.push_back(i);
-            }
-            else if(_x&&!_y)
-            {
-                pm.push_back(i);
-            }
-            else if(!_x&&_y)
-            {
-                mp.push_back(i);
-            }
-            else
-            {
-                mm.push_back(i);
-            }
+            cur=nxt;
+            ans.push_back(a[cur].second);
         }
-        while((int)pp.size()>0)
+        for(auto &v:ans)
         {
-            assert((int)mm.size()>0);
-            cout<<pp.back()+1<<' '<<mm.back()+1<<'\n';
-            pp.pop_back();
-            mm.pop_back();
+            cout<<v+1<<' ';
         }
-        while((int)pm.size()>0)
-        {
-            assert((int)mp.size()>0);
-            cout<<pm.back()+1<<' '<<mp.back()+1<<'\n';
-            pm.pop_back();
-            mp.pop_back();
-        }
+        cout<<'\n';
     }
     return 0;
 }
