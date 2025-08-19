@@ -7,114 +7,44 @@ using namespace std;
     #define debug(x)
 #endif
 
-typedef long long ll;
+int dp[11][1001];
 
-class SegmentTree
+int solve(int i,int rem,vector<int> &a,vector<int> &b,vector<int> &c,vector<int> &d,int c0,int d0)
 {
-
-private:
-
-    vector<ll> seg,lazy;
-
-public:
-
-    SegmentTree(ll n)
+    if(i>=(int)a.size())
     {
-        seg.resize(4*n+1);
-        lazy.resize(4*n+1);
+        return (rem/c0)*d0;
     }
-
-    void build(ll ind,ll lo,ll hi,vector<ll> &a)
+    if(dp[i][rem]!=-1)
     {
-        if(lo==hi)
-        {
-            seg[ind]=a[lo];
-            return;
-        }
-        ll mid=lo+(hi-lo)/2;
-        build(2*ind+1,lo,mid,a);
-        build(2*ind+2,mid+1,hi,a);
-        seg[ind]=seg[2*ind+1]+seg[2*ind+2];
+        return dp[i][rem];
     }
-
-    void update(ll ind,ll lo,ll hi,ll l,ll r,ll val)
+    int ans=0;
+    for(int cnt=0;cnt<=100;++cnt)
     {
-        if(lazy[ind]!=0)
+        if(rem>=c[i]*cnt&&a[i]>=cnt*b[i])
         {
-            seg[ind]+=(hi-lo+1)*lazy[ind];
-            if(hi!=lo)
-            {
-                lazy[2*ind+1]+=lazy[ind];
-                lazy[2*ind+2]+=lazy[ind];
-            }
-            lazy[ind]=0;
+            ans=max(ans,solve(i+1,rem-c[i]*cnt,a,b,c,d,c0,d0)+cnt*d[i]);
         }
-        if(l>hi||lo>r)
+        else
         {
-            return;
+            break;
         }
-        if(l<=lo&&hi<=r)
-        {
-            seg[ind]+=val;
-            if(hi!=lo)
-            {
-                lazy[2*ind+1]+=val;
-                lazy[2*ind+2]+=val;
-            }
-            return;
-        }
-        ll mid=lo+(hi-lo)/2;
-        update(2*ind+1,lo,mid,l,r,val);
-        update(2*ind+2,mid+1,hi,l,r,val);
-        seg[ind]=seg[2*ind+1]+seg[2*ind+2];
     }
+    return dp[i][rem]=ans;
+}
 
-    ll query(ll ind,ll lo,ll hi,ll i)
-    {
-        if(lazy[ind]!=0)
-        {
-            seg[ind]+=lazy[ind];
-            if(hi!=lo)
-            {
-                lazy[2*ind+1]+=lazy[ind];
-                lazy[2*ind+2]+=lazy[ind];
-            }
-            lazy[ind]=0;
-        }
-        if(lo==hi)
-        {
-            return seg[ind];
-        }
-        ll mid=lo+(hi-lo)/2;
-        if(i<=mid)
-        {
-            return query(2*ind+1,lo,mid,i);
-        }
-        return query(2*ind+2,mid+1,hi,i);
-    }
-
-};
-
-bool check(ll mid,ll m,ll w,vector<ll> &vec)
+int maxCost(int rem,vector<int> &a,vector<int> &b,vector<int> &c,vector<int> &d,int c0,int d0)
 {
-    ll n=vec.size(),cost=0;
-    vector<ll> a;
-    for(ll i=0;i<n;++i)
+    int n=a.size();
+    for(int i=0;i<=n;++i)
     {
-        a.push_back(max(0LL,mid-vec[i]));
-    }
-    SegmentTree st(n);
-    st.build(0,0,n-1,a);
-    for(ll i=0;i<n;++i)
-    {
-        ll x=st.query(0,0,n-1,i);
-        if(x>0)
+        for(int j=0;j<=rem;++j)
         {
-            cost+=x;
-            st.update(0,0,n-1,i,min(i+w-1,n-1),-x);
+            dp[i][j]=-1;
         }
     }
-    return (cost<=m);
+    return solve(0,rem,a,b,c,d,c0,d0);
 }
 
 int main()
@@ -122,26 +52,13 @@ int main()
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    ll n,m,w,lo=0,hi=2e9,ans=-1;
-    cin>>n>>m>>w;
-    vector<ll> a(n);
-    for(auto &v:a)
+    int rem,n,c0,d0;
+    cin>>rem>>n>>c0>>d0;
+    vector<int> a(n),b(n),c(n),d(n);
+    for(int i=0;i<n;++i)
     {
-        cin>>v;
+        cin>>a[i]>>b[i]>>c[i]>>d[i];
     }
-    while(lo<=hi)
-    {
-        ll mid=lo+(hi-lo)/2;
-        if(check(mid,m,w,a))
-        {
-            ans=mid;
-            lo=mid+1;
-        }
-        else
-        {
-            hi=mid-1;
-        }
-    }
-    cout<<ans<<'\n';
+    cout<<maxCost(rem,a,b,c,d,c0,d0)<<'\n';
     return 0;
 }
