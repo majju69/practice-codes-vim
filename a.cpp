@@ -7,44 +7,23 @@ using namespace std;
     #define debug(x)
 #endif
 
-int dp[11][1001];
+typedef long long ll;
 
-int solve(int i,int rem,vector<int> &a,vector<int> &b,vector<int> &c,vector<int> &d,int c0,int d0)
+inline ll ask(char c,ll k)
 {
-    if(i>=(int)a.size())
+    cout<<"? "<<c<<' '<<k<<endl;
+    ll x;
+    cin>>x;
+    if(x==-1)
     {
-        return (rem/c0)*d0;
+        exit(1);
     }
-    if(dp[i][rem]!=-1)
-    {
-        return dp[i][rem];
-    }
-    int ans=0;
-    for(int cnt=0;cnt<=100;++cnt)
-    {
-        if(rem>=c[i]*cnt&&a[i]>=cnt*b[i])
-        {
-            ans=max(ans,solve(i+1,rem-c[i]*cnt,a,b,c,d,c0,d0)+cnt*d[i]);
-        }
-        else
-        {
-            break;
-        }
-    }
-    return dp[i][rem]=ans;
+    return x;
 }
 
-int maxCost(int rem,vector<int> &a,vector<int> &b,vector<int> &c,vector<int> &d,int c0,int d0)
+inline void reply(ll x,ll y)
 {
-    int n=a.size();
-    for(int i=0;i<=n;++i)
-    {
-        for(int j=0;j<=rem;++j)
-        {
-            dp[i][j]=-1;
-        }
-    }
-    return solve(0,rem,a,b,c,d,c0,d0);
+    cout<<"! "<<x<<' '<<y<<endl;
 }
 
 int main()
@@ -52,13 +31,41 @@ int main()
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    int rem,n,c0,d0;
-    cin>>rem>>n>>c0>>d0;
-    vector<int> a(n),b(n),c(n),d(n);
-    for(int i=0;i<n;++i)
+    ll tc;
+    cin>>tc;
+    while(tc--)
     {
-        cin>>a[i]>>b[i]>>c[i]>>d[i];
+        ll n,d1=-1,d2=-1,idx=0,idx1=0;
+        cin>>n;
+        vector<pair<ll,ll>> a(n);
+        for(auto &v:a)
+        {
+            cin>>v.first>>v.second;
+        }
+        for(ll i=1;i<n;++i)
+        {
+            if(-a[i].first+a[i].second>-a[idx].first+a[idx].second)
+            {
+                idx=i;
+            }
+            if(a[i].first+a[i].second>a[idx1].first+a[idx1].second)
+            {
+                idx1=i;
+            }
+        }
+        d1=ask('U',1e9);
+        d1=ask('U',1e9);
+        d1=ask('L',1e9);
+        d1=ask('L',1e9);
+        d2=ask('R',1e9);
+        d2=ask('R',1e9);
+        d2=ask('R',1e9);
+        d2=ask('R',1e9);
+        d1+=a[idx].second-a[idx].first-4e9;
+        d2+=a[idx1].second+a[idx1].first-4e9;
+        reply((d2-d1)/2,(d1+d2)/2);
     }
-    cout<<maxCost(rem,a,b,c,d,c0,d0)<<'\n';
     return 0;
 }
+
+
