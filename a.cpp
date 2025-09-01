@@ -9,21 +9,41 @@ using namespace std;
 
 typedef long long ll;
 
-inline ll ask(char c,ll k)
+ll get(ll n)
 {
-    cout<<"? "<<c<<' '<<k<<endl;
-    ll x;
-    cin>>x;
-    if(x==-1)
+    ll ans=0;
+    for(ll i=1;i<=n;i*=10)
     {
-        exit(1);
+        ans+=(n-i+1);
     }
-    return x;
+    return ans;
 }
 
-inline void reply(ll x,ll y)
+ll dp[15][127][2];
+
+ll solve(ll i,ll sum,bool last,string &s)
 {
-    cout<<"! "<<x<<' '<<y<<endl;
+    if(i>=(ll)s.size())
+    {
+        return sum;
+    }
+    if(dp[i][sum][last]!=-1)
+    {
+        return dp[i][sum][last];
+    }
+    ll till=(last?(s[i]-'0'):9),ans=0;
+    for(ll j=0;j<=till;++j)
+    {
+        ans+=(solve(i+1,sum+j,(last&&(j==till)),s));
+    }
+    return dp[i][sum][last]=ans;
+}
+
+ll get_pre(ll x)
+{
+    memset(dp,-1,sizeof(dp));
+    string s=to_string(x);
+    return solve(0,0,1,s);
 }
 
 int main()
@@ -35,37 +55,31 @@ int main()
     cin>>tc;
     while(tc--)
     {
-        ll n,d1=-1,d2=-1,idx=0,idx1=0;
-        cin>>n;
-        vector<pair<ll,ll>> a(n);
-        for(auto &v:a)
+        ll k,lo=0,hi=-1,num=0,ans=0;
+        cin>>k;
+        hi=k;
+        while(lo<=hi)
         {
-            cin>>v.first>>v.second;
-        }
-        for(ll i=1;i<n;++i)
-        {
-            if(-a[i].first+a[i].second>-a[idx].first+a[idx].second)
+            ll mid=lo+((hi-lo)>>1);
+            if(get(mid)<k)
             {
-                idx=i;
+                num=mid;
+                lo=mid+1;
             }
-            if(a[i].first+a[i].second>a[idx1].first+a[idx1].second)
+            else
             {
-                idx1=i;
+                hi=mid-1;
             }
         }
-        d1=ask('U',1e9);
-        d1=ask('U',1e9);
-        d1=ask('L',1e9);
-        d1=ask('L',1e9);
-        d2=ask('R',1e9);
-        d2=ask('R',1e9);
-        d2=ask('R',1e9);
-        d2=ask('R',1e9);
-        d1+=a[idx].second-a[idx].first-4e9;
-        d2+=a[idx1].second+a[idx1].first-4e9;
-        reply((d2-d1)/2,(d1+d2)/2);
+        ans=get_pre(num);
+        k-=get(num);
+        num++;
+        string tmp=to_string(num);
+        for(ll i=0;i<k;++i)
+        {
+            ans+=(tmp[i]-'0');
+        }
+        cout<<ans<<'\n';
     }
     return 0;
 }
-
-
