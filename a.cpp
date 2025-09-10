@@ -7,112 +7,110 @@ using namespace std;
     #define debug(x)
 #endif
 
-typedef long long ll;
+inline bool bit(int a,int i)
+{
+    return a>>i&1;
+}
+
+inline bool check(int n)
+{
+    assert(n<16);
+    return !((bit(n,0)==bit(n,1)&&bit(n,1)==bit(n,2))||(bit(n,1)==bit(n,2)&&bit(n,2)==bit(n,3)));
+}
+
+int dp[200001][4];
+
+int solve(int i,int pvs,int endStart,vector<int> &a)
+{
+    if(i==(int)a.size()-2)
+    {
+        int mask=(pvs<<2)+(endStart>>2);
+        if(check(mask))
+        {
+            return 0;
+        }
+        return 1e9;
+    }
+    if(dp[i][pvs]!=-1)
+    {
+        return dp[i][pvs];
+    }
+    if(bit(pvs,0)==bit(pvs,1))
+    {
+        if(a[i]!=bit(pvs,0))
+        {
+            return dp[i][pvs]=solve(i+1,((pvs&1)<<1)+a[i],endStart,a);
+        }
+        return dp[i][pvs]=solve(i+1,((pvs&1)<<1)+1-a[i],endStart,a)+1;
+    }
+    return dp[i][pvs]=min(solve(i+1,((pvs&1)<<1)+a[i],endStart,a),solve(i+1,((pvs&1)<<1)+1-a[i],endStart,a)+1);
+}
+
+int getMin(vector<int> &a)
+{
+    int n=a.size(),ans=1e9;
+    for(int mask=0;mask<16;++mask)
+    {
+        if(check(mask))
+        {
+            int cur=((bit(mask,3)!=a[n-2])+(bit(mask,2)!=a[n-1])+(bit(mask,1)!=a[0])+(bit(mask,0)!=a[1]));
+            for(int i=0;i<=n;++i)
+            {
+                memset(dp[i],-1,sizeof(dp[i]));
+            }
+            cur+=solve(2,(mask&3),mask,a);
+            ans=min(ans,cur);
+        }
+    }
+    return ans;
+}
 
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    ll tc;
+    int tc;
     cin>>tc;
     while(tc--)
     {
-        ll n,m,q;
-        vector<pair<ll,bool>> a;
-        cin>>n>>m>>q;
-        vector<ll> a1(n+m),a2(n+m),pre(n+m),pre_a(n+m),pre_b(n+m);
-        for(ll i=0;i<n;++i)
+        int n;
+        string s;
+        vector<int> a;
+        cin>>n>>s;
+        for(auto &v:s)
         {
-            ll x;
-            cin>>x;
-            a.push_back({x,0});
+            a.push_back(v=='R');
         }
-        for(ll i=0;i<m;++i)
+        if(n<=5)
         {
-            ll x;
-            cin>>x;
-            a.push_back({x,1});
+            int ans=1e9;
+            for(int mask=0;mask<(1<<n);++mask)
+            {
+                bool ok=1;
+                for(int i=0;i<n;++i)
+                {
+                    if(bit(mask,i)==bit(mask,(i+1)%n)&&bit(mask,(i+1)%n)==bit(mask,(i+2)%n))
+                    {
+                        ok=0;
+                        break;
+                    }
+                }
+                if(ok)
+                {
+                    int cur=0;
+                    for(int i=0;i<n;++i)
+                    {
+                        cur+=(bit(mask,i)!=a[i]);
+                    }
+                    ans=min(ans,cur);
+                }
+            }
+            cout<<ans<<'\n';
         }
-        sort(a.rbegin(),a.rend());
-        a1[0]=!a[0].second;
-        a2[0]=a[0].second;
-        pre[0]=a[0].first;
-        pre_a[0]=(!a[0].second*a[0].first);
-        pre_b[0]=(a[0].second*a[0].first);
-        for(ll i=1;i<n+m;++i)
+        else
         {
-            a1[i]=a1[i-1]+!a[i].second;
-            a2[i]=a2[i-1]+a[i].second;
-            pre[i]=pre[i-1]+a[i].first;
-            pre_a[i]=pre_a[i-1]+(!a[i].second*a[i].first);
-            pre_b[i]=pre_b[i-1]+(a[i].second*a[i].first);
-        }
-        while(q--)
-        {
-            ll x,y,z;
-            cin>>x>>y>>z;
-            ll ub_x=upper_bound(a1.begin(),a1.end(),x)-a1.begin()-1,ub_y=upper_bound(a2.begin(),a2.end(),y)-a2.begin()-1;
-            if(z==0)
-            {
-                cout<<0<<'\n';
-                continue;
-            }
-            if(x==0)
-            {
-                if(y==0)
-                {
-                    cout<<0<<'\n';
-                }
-                else
-                {
-                    ll req=z,ans=0;
-                    ll idx=lower_bound(a2.begin(),a2.end(),req)-a2.begin();
-                    ans+=pre_b[idx];
-                    cout<<ans<<'\n';
-                }
-                continue;
-            }
-            if(y==0)
-            {
-                if(x==0)
-                {
-                    cout<<0<<'\n';
-                }
-                else
-                {
-                    ll req=z,ans=0;
-                    ll idx=lower_bound(a1.begin(),a1.end(),req)-a1.begin();
-                    ans+=pre_a[idx];
-                    cout<<ans<<'\n';
-                }
-                continue;
-            }
-            if(z<=min(ub_x,ub_y)+1)
-            {
-                cout<<pre[z-1]<<'\n';
-            }
-            else
-            {
-                if(ub_x<ub_y)
-                {
-                    ll ans=pre[ub_x],req=z-ub_x-1;
-                    // in a2, from ub_x+1,...,n+m-1, find the 1st idx >= req
-                    // a2[idx]-a2[ub_x] >= req => a2[idx]>=req+a2[ub_x]
-                    ll idx=lower_bound(a2.begin(),a2.end(),req+a2[ub_x])-a2.begin();
-                    ans+=pre_b[idx]-pre_b[ub_x];
-                    cout<<ans<<'\n';
-                }
-                else
-                {
-                    ll ans=pre[ub_y],req=z-ub_y-1;
-                    // in a1, from ub_y+1,...,n+m-1, find the 1st idx >= req
-                    // a1[idx]-a1[ub_y] >= req => a1[idx]>=req+a1[ub_y]
-                    ll idx=lower_bound(a1.begin(),a1.end(),req+a1[ub_y])-a1.begin();
-                    ans+=pre_a[idx]-pre_a[ub_y];
-                    cout<<ans<<'\n';
-                }
-            }
+            cout<<getMin(a)<<'\n';
         }
     }
     return 0;
