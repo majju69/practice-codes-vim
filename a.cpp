@@ -7,30 +7,14 @@ using namespace std;
     #define debug(x)
 #endif
 
-typedef long long ll;
-
-vector<long long> lpf(300001,0);
-vector<long long> primes;
-
-void leastPrimeFactor()
+inline char get(int i)
 {
-    long long n=lpf.size();
-    for(long long i=2;i<n;++i)
-    {
-        if(lpf[i]==0)
-        {
-            lpf[i]=i;
-            primes.push_back(i);
-        }
-        for(long long j=0;i*primes[j]<n;++j)
-        {
-            lpf[i*primes[j]]=primes[j];
-            if(primes[j]==lpf[i])
-            {
-                break;
-            }
-        }
-    }
+    return (char)(i+'a');
+}
+
+inline int get(char c)
+{
+    return (int)(c-'a');
 }
 
 int main()
@@ -38,135 +22,56 @@ int main()
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    leastPrimeFactor();
-    ll tc;
-    cin>>tc;
-    while(tc--)
+    int n,k,q;
+    string s;
+    cin>>n>>k>>s;
+    vector<int> dp(n,1e9);
+    vector<vector<int>> idx(k);
+    for(int i=0;i<n;++i)
     {
-        ll n;
-        bool zero=0;
-        map<ll,ll> mp;
-        cin>>n;
-        vector<ll> a(n),b(n);
-        for(auto &v:a)
+        idx[get(s[i])].push_back(i);
+    }
+    dp[n-1]=1;
+    for(int i=n-2;i>=0;--i)
+    {
+        int cur=1e9;
+        for(int j=0;j<k;++j)
         {
-            cin>>v;
-            ll x=v;
-            while(x>1)
+            int nxt=upper_bound(idx[j].begin(),idx[j].end(),i)-idx[j].begin();
+            if(nxt>=(int)idx[j].size())
             {
-                ll p=lpf[x];
-                mp[p]++;
-                if(mp[p]>1)
-                {
-                    zero=1;
-                    break;
-                }
-                while(x%p==0)
-                {
-                    x/=p;
-                }
+                cur=1;
+                break;
             }
+            nxt=idx[j][nxt];
+            cur=min(cur,dp[nxt]+1);
         }
-        for(auto &v:b)
+        dp[i]=cur;
+    }
+    cin>>q;
+    while(q--)
+    {
+        int len=0,cur=-1;
+        string t;
+        cin>>t;
+        len=t.size();
+        for(int i=0;i<len;++i)
         {
-            cin>>v;
+            int nxt=upper_bound(idx[get(t[i])].begin(),idx[get(t[i])].end(),cur)-idx[get(t[i])].begin();
+            if(nxt>=(int)idx[get(t[i])].size())
+            {
+                cur=-1;
+                break;
+            }
+            cur=idx[get(t[i])][nxt];
         }
-        if(zero)
+        if(cur==-1)
         {
             cout<<0<<'\n';
         }
         else
         {
-            ll ans=1e18;
-            vector<ll> idx;
-            for(ll i=0;i<n;++i)
-            {
-                ll v=a[i];
-                ll x=v;
-                while(x>1)
-                {
-                    ll p=lpf[x];
-                    mp[p]--;
-                    while(x%p==0)
-                    {
-                        x/=p;
-                    }
-                }
-                x=v+1;
-                while(x>1)
-                {
-                    ll p=lpf[x];
-                    if(mp[p]>0)
-                    {
-                        idx.push_back(i);
-                        break;
-                    }
-                    while(x%p==0)
-                    {
-                        x/=p;
-                    }
-                }
-                x=v;
-                while(x>1)
-                {
-                    ll p=lpf[x];
-                    mp[p]++;
-                    while(x%p==0)
-                    {
-                        x/=p;
-                    }
-                }
-            }
-            if((ll)idx.size()>0)
-            {
-                for(auto &v:idx)
-                {
-                    ans=min(ans,b[v]);
-                }
-            }
-            vector<pair<ll,ll>> odd,even,res;
-            for(ll i=0;i<n;++i)
-            {
-                if(a[i]&1)
-                {
-                    odd.push_back({b[i],a[i]});
-                }
-                else
-                {
-                    even.push_back({b[i],a[i]});
-                }
-                res.push_back({b[i],a[i]});
-            }
-            sort(odd.begin(),odd.end());
-            sort(even.begin(),even.end());
-            sort(res.begin(),res.end());
-            if((ll)even.size()>0&&odd[0].first<=even[0].first)
-            {
-                ans=min(ans,odd[0].first);
-            }
-            else
-            {
-                ans=min(ans,res[0].first+res[1].first);
-                vector<ll> cur_primes;
-                for(ll i=1;i<n;++i)
-                {
-                    ll x=res[i].second;
-                    while(x>1)
-                    {
-                        ll p=lpf[x];
-                        cur_primes.push_back(p);
-                        while(x%p==0)
-                        {
-                            x/=p;
-                        }
-                    }
-                }
-                for(auto &v:cur_primes)
-                {
-                    ans=min(ans,((v-res[0].second%v)%v)*res[0].first);
-                }
-            }
-            cout<<ans<<'\n';
+            cout<<dp[cur]<<'\n';
         }
     }
     return 0;
