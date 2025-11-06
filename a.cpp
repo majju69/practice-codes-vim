@@ -7,14 +7,16 @@ using namespace std;
     #define debug(x)
 #endif
 
-inline char get(int i)
-{
-    return (char)(i+'a');
-}
+const int N=2e5+10;
+int pre[N];
 
-inline int get(char c)
+inline int get(int l,int r)
 {
-    return (int)(c-'a');
+    if(r<l)
+    {
+        return 0;
+    }
+    return (pre[r]-((l==0)?0:pre[l-1]));
 }
 
 int main()
@@ -22,57 +24,37 @@ int main()
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    int n,k,q;
-    string s;
-    cin>>n>>k>>s;
-    vector<int> dp(n,1e9);
-    vector<vector<int>> idx(k);
-    for(int i=0;i<n;++i)
+    int tc;
+    cin>>tc;
+    while(tc--)
     {
-        idx[get(s[i])].push_back(i);
-    }
-    dp[n-1]=1;
-    for(int i=n-2;i>=0;--i)
-    {
-        int cur=1e9;
-        for(int j=0;j<k;++j)
+        memset(pre,0,sizeof(pre));
+        int n,y;
+        long long ans=-1e18;
+        cin>>n>>y;
+        for(int i=0;i<n;++i)
         {
-            int nxt=upper_bound(idx[j].begin(),idx[j].end(),i)-idx[j].begin();
-            if(nxt>=(int)idx[j].size())
+            int x;
+            cin>>x;
+            pre[x]++;
+        }
+        for(int i=1;i<N;++i)
+        {
+            pre[i]+=pre[i-1];
+        }
+        for(int i=2;i<N;++i)
+        {
+            int new_tags=0;
+            long long price=0;
+            for(int j=0;j<N;j+=i)
             {
-                cur=1;
-                break;
+                int lb=j+1,ub=min(N-1,j+i);
+                new_tags+=max(get(lb,ub)-get((j+i)/i,(j+i)/i),0);
+                price+=1ll*get(lb,ub)*((j+i)/i);
             }
-            nxt=idx[j][nxt];
-            cur=min(cur,dp[nxt]+1);
+            ans=max(ans,price-1ll*y*new_tags);
         }
-        dp[i]=cur;
-    }
-    cin>>q;
-    while(q--)
-    {
-        int len=0,cur=-1;
-        string t;
-        cin>>t;
-        len=t.size();
-        for(int i=0;i<len;++i)
-        {
-            int nxt=upper_bound(idx[get(t[i])].begin(),idx[get(t[i])].end(),cur)-idx[get(t[i])].begin();
-            if(nxt>=(int)idx[get(t[i])].size())
-            {
-                cur=-1;
-                break;
-            }
-            cur=idx[get(t[i])][nxt];
-        }
-        if(cur==-1)
-        {
-            cout<<0<<'\n';
-        }
-        else
-        {
-            cout<<dp[cur]<<'\n';
-        }
+        cout<<ans<<'\n';
     }
     return 0;
 }
