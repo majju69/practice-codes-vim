@@ -7,16 +7,11 @@ using namespace std;
     #define debug(x)
 #endif
 
-const int N=2e5+10;
-int pre[N];
+typedef long long ll;
 
-inline int get(int l,int r)
+inline bool bit(ll a,ll i)
 {
-    if(r<l)
-    {
-        return 0;
-    }
-    return (pre[r]-((l==0)?0:pre[l-1]));
+    return (a>>i&1);
 }
 
 int main()
@@ -24,37 +19,53 @@ int main()
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    int tc;
-    cin>>tc;
-    while(tc--)
+    ll n=0,m,ans=-1;
+    string s;
+    cin>>s>>m;
+    n=s.size();
+    vector<ll> mult(n,1),fact(n+1,1),freq(10,0);
+    vector<vector<ll>> dp((1<<n),vector<ll>(m,0));
+    for(ll i=n-2;i>=0;--i)
     {
-        memset(pre,0,sizeof(pre));
-        int n,y;
-        long long ans=-1e18;
-        cin>>n>>y;
-        for(int i=0;i<n;++i)
-        {
-            int x;
-            cin>>x;
-            pre[x]++;
-        }
-        for(int i=1;i<N;++i)
-        {
-            pre[i]+=pre[i-1];
-        }
-        for(int i=2;i<N;++i)
-        {
-            int new_tags=0;
-            long long price=0;
-            for(int j=0;j<N;j+=i)
-            {
-                int lb=j+1,ub=min(N-1,j+i);
-                new_tags+=max(get(lb,ub)-get((j+i)/i,(j+i)/i),0);
-                price+=1ll*get(lb,ub)*((j+i)/i);
-            }
-            ans=max(ans,price-1ll*y*new_tags);
-        }
-        cout<<ans<<'\n';
+        mult[i]=(mult[i+1]*10)%m;
     }
+    for(ll i=2;i<=n;++i)
+    {
+        fact[i]=i*fact[i-1];
+    }
+    for(ll i=0;i<n;++i)
+    {
+        freq[s[i]-'0']++;
+        if(s[i]!='0')
+        {
+            dp[(1<<i)][((s[i]-'0')%m*mult[0])%m]=1;
+        }
+    }
+    for(ll mask=2;mask<(1<<n);++mask)
+    {
+        if(__builtin_popcountll(mask)<2)
+        {
+            continue;
+        }
+        ll cnt=__builtin_popcountll(mask);
+        for(ll i=0;i<n;++i)
+        {
+            if(bit(mask,i))
+            {
+                ll nmask=(mask^(1<<i));
+                for(ll j=0;j<m;++j)
+                {
+                    dp[mask][(j+(s[i]-'0')*mult[cnt-1])%m]+=dp[nmask][j];
+                }
+            }
+        }
+    }
+    ans=dp[(1<<n)-1][0];
+    for(auto &v:freq)
+    {
+        assert(ans%fact[v]==0);
+        ans/=fact[v];
+    }
+    cout<<ans<<'\n';
     return 0;
 }
