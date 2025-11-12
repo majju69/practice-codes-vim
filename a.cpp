@@ -7,31 +7,52 @@ using namespace std;
     #define debug(x)
 #endif
 
-inline bool get(int n)
-{
-    if(n&1)
-    {
-        return 0;
-    }
-    if((n&(n-1))==0&&(__builtin_ctz(n)&1))
-    {
-        return 0;
-    }
-    return 1;
-}
-
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    int tc;
-    cin>>tc;
-    while(tc--)
+    long long u,v;
+    cin>>u>>v;
+    if(u>v)
     {
-        int n;
-        cin>>n;
-        cout<<(get(n)?"Alice":"Bob")<<'\n';
+        cout<<-1<<'\n';
+    }
+    else
+    {
+        long long diff=v-u;
+        if(diff&1)
+        {
+            cout<<-1<<'\n';
+        }
+        else
+        {
+            vector<long long> ans;
+            if(u!=0)
+            {
+                ans.push_back(u);
+            }
+            if(diff!=0)
+            {
+                ans.push_back(diff>>1);
+                ans.push_back(diff>>1);
+            }
+            if((long long)ans.size()>2)
+            {
+                sort(ans.begin(),ans.end());
+                if((ans[0]&ans[2])==0)
+                {
+                    ans[0]+=ans[2];
+                    ans.pop_back();
+                }
+            }
+            cout<<(long long)ans.size()<<'\n';
+            for(auto &v:ans)
+            {
+                cout<<v<<' ';
+            }
+            cout<<'\n';
+        }
     }
     return 0;
 }
