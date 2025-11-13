@@ -7,16 +7,35 @@ using namespace std;
     #define debug(x)
 #endif
 
-typedef long long ll;
-
-inline bool isSetBit(ll a,ll i)
+int gcd(int a,int b)
 {
-    return ((a&(1LL<<i))!=0);
+    return ((b==0)?a:gcd(b,a%b));
 }
 
-inline ll switchBit(ll a,ll i)
+vector<int> lpf(15000001,0),id(15000001,-1);
+vector<int> primes,cnt;
+
+void leastPrimeFactor()
 {
-    return (a^(1LL<<i));
+    int n=lpf.size();
+    for(int i=2;i<n;++i)
+    {
+        if(lpf[i]==0)
+        {
+            lpf[i]=i;
+            primes.push_back(i);
+            cnt.push_back(0);
+            id[i]=(int)primes.size()-1;
+        }
+        for(int j=0;i*primes[j]<n;++j)
+        {
+            lpf[i*primes[j]]=primes[j];
+            if(primes[j]==lpf[i])
+            {
+                break;
+            }
+        }
+    }
 }
 
 int main()
@@ -24,61 +43,32 @@ int main()
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    ll n,m,k,ans=0;
-    cin>>n>>m>>k;
-    vector<ll> a(n);
-    vector<vector<ll>> dp((1<<n),vector<ll>(n,0)),rules(n,vector<ll>(n,0));
+    leastPrimeFactor();
+    int n,g=0,mx=0;
+    cin>>n;
+    vector<int> a(n);
     for(auto &v:a)
     {
         cin>>v;
+        g=gcd(v,g);
     }
-    for(ll i=0;i<k;++i)
+    for(auto &v:a)
     {
-        ll x,y,c;
-        cin>>x>>y>>c;
-        x--;
-        y--;
-        rules[x][y]=c;
-    }
-    for(ll i=0;i<n;++i)
-    {
-        dp[(1<<i)][i]=a[i];
-    }
-    for(ll mask=1;mask<(1<<n);++mask)
-    {
-        if(__builtin_popcount(mask)==1)
+        v/=g;
+        while(v>1)
         {
-            continue;
-        }
-        for(ll i=0;i<n;++i)
-        {
-            if(isSetBit(mask,i))
+            int p=lpf[v];
+            cnt[id[p]]++;
+            while(v%p==0)
             {
-                ll x=switchBit(mask,i),cur=dp[mask][i];
-                for(ll j=0;j<n;++j)
-                {
-                    if(isSetBit(x,j))
-                    {
-                        cur=max(cur,dp[x][j]+a[i]+rules[j][i]);
-                    }
-                }
-                dp[mask][i]=cur;
+                v/=p;
             }
         }
     }
-    for(ll i=1;i<(1<<n);++i)
+    for(auto &v:primes)
     {
-        if(__builtin_popcount(i)==m)
-        {
-            for(ll j=0;j<n;++j)
-            {
-                if(isSetBit(i,j))
-                {
-                    ans=max(ans,dp[i][j]);
-                }
-            }
-        }
+        mx=max(mx,cnt[id[v]]);
     }
-    cout<<ans<<'\n';
+    cout<<((mx==0)?-1:n-mx)<<'\n';
     return 0;
 }
