@@ -7,56 +7,34 @@ using namespace std;
     #define debug(x)
 #endif
 
-int dp[201][402];
-
-int solve(int i,int j,vector<int> &a)
-{
-    if(i>=(int)a.size())
-    {
-        return 0;
-    }
-    if(j>2*(int)a.size())
-    {
-        return 1e9;
-    }
-    if(dp[i][j]!=-1)
-    {
-        return dp[i][j];
-    }
-    return dp[i][j]=min(solve(i,j+1,a),solve(i+1,j+1,a)+abs(j-a[i]));
-}
-
-int minTime(vector<int> &a)
-{
-    int n=a.size();
-    sort(a.begin(),a.end());
-    for(int i=0;i<=n;++i)
-    {
-        for(int j=0;j<=2*n+1;++j)
-        {
-            dp[i][j]=-1;
-        }
-    }
-    return solve(0,1,a);
-}
+typedef long long ll;
 
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    int tc;
-    cin>>tc;
-    while(tc--)
+    ll n,m,k,lo=1,hi=0,ans=-1;
+    cin>>n>>m>>k;
+    hi=n*m;
+    while(lo<=hi)
     {
-        int n;
-        cin>>n;
-        vector<int> a(n);
-        for(auto &v:a)
+        ll mid=lo+((hi-lo)>>1);
+        ll cnt=0;
+        for(ll i=1;i<=n;++i)
         {
-            cin>>v;
+            cnt+=min(mid/i,m);
         }
-        cout<<minTime(a)<<'\n';
+        if(cnt>=k)
+        {
+            ans=mid;
+            hi=mid-1;
+        }
+        else
+        {
+            lo=mid+1;
+        }
     }
+    cout<<ans<<'\n';
     return 0;
 }
