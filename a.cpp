@@ -7,41 +7,42 @@ using namespace std;
     #define debug(x)
 #endif
 
-typedef long long ll;
+const int mod=1e9+9;
 
-ll dp[1001][2001];
-
-ll solve(ll i,ll j,ll k,vector<ll> &a,vector<ll> &b)
+inline int add(int a,int b)
 {
-    if(i>=(ll)a.size())
-    {
-        return 0;
-    }
-    if((ll)a.size()-i>(ll)b.size()-j)
-    {
-        return 1e18;
-    }
-    if(dp[i][j]!=-1)
-    {
-        return dp[i][j];
-    }
-    ll take=max(solve(i+1,j+1,k,a,b),abs(a[i]-b[j])+abs(b[j]-k)),skip=solve(i,j+1,k,a,b);
-    return dp[i][j]=min(take,skip);
+    return ((a%mod)+(b%mod))%mod;
 }
 
-ll minTime(vector<ll> &a,vector<ll> &b,ll k)
+inline int mul(int a,int b)
 {
-    ll n=a.size(),m=b.size();
-    for(ll i=0;i<=n;++i)
+    return (1ll*(a%mod)*(b%mod))%mod;
+}
+
+inline int sub(int a,int b)
+{
+    return ((a%mod)-(b%mod)+mod)%mod;
+}
+
+int power(int a,int b)        // Use when mod is of order 10^9 or less
+{
+    int ans=1;
+    a=a%mod;
+    while(b)
     {
-        for(ll j=0;j<=m;++j)
+        if(b&1)
         {
-            dp[i][j]=-1;
+            ans=(1ll*(ans%mod)*(a%mod))%mod;
         }
+        a=(1ll*(a%mod)*(a%mod))%mod;       
+        b>>=1;
     }
-    sort(a.begin(),a.end());
-    sort(b.begin(),b.end());
-    return solve(0,0,k,a,b);
+    return ans%mod;
+}
+
+inline int divide(int a,int b)
+{
+    return mul(a,power(b,mod-2));
 }
 
 int main()
@@ -49,17 +50,28 @@ int main()
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    ll n,m,k;
-    cin>>n>>m>>k;
-    vector<ll> a(n),b(m);
-    for(auto &v:a)
+    int n,a,b,k,x=-1,s=0;
+    string str;
+    cin>>n>>a>>b>>k>>str;
+    x=divide(b,a),s=0;
+    for(int i=0;i<k;++i)
     {
-        cin>>v;
+        if(str[i]=='-')
+        {
+            s=sub(s,power(x,i));
+        }
+        else
+        {
+            s=add(s,power(x,i));
+        }
     }
-    for(auto &v:b)
+    if(power(x,k)!=1)
     {
-        cin>>v;
+        cout<<mul(power(a,n),mul(s,divide(sub(power(x,n+1),1),sub(power(x,k),1))))<<'\n';
     }
-    cout<<minTime(a,b,k)<<'\n';
+    else
+    {
+        cout<<mul(power(a,n),mul(s,(n+1)/k))<<'\n';
+    }
     return 0;
 }
