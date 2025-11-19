@@ -2,76 +2,59 @@
 using namespace std;
 
 #ifdef LOCAL
-    #include"debug.h"
+	#include"debug.h"
 #else
-    #define debug(x)
+	#define debug(x)
 #endif
 
-const int mod=1e9+9;
-
-inline int add(int a,int b)
+inline int ask(int y)
 {
-    return ((a%mod)+(b%mod))%mod;
+	cout<<y<<endl;
+	int x;
+	cin>>x;
+	if(x==0)
+	{
+		exit(0);
+	}
+	if(x==-2)
+	{
+		exit(1);
+	}
+	return x;
 }
 
-inline int mul(int a,int b)
-{
-    return (1ll*(a%mod)*(b%mod))%mod;
-}
-
-inline int sub(int a,int b)
-{
-    return ((a%mod)-(b%mod)+mod)%mod;
-}
-
-int power(int a,int b)        // Use when mod is of order 10^9 or less
-{
-    int ans=1;
-    a=a%mod;
-    while(b)
-    {
-        if(b&1)
-        {
-            ans=(1ll*(ans%mod)*(a%mod))%mod;
-        }
-        a=(1ll*(a%mod)*(a%mod))%mod;       
-        b>>=1;
-    }
-    return ans%mod;
-}
-
-inline int divide(int a,int b)
-{
-    return mul(a,power(b,mod-2));
-}
 
 int main()
 {
-    ios_base::sync_with_stdio(false);
-    cin.tie(NULL);
-    cout.tie(NULL);
-    int n,a,b,k,x=-1,s=0;
-    string str;
-    cin>>n>>a>>b>>k>>str;
-    x=divide(b,a),s=0;
-    for(int i=0;i<k;++i)
-    {
-        if(str[i]=='-')
-        {
-            s=sub(s,power(x,i));
-        }
-        else
-        {
-            s=add(s,power(x,i));
-        }
-    }
-    if(power(x,k)!=1)
-    {
-        cout<<mul(power(a,n),mul(s,divide(sub(power(x,n+1),1),sub(power(x,k),1))))<<'\n';
-    }
-    else
-    {
-        cout<<mul(power(a,n),mul(s,(n+1)/k))<<'\n';
-    }
-    return 0;
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+	int m,n,t=0,lo=1,hi=0;
+	cin>>m>>n;
+	vector<bool> a(n);
+	for(int i=0;i<n;++i)
+	{
+		a[i]=(ask(m)==-1);
+	}
+	hi=m;
+	while(lo<=hi)
+	{
+		int mid=lo+(hi-lo)/2;
+		int q=ask(mid);
+		if(!a[t])
+		{
+			q=-q;
+		}
+		if(q==-1)
+		{
+			hi=mid-1;
+		}
+		else
+		{
+			lo=mid+1;
+		}
+		t++;
+		t%=n;
+	}
+	return 0;
 }
