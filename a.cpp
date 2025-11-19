@@ -7,54 +7,38 @@ using namespace std;
 	#define debug(x)
 #endif
 
-inline int ask(int y)
+int gcd(int a,int b)
 {
-	cout<<y<<endl;
-	int x;
-	cin>>x;
-	if(x==0)
-	{
-		exit(0);
-	}
-	if(x==-2)
-	{
-		exit(1);
-	}
-	return x;
+	return ((b==0)?a:gcd(b,a%b));
 }
-
 
 int main()
 {
 	ios_base::sync_with_stdio(false);
 	cin.tie(NULL);
 	cout.tie(NULL);
-	int m,n,t=0,lo=1,hi=0;
-	cin>>m>>n;
-	vector<bool> a(n);
-	for(int i=0;i<n;++i)
+	int n,k,g=0;
+	cin>>n>>k;
+	while(n--)
 	{
-		a[i]=(ask(m)==-1);
+		int x;
+		cin>>x;
+		x%=k;
+		g=gcd(g,x);
 	}
-	hi=m;
-	while(lo<=hi)
+	g=gcd(g,k);
+	if(g==0)
 	{
-		int mid=lo+(hi-lo)/2;
-		int q=ask(mid);
-		if(!a[t])
+		cout<<1<<'\n'<<0<<'\n';
+	}
+	else
+	{
+		cout<<k/g<<'\n';
+		for(int i=0;i<k;i+=g)
 		{
-			q=-q;
+			cout<<i<<' ';
 		}
-		if(q==-1)
-		{
-			hi=mid-1;
-		}
-		else
-		{
-			lo=mid+1;
-		}
-		t++;
-		t%=n;
+		cout<<'\n';
 	}
 	return 0;
 }
