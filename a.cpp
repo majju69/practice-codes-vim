@@ -7,19 +7,50 @@ using namespace std;
     #define debug(x)
 #endif
 
-vector<vector<int>> divisors(100001);
-vector<vector<int>> idx(100001);
+typedef long long ll;
 
-void fillDivisors()
+ll minCost(vector<ll> &a,vector<ll> &c)
 {
-    int n=divisors.size();
-    for(int i=2;i<n;i++)
+    ll n=a.size();
+    if(n==1)
     {
-        for(int j=i;j<n;j+=i)
-        {
-            divisors[j].push_back(i);
-        }
+        return 0;
     }
+    ll ind=0;
+    map<ll,ll> mp;
+    for(auto &v:a)
+    {
+        mp[v]=0;
+    }
+    for(auto &v:mp)
+    {
+        v.second=ind++;
+    }
+    for(auto &v:a)
+    {
+        v=mp[v];
+    }
+    vector<ll> dp(ind+1,c[0]);
+    dp[a[0]]=0;
+    for(ll i=1;i<n;++i)
+    {
+        vector<ll> ndp(ind+1,1e18);
+        ll mn=1e18;
+        for(ll j=0;j<ind;++j)
+        {
+            mn=min(mn,dp[j]);
+            if(j==a[i])
+            {
+                ndp[j]=mn;
+            }
+            else
+            {
+                ndp[j]=mn+c[i];
+            }
+        }
+        dp=ndp;
+    }
+    return *min_element(dp.begin(),dp.end());
 }
 
 int main()
@@ -27,67 +58,22 @@ int main()
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    fillDivisors();
-    int tc;
+    ll tc;
     cin>>tc;
     while(tc--)
     {
-        int n,q;
-        cin>>n>>q;
-        vector<int> a(n);
-        for(int i=0;i<n;++i)
-        {
-            cin>>a[i];
-            idx[a[i]].push_back(i);
-        }
-        while(q--)
-        {
-            int k,l,r;
-            cin>>k>>l>>r;
-            if(k==1)
-            {
-                cout<<r-l+1<<'\n';
-            }
-            else
-            {
-                l--;
-                r--;
-                int cur=l;
-                long long ans=0;
-                while(cur<=r)
-                {
-                    if(k%a[cur]==0)
-                    {
-                        while(k%a[cur]==0)
-                        {
-                            k/=a[cur];
-                        }
-                        ans+=1ll*k;
-                        cur++;
-                        continue;
-                    }
-                    int nxt=r+1;
-                    for(auto &v:divisors[k])
-                    {
-                        int _idx=lower_bound(idx[v].begin(),idx[v].end(),cur)-idx[v].begin();
-                        if(_idx<(int)idx[v].size())
-                        {
-                            if(idx[v][_idx]<=r)
-                            {
-                                nxt=min(nxt,idx[v][_idx]);
-                            }
-                        }
-                    }
-                    ans+=1ll*(nxt-cur)*k;
-                    cur=nxt;
-                }
-                cout<<ans<<'\n';
-            }
-        }
+        ll n;
+        cin>>n;
+        vector<ll> a(n),c(n);
         for(auto &v:a)
         {
-            idx[v].clear();
+            cin>>v;
         }
+        for(auto &v:c)
+        {
+            cin>>v;
+        }
+        cout<<minCost(a,c)<<'\n';
     }
     return 0;
 }
