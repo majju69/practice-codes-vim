@@ -7,9 +7,36 @@ using namespace std;
     #define debug(x)
 #endif
 
-int gcd(int a,int b)
+bool bit(int a,int i)
 {
-    return ((b==0)?a:gcd(b,a%b));
+    return a>>i&1;
+}
+
+int get(vector<int> &a,int i)
+{
+    if(i==0)
+    {
+        int cnt[]={0,0};
+        for(auto &v:a)
+        {
+            cnt[bit(v,i)]++;
+            if(cnt[0]!=0&&cnt[1]!=0)
+            {
+                return 1;
+            }
+        }
+        return 0;
+    }
+    vector<int> cur[2];
+    for(auto &v:a)
+    {
+        cur[bit(v,i)].push_back(v);
+    }
+    if(cur[0].size()==0||cur[1].size()==0)
+    {
+        return get(a,i-1);
+    }
+    return min(get(cur[0],i-1),get(cur[1],i-1))+(1<<i);
 }
 
 int main()
@@ -17,45 +44,13 @@ int main()
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    int n,g=0,mx=-1,ans=0;
+    int n;
     cin>>n;
     vector<int> a(n);
     for(auto &v:a)
     {
         cin>>v;
-        g=gcd(g,v);
     }
-    for(auto &v:a)
-    {
-        v/=g;
-        mx=max(mx,v);
-    }
-    vector<bool> present(mx+1,0);
-    for(auto &v:a)
-    {
-        present[v]=1;
-    }
-    for(int i=mx;i>=1;--i)
-    {
-        if(present[i])
-        {
-            continue;
-        }
-        int cnt=1,g=0;
-        for(int j=(i<<1);j<=mx;j+=i)
-        {
-            cnt++;
-            if(present[j])
-            {
-                g=gcd(cnt,g);
-            }
-        }
-        if(g==1)
-        {
-            ans++;
-            present[i]=i;
-        }
-    }
-    cout<<ans<<'\n';
+    cout<<get(a,29)<<'\n';
     return 0;
 }
