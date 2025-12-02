@@ -7,36 +7,56 @@ using namespace std;
     #define debug(x)
 #endif
 
-bool bit(int a,int i)
+int bfs(int s,int t,vector<int> &par,vector<int> adj[],vector<vector<int>> &capacity)
 {
-    return a>>i&1;
-}
-
-int get(vector<int> &a,int i)
-{
-    if(i==0)
+    fill(par.begin(),par.end(),-1);
+    par[s]=-2;
+    queue<pair<int,int>> q;
+    q.push({s,1e9});
+    while(q.size())
     {
-        int cnt[]={0,0};
-        for(auto &v:a)
+        int node=q.front().first,flow=q.front().second;
+        q.pop();
+        for (auto &v:adj[node])
         {
-            cnt[bit(v,i)]++;
-            if(cnt[0]!=0&&cnt[1]!=0)
+            if(par[v]==-1&&capacity[node][v])
             {
-                return 1;
+                par[v]=node;
+                int new_flow=min(flow,capacity[node][v]);
+                if(v==t)
+                {
+                    return new_flow;
+                }
+                q.push({v,new_flow});
             }
         }
-        return 0;
     }
-    vector<int> cur[2];
-    for(auto &v:a)
+
+    return 0;
+}
+
+int maxflow(int s,int t,int n,vector<int> adj[],vector<vector<int>> &capacity)
+{
+    int flow=0,new_flow=-1;
+    vector<int> par(n);
+    while(1)
     {
-        cur[bit(v,i)].push_back(v);
+        new_flow=bfs(s,t,par,adj,capacity);
+        if(new_flow==0)
+        {
+            break;
+        }
+        flow+=new_flow;
+        int cur=t;
+        while(cur!=s)
+        {
+            int pvs=par[cur];
+            capacity[pvs][cur]-=new_flow;
+            capacity[cur][pvs]+=new_flow;
+            cur=pvs;
+        }
     }
-    if(cur[0].size()==0||cur[1].size()==0)
-    {
-        return get(a,i-1);
-    }
-    return min(get(cur[0],i-1),get(cur[1],i-1))+(1<<i);
+    return flow;
 }
 
 int main()
@@ -44,13 +64,97 @@ int main()
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    int n;
-    cin>>n;
-    vector<int> a(n);
+    int n,m,ans=0;
+    set<int> primes;
+    cin>>n>>m;
+    vector<int> a(n),candy;
+    vector<pair<int,int>> edges(m);
     for(auto &v:a)
     {
         cin>>v;
+        int x=v;
+        if(!(x&1))
+        {
+            primes.insert(2);
+            while(!(x&1))
+            {
+                x>>=1;
+            }
+        }
+        for(int i=3;i*i<=x;i+=2)
+        {
+            if(x%i==0)
+            {
+                primes.insert(i);
+                while(x%i==0)
+                {
+                    x/=i;
+                }
+            }
+        }
+        if(x>2)
+        {
+            primes.insert(x);
+        }
     }
-    cout<<get(a,29)<<'\n';
+    for(auto &v:primes)
+    {
+        candy.push_back(v);
+    }
+    for(auto &edge:edges)
+    {
+        cin>>edge.first>>edge.second;
+        if(edge.second&1)
+        {
+            swap(edge.first,edge.second);
+        }
+    }
+    for(auto &p:candy)
+    {
+        vector<int> adj[n+2];
+        vector<vector<int>> capacity(n+2,vector<int>(n+2,0));
+        for(int i=1;i<=n;++i)
+        {
+            if(i&1)
+            {
+                adj[0].push_back(i);
+                adj[i].push_back(0);
+                int x=a[i-1],cnt=0;
+                while(x%p==0)
+                {
+                    x/=p;
+                    cnt++;
+                }
+                capacity[0][i]=cnt;
+            }
+            else
+            {
+                adj[n+1].push_back(i);
+                adj[i].push_back(n+1);
+                int x=a[i-1],cnt=0;
+                while(x%p==0)
+                {
+                    x/=p;
+                    cnt++;
+                }
+                capacity[i][n+1]=cnt;
+            }
+        }
+        for(auto &edge:edges)
+        {
+            int x=a[edge.first-1],y=a[edge.second-1],cnt=0;
+            while(x%p==0&&y%p==0)
+            {
+                cnt++;
+                x/=p;
+                y/=p;
+            }
+            adj[edge.first].push_back(edge.second);
+            adj[edge.second].push_back(edge.first);
+            capacity[edge.first][edge.second]=cnt;
+        }
+        ans+=maxflow(0,n+1,n+2,adj,capacity);
+    }
+    cout<<ans<<'\n';
     return 0;
 }
