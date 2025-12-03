@@ -7,40 +7,30 @@ using namespace std;
     #define debug(x)
 #endif
 
-inline bool bit(long long a,int i)
+void dfs(int node,int cur,vector<bool> &vis,vector<int> adj[],vector<vector<int>> &mark)
 {
-    return (a>>i&1);
-}
-
-int bfs(int src,int n,vector<int> adj[])
-{
-    int mn=1e9;
-    vector<int> dist(n,1e9),par(n,-1);
-    queue<int> q;
-    dist[src]=0;
-    q.push(src);
-    while(q.size())
+    vis[node]=1;
+    mark[node].push_back(cur);
+    for(auto &v:adj[node])
     {
-        int node=q.front();
-        q.pop();
-        for(auto &v:adj[node])
+        if(!vis[v])
         {
-            if(dist[v]>1+dist[node])
-            {
-                dist[v]=1+dist[node];
-                q.push(v);
-                par[v]=node;
-            }
-            else
-            {
-                if(par[node]!=v&&par[v]!=node)
-                {
-                    mn=min(mn,dist[node]+dist[v]+1);
-                }
-            }
+            dfs(v,cur,vis,adj,mark);
         }
     }
-    return mn;
+}
+
+void dfs(int node,vector<bool> &vis,vector<int> adj[],int &cnt)
+{
+    vis[node]=1;
+    cnt++;
+    for(auto &v:adj[node])
+    {
+        if(!vis[v])
+        {
+            dfs(v,vis,adj,cnt);
+        }
+    }
 }
 
 int main()
@@ -48,65 +38,122 @@ int main()
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    int n;
-    cin>>n;
-    bool three=0;
-    vector<long long> a;
-    vector<vector<int>> edges(60);
-    for(int i=0;i<n;++i)
+    int tc;
+    cin>>tc;
+    while(tc--)
     {
-        long long x;
-        cin>>x;
-        if(x!=0)
+        int n,m,a,b,cnt[]={0,0};
+        cin>>n>>m>>a>>b;
+        vector<int> _a,_b;
+        vector<vector<int>> mark(n);
+        vector<bool> vis(n,0);
+        a--;
+        b--;
+        if(a>b)
         {
-            a.push_back(x);
+            swap(a,b);
         }
-    }
-    n=a.size();
-    for(int i=0;i<n;++i)
-    {
-        if(three)
+        vector<int> adj[n],adj_a[n],adj_b[n];
+        for(int i=0;i<m;++i)
         {
-            break;
-        }
-        for(int j=0;j<60;++j)
-        {
-            if(bit(a[i],j))
+            int u,v;
+            cin>>u>>v;
+            u--;
+            v--;
+            if(u>v)
             {
-                edges[j].push_back(i);
-                if((int)edges[j].size()>=3)
-                {
-                    three=1;
-                    break;
-                }
+                swap(u,v);
+            }
+            if(u==a&&v==b)
+            {
+                continue;
+            }
+            if(u==a)
+            {
+                _a.push_back(v);
+                continue;
+            }
+            if(v==a)
+            {
+                _a.push_back(u);
+                continue;
+            }
+            if(v==b)
+            {
+                _b.push_back(u);
+                continue;
+            }
+            if(u==b)
+            {
+                _b.push_back(v);
+                continue;
+            }
+            adj[u].push_back(v);
+            adj[v].push_back(u);
+        }
+        for(auto &v:_a)
+        {
+            if(!vis[v])
+            {
+                dfs(v,0,vis,adj,mark);
             }
         }
-    }
-    if(three)
-    {
-        cout<<3<<'\n';
-    }
-    else
-    {
-        int mn=1e9;
-        vector<int> adj[n];
-        for(auto &vec:edges)
+        fill(vis.begin(),vis.end(),0);
+        for(auto &v:_b)
         {
-            if((int)vec.size()>1)
+            if(!vis[v])
             {
-                adj[vec[0]].push_back(vec[1]);
-                adj[vec[1]].push_back(vec[0]);
+                dfs(v,1,vis,adj,mark);
             }
         }
         for(int i=0;i<n;++i)
         {
-            mn=min(mn,bfs(i,n,adj));
+            if((int)mark[i].size()==2||(int)mark[i].size()==0)
+            {
+                continue;
+            }
+            if(mark[i][0]==0)
+            {
+                for(auto &v:adj[i])
+                {
+                    assert((int)mark[v].size()==1);
+                    adj_a[i].push_back(v);
+                }
+            }
+            else
+            {
+                for(auto &v:adj[i])
+                {
+                    assert((int)mark[v].size()==1);
+                    adj_b[i].push_back(v);
+                }
+            }
         }
-        if(mn==(int)1e9)
+        fill(vis.begin(),vis.end(),0);
+        for(int i=0;i<n;++i)
         {
-            mn=-1;
+            if((int)mark[i].size()==2||(int)mark[i].size()==0||mark[i][0]==1)
+            {
+                continue;
+            }
+            if(!vis[i])
+            {
+                dfs(i,vis,adj_a,cnt[0]);
+            }
         }
-        cout<<mn<<'\n';
+        fill(vis.begin(),vis.end(),0);
+        for(int i=0;i<n;++i)
+        {
+            if((int)mark[i].size()==2||(int)mark[i].size()==0||mark[i][0]==0)
+            {
+                continue;
+            }
+            if(!vis[i])
+            {
+                dfs(i,vis,adj_b,cnt[1]);
+            }
+        }
+        cout<<1ll*cnt[0]*cnt[1]<<'\n';
     }
     return 0;
 }
