@@ -7,91 +7,59 @@ using namespace std;
     #define debug(x)
 #endif
 
+const int mod=998244353;
+
+inline int add(int a,int b)
+{
+    return ((a%mod)+(b%mod))%mod;
+}
+
+inline int mul(int a,int b)
+{
+    return (1ll*(a%mod)*(b%mod))%mod;
+}
+
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    int n,ans_idx=-1;
-    long long mx=-1;
-    stack<int> st;
+    int n,ans=0;
     cin>>n;
-    vector<int> a(n),ans(n),pse(n,-1),nse(n,n);
-    vector<long long> dp1(n,0),dp2(n,0);
+    vector<int> a(n),cnt(2,0),sum(2,0),_cnt(2,0),_sum(2,0);
     for(auto &v:a)
     {
         cin>>v;
     }
-    for(int i=0;i<n;++i)
+    for(int i=0;i<30;++i)
     {
-        while(!st.empty()&&a[st.top()]>=a[i])
+        int cur_ans=0;
+        cnt[0]=cnt[1]=0;
+        sum[0]=sum[1]=0;
+        for(auto &v:a)
         {
-            st.pop();
+            bool bit=(v>>i&1);
+            if(!bit)
+            {
+                _cnt[0]=cnt[0]+1;
+                _cnt[1]=cnt[1];
+                _sum[0]=add(1,add(sum[0],cnt[0]));
+                _sum[1]=add(sum[1],cnt[1]);
+            }
+            else
+            {
+                _cnt[0]=cnt[1];
+                _cnt[1]=cnt[0]+1;
+                _sum[0]=add(sum[1],cnt[1]);
+                _sum[1]=add(1,add(sum[0],cnt[0]));
+            }
+            cnt=_cnt;
+            sum=_sum;
+            cur_ans=add(cur_ans,sum[1]);
         }
-        if(!st.empty())
-        {
-            pse[i]=st.top();
-        }
-        st.push(i);
+        cur_ans=mul(cur_ans,(1<<i));
+        ans=add(ans,cur_ans);
     }
-    while(!st.empty())
-    {
-        st.pop();
-    }
-    for(int i=n-1;i>=0;--i)
-    {
-        while(!st.empty()&&a[st.top()]>=a[i])
-        {
-            st.pop();
-        }
-        if(!st.empty())
-        {
-            nse[i]=st.top();
-        }
-        st.push(i);
-    }
-    dp1[0]=a[0];
-    for(int i=1;i<n;++i)
-    {
-        int idx=pse[i];
-        dp1[i]=1ll*(i-idx)*a[i];
-        if(idx>=0)
-        {
-            dp1[i]+=dp1[idx];
-        }
-    }
-    dp2[n-1]=a[n-1];
-    for(int i=n-2;i>=0;--i)
-    {
-        int idx=nse[i];
-        dp2[i]=1ll*(idx-i)*a[i];
-        if(idx<n)
-        {
-            dp2[i]+=dp2[idx];
-        }
-    }
-    for(int i=0;i<n;++i)
-    {
-        long long cur=dp1[i]+dp2[i]-a[i];
-        if(cur>mx)
-        {
-            mx=cur;
-            ans_idx=i;
-        }
-    }
-    ans[ans_idx]=a[ans_idx];
-    for(int i=ans_idx+1;i<n;++i)
-    {
-        ans[i]=min(ans[i-1],a[i]);
-    }
-    for(int i=ans_idx-1;i>=0;--i)
-    {
-        ans[i]=min(ans[i+1],a[i]);
-    }
-    for(auto &v:ans)
-    {
-        cout<<v<<' ';
-    }
-    cout<<'\n';
+    cout<<ans<<'\n';
     return 0;
 }
