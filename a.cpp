@@ -7,71 +7,44 @@ using namespace std;
     #define debug(x)
 #endif
 
+const int mod=1e9+7;
+
+inline int mul(int a,int b)
+{
+    return (1ll*(a%mod)*(b%mod))%mod;
+}
+
+inline int mul(int a,int b,int p)
+{
+    return (1ll*(a%p)*(b%p))%p;
+}
+
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    int tc;
-    cin>>tc;
-    while(tc--)
+    int p,k,ans=1;
+    cin>>p>>k;
+    vector<bool> vis(p,0);
+    vis[0]=1;
+    for(int i=1;i<p;++i)
     {
-        int n,k;
-        cin>>n>>k;
-        vector<int> a(n);
-        for(auto &v:a)
+        if(!vis[i])
         {
-            cin>>v;
-        }
-        if(k<=2)
-        {
-            cout<<"YES\n";
-        }
-        else
-        {
-            vector<int> _a=a,tmp;
-            sort(_a.begin(),_a.end());
-            for(auto &v:a)
+            ans=mul(ans,p);
+            int cur=i;
+            while(!vis[cur])
             {
-                if(v<=_a[k-2])
-                {
-                    tmp.push_back(v);
-                }
+                vis[cur]=1;
+                cur=mul(cur,k,p);
             }
-            int rem=(int)tmp.size()-k+1,i=0,j=(int)tmp.size()-1;
-            bool ok=1;
-            while(i<j)
-            {
-                if(tmp[i]==tmp[j])
-                {
-                    i++;
-                    j--;
-                }
-                else
-                {
-                    if(rem<=0)
-                    {
-                        ok=0;
-                        break;
-                    }
-                    if(tmp[i]==_a[k-2])
-                    {
-                        i++;
-                        rem--;
-                        continue;
-                    }
-                    if(tmp[j]==_a[k-2])
-                    {
-                        j--;
-                        rem--;
-                        continue;
-                    }
-                    ok=0;
-                    break;
-                }
-            }
-            cout<<(ok?"YES":"NO")<<'\n';
         }
     }
+    if(k==1)
+    {
+        ans=mul(ans,p);
+    }
+    cout<<ans<<'\n';
     return 0;
 }
