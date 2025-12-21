@@ -7,42 +7,46 @@ using namespace std;
     #define debug(x)
 #endif
 
+typedef long long ll;
+
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    int tc;
-    cin>>tc;
-    while(tc--)
+    ll n;
+    cin>>n;
+    vector<ll> a(n);
+    for(auto &v:a)
     {
-        int n,k,rem=-1,mul=1,a=-1,b=-1,c=-1;
-        cin>>n>>k;
-        rem=k-3;
-        n-=rem;
-        while(1)
+        cin>>v;
+    }
+    if(n==1)
+    {
+        cout<<"1 1\n"<<-a[0]<<"\n1 1 \n0\n1 1 \n0\n";
+    }
+    else
+    {
+        cout<<"1 "<<n<<'\n';
+        for(ll i=0;i<n;++i)
         {
-            if(n==4)
-            {
-                a=mul;
-                b=mul;
-                c=(mul<<1);
-                break;
-            }
-            if(n&1)
-            {
-                a=mul*(n>>1);
-                b=mul*(n>>1);
-                c=mul;
-                break;
-            }
-            mul<<=1;
-            n>>=1;
+            ll rem=((n-1)-((a[i]%(n-1))+(n-1))%(n-1))%(n-1);
+            a[i]+=rem*n;
+            cout<<rem*n<<' ';
         }
-        cout<<a<<' '<<b<<' '<<c<<' ';
-        while(rem--)
+        cout<<'\n';
+        cout<<"1 "<<n-1<<'\n';
+        for(ll i=0;i<n-1;++i)
         {
-            cout<<1<<' ';
+            cout<<-a[i]<<' ';
+            a[i]=0;
+        }
+        cout<<'\n';
+        cout<<"2 "<<n<<'\n';
+        for(ll i=1;i<n;++i)
+        {
+            cout<<-a[i]<<' ';
+            a[i]=0;
         }
         cout<<'\n';
     }
