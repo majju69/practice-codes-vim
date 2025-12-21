@@ -16,37 +16,33 @@ int main()
     cin>>tc;
     while(tc--)
     {
-        int n,i=1;
-        priority_queue<pair<int,int>> pq;
-        cin>>n;
-        vector<int> ans(n);
-        pq.push({n,0});     // {len,-start_idx}
-        while(pq.size())
+        int n,k,rem=-1,mul=1,a=-1,b=-1,c=-1;
+        cin>>n>>k;
+        rem=k-3;
+        n-=rem;
+        while(1)
         {
-            pair<int,int> p=pq.top();
-            pq.pop();
-            int len=p.first,idx=-p.second;
-            ans[idx+((len-1)>>1)]=i++;
-            if(len>1)
+            if(n==4)
             {
-                if(len&1)
-                {
-                    pq.push({(len>>1),-idx});
-                    pq.push({(len>>1),-(idx+((len+1)>>1))});
-                }
-                else
-                {
-                    if(len!=2)
-                    {
-                        pq.push({(len>>1)-1,-idx});
-                    }
-                    pq.push({(len>>1),-(idx+(len>>1))});
-                }
+                a=mul;
+                b=mul;
+                c=(mul<<1);
+                break;
             }
+            if(n&1)
+            {
+                a=mul*(n>>1);
+                b=mul*(n>>1);
+                c=mul;
+                break;
+            }
+            mul<<=1;
+            n>>=1;
         }
-        for(auto &v:ans)
+        cout<<a<<' '<<b<<' '<<c<<' ';
+        while(rem--)
         {
-            cout<<v<<' ';
+            cout<<1<<' ';
         }
         cout<<'\n';
     }
