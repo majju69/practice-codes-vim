@@ -7,44 +7,48 @@ using namespace std;
     #define debug(x)
 #endif
 
-const int mod=1e9+7;
-
-inline int mul(int a,int b)
-{
-    return (1ll*(a%mod)*(b%mod))%mod;
-}
-
-inline int mul(int a,int b,int p)
-{
-    return (1ll*(a%p)*(b%p))%p;
-}
-
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    int p,k,ans=1;
-    cin>>p>>k;
-    vector<bool> vis(p,0);
-    vis[0]=1;
-    for(int i=1;i<p;++i)
+    int tc;
+    cin>>tc;
+    while(tc--)
     {
-        if(!vis[i])
+        int n,i=1;
+        priority_queue<pair<int,int>> pq;
+        cin>>n;
+        vector<int> ans(n);
+        pq.push({n,0});     // {len,-start_idx}
+        while(pq.size())
         {
-            ans=mul(ans,p);
-            int cur=i;
-            while(!vis[cur])
+            pair<int,int> p=pq.top();
+            pq.pop();
+            int len=p.first,idx=-p.second;
+            ans[idx+((len-1)>>1)]=i++;
+            if(len>1)
             {
-                vis[cur]=1;
-                cur=mul(cur,k,p);
+                if(len&1)
+                {
+                    pq.push({(len>>1),-idx});
+                    pq.push({(len>>1),-(idx+((len+1)>>1))});
+                }
+                else
+                {
+                    if(len!=2)
+                    {
+                        pq.push({(len>>1)-1,-idx});
+                    }
+                    pq.push({(len>>1),-(idx+(len>>1))});
+                }
             }
         }
+        for(auto &v:ans)
+        {
+            cout<<v<<' ';
+        }
+        cout<<'\n';
     }
-    if(k==1)
-    {
-        ans=mul(ans,p);
-    }
-    cout<<ans<<'\n';
     return 0;
 }
