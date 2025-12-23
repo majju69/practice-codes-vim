@@ -7,48 +7,49 @@ using namespace std;
     #define debug(x)
 #endif
 
-typedef long long ll;
+const int mod=1e9+7;
+
+inline int sub(int a,int b)
+{
+    return ((a%mod)-(b%mod)+mod)%mod;
+}
+
+int power(int a,int b)        // Use when mod is of order 10^9 or less
+{
+    int ans=1;
+    a=a%mod;
+    while(b)
+    {
+        if(b&1)
+        {
+            ans=(1ll*(ans%mod)*(a%mod))%mod;
+        }
+        a=(1ll*(a%mod)*(a%mod))%mod;       
+        b>>=1;
+    }
+    return ans%mod;
+}
 
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    ll n;
-    cin>>n;
-    vector<ll> a(n);
-    for(auto &v:a)
+    int tc;
+    cin>>tc;
+    while(tc--)
     {
-        cin>>v;
-    }
-    if(n==1)
-    {
-        cout<<"1 1\n"<<-a[0]<<"\n1 1 \n0\n1 1 \n0\n";
-    }
-    else
-    {
-        cout<<"1 "<<n<<'\n';
-        for(ll i=0;i<n;++i)
+        int l,r,k;
+        cin>>l>>r>>k;
+        if(k>=10)
         {
-            ll rem=((n-1)-((a[i]%(n-1))+(n-1))%(n-1))%(n-1);
-            a[i]+=rem*n;
-            cout<<rem*n<<' ';
+            cout<<0<<'\n';
         }
-        cout<<'\n';
-        cout<<"1 "<<n-1<<'\n';
-        for(ll i=0;i<n-1;++i)
+        else
         {
-            cout<<-a[i]<<' ';
-            a[i]=0;
+            int x=(10/k)+1-((10%k)==0);
+            cout<<sub(power(x,r),power(x,l))<<'\n';
         }
-        cout<<'\n';
-        cout<<"2 "<<n<<'\n';
-        for(ll i=1;i<n;++i)
-        {
-            cout<<-a[i]<<' ';
-            a[i]=0;
-        }
-        cout<<'\n';
     }
     return 0;
 }
