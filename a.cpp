@@ -7,29 +7,6 @@ using namespace std;
     #define debug(x)
 #endif
 
-const int mod=1e9+7;
-
-inline int sub(int a,int b)
-{
-    return ((a%mod)-(b%mod)+mod)%mod;
-}
-
-int power(int a,int b)        // Use when mod is of order 10^9 or less
-{
-    int ans=1;
-    a=a%mod;
-    while(b)
-    {
-        if(b&1)
-        {
-            ans=(1ll*(ans%mod)*(a%mod))%mod;
-        }
-        a=(1ll*(a%mod)*(a%mod))%mod;       
-        b>>=1;
-    }
-    return ans%mod;
-}
-
 int main()
 {
     ios_base::sync_with_stdio(false);
@@ -39,17 +16,44 @@ int main()
     cin>>tc;
     while(tc--)
     {
-        int l,r,k;
-        cin>>l>>r>>k;
-        if(k>=10)
+        int n,ans=0;
+        multiset<int> st;
+        cin>>n;
+        vector<int> adj[n],sub(n);
+        vector<vector<int>> dp(n,vector<int>(2));
+        for(int i=1;i<n;++i)
         {
-            cout<<0<<'\n';
+            int u,v;
+            cin>>u>>v;
+            u--;
+            v--;
+            adj[u].push_back(v);
+            adj[v].push_back(u);
         }
-        else
+        for(int i=0;i<n;++i)
         {
-            int x=(10/k)+1-((10%k)==0);
-            cout<<sub(power(x,r),power(x,l))<<'\n';
+            st.insert((int)adj[i].size());
         }
+        for(int i=0;i<n;++i)
+        {
+            st.erase(st.find((int)adj[i].size()));
+            for(auto &v:adj[i])
+            {
+                ans=max(ans,(int)adj[v].size()+(int)adj[i].size()-2);
+                st.erase(st.find((int)adj[v].size()));
+            }
+            if((int)st.size()>0)
+            {
+                int x=(*(--st.end()));
+                ans=max(ans,(int)adj[i].size()+x-1);
+            }
+            st.insert((int)adj[i].size());
+            for(auto &v:adj[i])
+            {
+                st.insert((int)adj[v].size());
+            }
+        }
+        cout<<ans<<'\n';
     }
     return 0;
 }
