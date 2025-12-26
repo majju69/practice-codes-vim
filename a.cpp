@@ -4,12 +4,8 @@ using namespace std;
 #ifdef LOCAL
     #include"debug.h"
 #else
-    #define debug(x) 
+    #define debug(x)
 #endif
-
-const int N=2e5+10;
-int a[N],pvs[2];
-long long dp[2],ndp[2];
 
 int main()
 {
@@ -20,53 +16,22 @@ int main()
     cin>>tc;
     while(tc--)
     {
-        int n,s;
-        cin>>n>>s;
-        for(int i=0;i<n;++i)
+        int n;
+        cin>>n;
+        vector<int> a(n),dp={1,0,(int)-1e9},ndp;
+        for(auto &v:a)
         {
-            cin>>a[i];
+            cin>>v;
         }
-        for(int i=0;i<n-2;++i)
+        for(int i=1;i<n;++i)
         {
-            int lb=min(a[i+1]-s,s),ub=max(a[i+1]-s,s);
-            ndp[0]=dp[0];
-			ndp[1]=dp[1];
-            if(lb<0)
-            {
-                lb=0;
-            }
-            if(ub>a[i+1])
-            {
-                ub=a[i+1];
-            }
-            if(i==0)
-            {
-                ndp[0]=1ll*a[0]*lb;
-                ndp[1]=1ll*a[0]*ub;
-            }
-            else
-            {
-                ndp[0]=min(dp[0]+1ll*lb*(a[i]-pvs[0]),dp[1]+1ll*lb*(a[i]-pvs[1]));
-                ndp[1]=min(dp[0]+1ll*ub*(a[i]-pvs[0]),dp[1]+1ll*ub*(a[i]-pvs[1]));
-            }
-            pvs[0]=lb;
-            pvs[1]=ub;
-            dp[0]=ndp[0];
-			dp[1]=ndp[1];
+            ndp=dp;
+            ndp[0]=dp[0]-(dp[0]>a[i])+(dp[0]<a[i]);
+            ndp[1]=max(dp[0],dp[1]);
+            ndp[2]=max(dp[2]-(dp[2]>a[i])+(dp[2]<a[i]),dp[1]-(dp[1]>a[i])+(dp[1]<a[i]));
+            dp=ndp;
         }
-        cout<<min(dp[0]+1ll*a[n-1]*(a[n-2]-pvs[0]),dp[1]+1ll*a[n-1]*(a[n-2]-pvs[1]))<<'\n';
+        cout<<max(dp[1],dp[2])<<'\n';
     }
     return 0;
 }
-
-/*
-
-
-s>=xi, s>=ai-xi => xi<=s&&xi>=ai-s => ai-s<=xi<=s
-
-s<=xi, s<=ai-xi => xi>=s&&xi<=ai-s => s<=xi<=ai-s
-
-
-Take extreme
-
-*/
