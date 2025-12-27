@@ -7,112 +7,102 @@ using namespace std;
     #define debug(x)
 #endif
 
-const int N=5e4+10;
-
-struct cmp_table
-{
-    bool operator()(const pair<int,int> &a,const pair<int,int> &b) const
-    {
-        int sa=a.first+a.second,sb=b.first+b.second;
-        if(sa!=sb)
-        {
-            return sa<sb;
-        }
-        if(a.first!=b.first)
-        {
-            return a.first<b.first;
-        }
-        return a.second<b.second;
-    }
-};
-
-struct cmp_cell
-{
-    bool operator()(const pair<int,int> &a,const pair<int,int> &b) const
-    {
-        int sa=a.first+a.second+2*(a.first%3==2&&a.second%3==2),sb=b.first+b.second+2*(b.first%3==2&&b.second%3==2);
-        if(sa!=sb)
-        {
-            return sa<sb;
-        }
-        if(a.first!=b.first)
-        {
-            return a.first<b.first;
-        }
-        return a.second<b.second;
-    }
-};
-
-set<pair<int,int>,cmp_table> table;
-set<pair<int,int>,cmp_cell> cell;
-
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    for(int sum=0;sum<=N;++sum)
+    int tc;
+    cin>>tc;
+    while(tc--)
     {
-        if((int)table.size()>N)
+        int n,m;
+        cin>>n>>m;
+        vector<pair<int,int>> a(n);
+        for(int i=0;i<n;++i)
         {
-            break;
+            cin>>a[i].first;
+            a[i].second=i+1;
         }
-        for(int x=0;x<=sum;++x)
+        sort(a.begin(),a.end());
+        if(m>(n>>1))
         {
-            if((int)table.size()>N)
+            cout<<-1<<'\n';
+        }
+        else
+        {
+            if(m==0)
             {
-                break;
+                int s=0,idx=-1;
+                for(int i=n-2;i>=0;--i)
+                {
+                    if(s+a[i].first>=a[n-1].first)
+                    {
+                        break;
+                    }
+                    s+=a[i].first;
+                    idx=i;
+                }
+                if(idx==0)
+                {
+                    if(s<a[n-1].first)
+                    {
+                        cout<<-1<<'\n';
+                    }
+                    else
+                    {
+                        cout<<n-1<<'\n';
+                        for(int i=0;i<n-1;++i)
+                        {
+                            cout<<a[i].second<<' '<<a[n-1].second<<'\n';
+                        }
+                    }
+                    continue;
+                }
+                vector<pair<int,int>> ans;
+                for(int i=idx;i<n-1;++i)
+                {
+                    ans.push_back({a[i].second,a[n-1].second});
+                }
+                for(int i=0;i<idx-1;++i)
+                {
+                    ans.push_back({a[i].second,a[i+1].second});
+                }
+                ans.push_back({a[n-1].second,a[idx-1].second});
+                cout<<(int)ans.size()<<'\n';
+                for(auto &v:ans)
+                {
+                    cout<<v.first<<' '<<v.second<<'\n';
+                }
             }
-            table.insert({3*x+1,3*(sum-x)+1});
-            cell.insert({3*x+1,3*(sum-x)+1});
-            cell.insert({3*x+2,3*(sum-x)+1});
-            cell.insert({3*x+1,3*(sum-x)+2});
-            cell.insert({3*x+2,3*(sum-x)+2});
-        }
-    }
-    int q;
-    cin>>q;
-    while(q--)
-    {
-        int n;
-        cin>>n;
-        vector<pair<int,int>> rm_table,rm_cell;
-        while(n--)
-        {
-            int t;
-            cin>>t;
-            if(t==0)
+            else if(m==1)
             {
-                auto it=table.begin();
-                pair<int,int> p=*it;
-                table.erase(it);
-                cell.erase(p);
-                rm_table.push_back(p);
-                rm_cell.push_back(p);
-                cout<<p.first<<' '<<p.second<<'\n';
+                cout<<n-1<<'\n';
+                for(int i=0;i<n-1;++i)
+                {
+                    cout<<a[i].second<<' '<<a[i+1].second<<'\n';
+                }
             }
             else
             {
-                auto it=cell.begin();
-                pair<int,int> p=*it;
-                cell.erase(it);
-                rm_cell.push_back(p);
-                pair<int,int> tmp={3*(p.first/3)+1,3*(p.second/3)+1};
-                if(table.find(tmp)!=table.end())
+                int idx=0,rem=n;
+                vector<pair<int,int>> ans;
+                while(rem>(m<<1))
                 {
-                    table.erase(tmp);
-                    rm_table.push_back(tmp);
+                    ans.push_back({a[idx].second,a[idx+1].second});
+                    idx++;
+                    rem--;
                 }
-                cout<<p.first<<' '<<p.second<<'\n';
+                for(int i=idx;i<n;i+=2)
+                {
+                    ans.push_back({a[i+1].second,a[i].second});
+                }
+                cout<<(int)ans.size()<<'\n';
+                for(auto &v:ans)
+                {
+                    cout<<v.first<<' '<<v.second<<'\n';
+                }
             }
-        }
-        for(auto &v:rm_cell)
-        {
-            cell.insert(v);
-        }
-        for(auto &v:rm_table)
-        {
-            table.insert(v);
         }
     }
     return 0;
