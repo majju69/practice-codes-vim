@@ -9,13 +9,11 @@ using namespace std;
 
 typedef long long ll;
 
-bool cmp(const pair<ll,ll> &a,const pair<ll,ll> &b)
+const ll base=10;
+
+char get(ll x)
 {
-    if(a.first==b.first)
-    {
-        return a.second<b.second;
-    }
-    return a.first>b.first;
+    return (char)((x%base)+'0');
 }
 
 int main()
@@ -27,47 +25,50 @@ int main()
     cin>>tc;
     while(tc--)
     {
-        ll n,m,k,ans=0,sum=0;
-        multiset<ll> st;
-        vector<ll> res;
-        cin>>n>>m>>k;
-        for(ll i=0;i<m;++i)
+        ll n,carry=0,sum=0;
+        string s,ans;
+        vector<ll> cnt(10,0);
+        cin>>n>>s;
+        reverse(s.begin(),s.end());
+        while(s.back()=='0')
         {
-            ll x;
-            cin>>x;
-            st.insert(x);
+            s.pop_back();
+            n--;
         }
-        vector<pair<ll,ll>> a(n);
-        for(auto &v:a)
+        reverse(s.begin(),s.end());
+        for(auto &v:s)
         {
-            ll y;
-            cin>>v.second>>y>>v.first;
-            k-=y;
-            v.first-=y;
+            cnt[v-'0']++;
         }
-        sort(a.begin(),a.end(),cmp);
-        for(auto &v:a)
+        for(ll i=n-1;i>=0;--i)
         {
-            auto it=st.lower_bound(v.second);
-            if(it==st.end())
+            sum=carry;
+            for(ll j=1;j<10;++j)
             {
-                res.push_back(v.first);
+                sum+=j*cnt[j];
+            }
+            if(i>0)
+            {
+                ans.push_back(get(sum));
+                carry=sum/base;
+                sum=0;
+                cnt[s[i]-'0']--;
             }
             else
             {
-                ans++;
-                st.erase(it);
+                string tmp=to_string(sum);
+                reverse(tmp.begin(),tmp.end());
+                for(auto &v:tmp)
+                {
+                    ans.push_back(v);
+                }
             }
         }
-        sort(res.begin(),res.end());
-        for(auto &v:res)
+        while((ll)ans.size()>0&&ans.back()=='0')
         {
-            if(sum+v<=k)
-            {
-                ans++;
-                sum+=v;
-            }
+            ans.pop_back();
         }
+        reverse(ans.begin(),ans.end());
         cout<<ans<<'\n';
     }
     return 0;
