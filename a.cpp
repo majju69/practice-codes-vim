@@ -7,69 +7,45 @@ using namespace std;
     #define debug(x)
 #endif
 
-typedef long long ll;
-
-const ll base=10;
-
-char get(ll x)
-{
-    return (char)((x%base)+'0');
-}
-
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    ll tc;
+    int tc;
     cin>>tc;
     while(tc--)
     {
-        ll n,carry=0,sum=0;
-        string s,ans;
-        vector<ll> cnt(10,0);
-        cin>>n>>s;
-        reverse(s.begin(),s.end());
-        while(s.back()=='0')
+        int dp[]={0,(int)1e9},ndp[]={-1,-1},n=0;
+        string s,t;
+        cin>>s>>t;
+        n=s.size();
+        for(int i=0;i<n;++i)
         {
-            s.pop_back();
-            n--;
-        }
-        reverse(s.begin(),s.end());
-        for(auto &v:s)
-        {
-            cnt[v-'0']++;
-        }
-        for(ll i=n-1;i>=0;--i)
-        {
-            sum=carry;
-            for(ll j=1;j<10;++j)
+            if(s[i]=='0'&&t[i]=='0')
             {
-                sum+=j*cnt[j];
+                ndp[0]=min(dp[0],dp[1]+1);
+                ndp[1]=min(dp[0]+2,dp[1]+1);
             }
-            if(i>0)
+            if(s[i]=='0'&&t[i]=='1')
             {
-                ans.push_back(get(sum));
-                carry=sum/base;
-                sum=0;
-                cnt[s[i]-'0']--;
+                ndp[0]=min(dp[0]+1,dp[1]+2);
+                ndp[1]=min(dp[0]+1,dp[1]);
             }
-            else
+            if(s[i]=='1'&&t[i]=='0')
             {
-                string tmp=to_string(sum);
-                reverse(tmp.begin(),tmp.end());
-                for(auto &v:tmp)
-                {
-                    ans.push_back(v);
-                }
+                ndp[0]=min(dp[0]+1,dp[1]);
+                ndp[1]=min(dp[0]+1,dp[1]+2);
             }
+            if(s[i]=='1'&&t[i]=='1')
+            {
+                ndp[0]=min(dp[0]+2,dp[1]+1);
+                ndp[1]=min(dp[0],dp[1]+1);
+            }
+            dp[0]=ndp[0];
+            dp[1]=ndp[1];
         }
-        while((ll)ans.size()>0&&ans.back()=='0')
-        {
-            ans.pop_back();
-        }
-        reverse(ans.begin(),ans.end());
-        cout<<ans<<'\n';
+        cout<<min(dp[0],dp[1])<<'\n';
     }
     return 0;
 }
