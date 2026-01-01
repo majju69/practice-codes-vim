@@ -16,36 +16,54 @@ int main()
     cin>>tc;
     while(tc--)
     {
-        int dp[]={0,(int)1e9},ndp[]={-1,-1},n=0;
-        string s,t;
-        cin>>s>>t;
-        n=s.size();
+        int n,dp[]={1,0,0,0},ndp[]={-1,-1,-1,-1};
+        string s[2];
+        cin>>n>>s[0]>>s[1];
         for(int i=0;i<n;++i)
         {
-            if(s[i]=='0'&&t[i]=='0')
+            memset(ndp,0,sizeof(ndp));
+            if(s[0][i]=='#'&&s[1][i]=='#')
             {
-                ndp[0]=min(dp[0],dp[1]+1);
-                ndp[1]=min(dp[0]+2,dp[1]+1);
+                ndp[0]=dp[0];
             }
-            if(s[i]=='0'&&t[i]=='1')
+            if(s[0][i]=='#'&&s[1][i]!='#')
             {
-                ndp[0]=min(dp[0]+1,dp[1]+2);
-                ndp[1]=min(dp[0]+1,dp[1]);
+                ndp[0]=dp[1];
+                ndp[1]=dp[0];
             }
-            if(s[i]=='1'&&t[i]=='0')
+            if(s[0][i]!='#'&&s[1][i]=='#')
             {
-                ndp[0]=min(dp[0]+1,dp[1]);
-                ndp[1]=min(dp[0]+1,dp[1]+2);
+                ndp[0]=dp[2];
+                ndp[2]=dp[0];
             }
-            if(s[i]=='1'&&t[i]=='1')
+            if(s[0][i]!='#'&&s[1][i]!='#')
             {
-                ndp[0]=min(dp[0]+2,dp[1]+1);
-                ndp[1]=min(dp[0],dp[1]+1);
+                ndp[0]=dp[0]+dp[3];
+                ndp[3]=dp[0];
+                ndp[1]=dp[2];
+                ndp[2]=dp[1];
             }
-            dp[0]=ndp[0];
-            dp[1]=ndp[1];
+            for(int j=0;j<4;++j)
+            {
+                dp[j]=ndp[j];
+                if(dp[j]>2)
+                {
+                    dp[j]=2;
+                }
+            }
         }
-        cout<<min(dp[0],dp[1])<<'\n';
+        if(dp[0]==0)
+        {
+            cout<<"None\n";
+        }
+        else if(dp[0]==1)
+        {
+            cout<<"Unique\n";
+        }
+        else
+        {
+            cout<<"Multiple\n";
+        }
     }
     return 0;
 }
