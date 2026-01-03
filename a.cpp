@@ -7,57 +7,44 @@ using namespace std;
     #define debug(x)
 #endif
 
+typedef long long ll;
+
+ll gcd(const ll a,const ll b)
+{
+    return ((b==0)?a:gcd(b,a%b));
+}
+
+inline ll lcm(const ll a,const ll b)
+{
+    return (a/gcd(a,b))*b;
+}
+
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    int tc;
+    ll tc;
     cin>>tc;
     while(tc--)
     {
-        int n,pvs=0;
-        long long ans=0;
+        ll n,ans=1,g=0,l=1;
         cin>>n;
-        vector<int> a(n),cost(n);
-        for(auto &v:a)
+        while(n--)
         {
-            cin>>v;
-        }
-        for(int i=1;i<n;++i)
-        {
-            if(a[i]==a[i-1])
+            ll a,b;
+            cin>>a>>b;
+            l=lcm(l,b);
+            g=gcd(g,a*b);
+            if(g%l)
             {
-                cost[i]=0;
+                ans++;
+                g=a*b;
+                l=b;
             }
-            else if(a[i]>a[i-1])
-            {
-                int cnt=0,x=a[i-1];
-                while(a[i]>=x)
-                {
-                    x<<=1;
-                    cnt++;
-                }
-                cnt--;
-                cost[i]=-cnt;
-            }
-            else
-            {
-                int cnt=0,x=a[i];
-                while(a[i-1]>x)
-                {
-                    x<<=1;
-                    cnt++;
-                }
-                cost[i]=cnt;
-            }
-        }
-        for(auto &v:cost)
-        {
-            ans+=max(v+pvs,0);
-            pvs=max(v+pvs,0);
         }
         cout<<ans<<'\n';
     }
     return 0;
 }
+
