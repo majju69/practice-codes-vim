@@ -16,54 +16,48 @@ int main()
     cin>>tc;
     while(tc--)
     {
-        int n,dp[]={1,0,0,0},ndp[]={-1,-1,-1,-1};
-        string s[2];
-        cin>>n>>s[0]>>s[1];
-        for(int i=0;i<n;++i)
+        int n,pvs=0;
+        long long ans=0;
+        cin>>n;
+        vector<int> a(n),cost(n);
+        for(auto &v:a)
         {
-            memset(ndp,0,sizeof(ndp));
-            if(s[0][i]=='#'&&s[1][i]=='#')
+            cin>>v;
+        }
+        for(int i=1;i<n;++i)
+        {
+            if(a[i]==a[i-1])
             {
-                ndp[0]=dp[0];
+                cost[i]=0;
             }
-            if(s[0][i]=='#'&&s[1][i]!='#')
+            else if(a[i]>a[i-1])
             {
-                ndp[0]=dp[1];
-                ndp[1]=dp[0];
-            }
-            if(s[0][i]!='#'&&s[1][i]=='#')
-            {
-                ndp[0]=dp[2];
-                ndp[2]=dp[0];
-            }
-            if(s[0][i]!='#'&&s[1][i]!='#')
-            {
-                ndp[0]=dp[0]+dp[3];
-                ndp[3]=dp[0];
-                ndp[1]=dp[2];
-                ndp[2]=dp[1];
-            }
-            for(int j=0;j<4;++j)
-            {
-                dp[j]=ndp[j];
-                if(dp[j]>2)
+                int cnt=0,x=a[i-1];
+                while(a[i]>=x)
                 {
-                    dp[j]=2;
+                    x<<=1;
+                    cnt++;
                 }
+                cnt--;
+                cost[i]=-cnt;
+            }
+            else
+            {
+                int cnt=0,x=a[i];
+                while(a[i-1]>x)
+                {
+                    x<<=1;
+                    cnt++;
+                }
+                cost[i]=cnt;
             }
         }
-        if(dp[0]==0)
+        for(auto &v:cost)
         {
-            cout<<"None\n";
+            ans+=max(v+pvs,0);
+            pvs=max(v+pvs,0);
         }
-        else if(dp[0]==1)
-        {
-            cout<<"Unique\n";
-        }
-        else
-        {
-            cout<<"Multiple\n";
-        }
+        cout<<ans<<'\n';
     }
     return 0;
 }
