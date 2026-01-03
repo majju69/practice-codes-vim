@@ -7,6 +7,23 @@ using namespace std;
     #define debug(x)
 #endif
 
+bool check(int mid,int w,int f,vector<bool> &dp)
+{
+    int n=dp.size();
+    for(int i=0;i<=(n>>1);++i)
+    {
+        if(!dp[i])
+        {
+            continue;
+        }
+        if(mid*f>=i&&mid*w>=(n-1-i))
+        {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 int main()
 {
     ios_base::sync_with_stdio(false);
@@ -16,82 +33,47 @@ int main()
     cin>>tc;
     while(tc--)
     {
-        int n;
-        string s;
-        cin>>n;
-        vector<int> adj[n];
-        for(int i=1;i<n;++i)
+        int w,f,n,s=0,lo=1,hi=0,ans=-1;
+        cin>>w>>f>>n;
+        vector<int> a(n);
+        for(auto &v:a)
         {
-            int u,v;
-            cin>>u>>v;
-            u--;
-            v--;
-            adj[u].push_back(v);
-            adj[v].push_back(u);
+            cin>>v;
+            s+=v;
         }
-        cin>>s;
-        if(s[0]!='?')
+        if(w<f)
         {
-            int ans=0,cnt=0;
-            for(int i=1;i<n;++i)
-            {
-                if((int)adj[i].size()==1)
-                {
-                    if(s[i]=='?')
-                    {
-                        cnt++;
-                    }
-                    else
-                    {
-                        ans+=(s[i]!=s[0]);
-                    }
-                }
-            }
-            cnt++;
-            cnt>>=1;
-            cout<<ans+cnt<<'\n';
+            swap(w,f);
         }
-        else
+        hi=(s+w-1)/w;
+        vector<bool> dp(s+1,0),ndp;
+        dp[0]=1;
+        for(int i=0;i<n;++i)
         {
-            int leaf[]={0,0,0},cnt=0;
-            for(int i=1;i<n;++i)
+            ndp=dp;
+            for(int j=0;j<=s;++j)
             {
-                if((int)adj[i].size()==1)
+                if(j-a[i]>=0)
                 {
-                    if(s[i]=='?')
-                    {
-                        leaf[2]++;
-                    }
-                    else
-                    {
-                        leaf[s[i]-'0']++;
-                    }
-                }
-                else
-                {
-                    cnt+=(s[i]=='?');
+                    ndp[j]=(ndp[j]||dp[j-a[i]]);
                 }
             }
-            if(leaf[0]>leaf[1])
+            dp=ndp;
+        }
+        while(lo<=hi)
+        {
+            int mid=lo+(hi-lo)/2;
+            if(check(mid,w,f,dp))
             {
-                cout<<leaf[0]+(leaf[2]>>1)<<'\n';
-            }
-            else if(leaf[0]<leaf[1])
-            {
-                cout<<leaf[1]+(leaf[2]>>1)<<'\n';
+                ans=mid;
+                hi=mid-1;
             }
             else
             {
-                if(cnt&1)
-                {
-                    cout<<leaf[0]+((leaf[2]+1)>>1)<<'\n';
-                }
-                else
-                {
-                    cout<<leaf[0]+(leaf[2]>>1)<<'\n';
-                }
+                lo=mid+1;
             }
         }
+        cout<<ans<<'\n';
     }
     return 0;
 }
