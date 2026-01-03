@@ -9,16 +9,6 @@ using namespace std;
 
 typedef long long ll;
 
-ll gcd(const ll a,const ll b)
-{
-    return ((b==0)?a:gcd(b,a%b));
-}
-
-inline ll lcm(const ll a,const ll b)
-{
-    return (a/gcd(a,b))*b;
-}
-
 int main()
 {
     ios_base::sync_with_stdio(false);
@@ -28,23 +18,33 @@ int main()
     cin>>tc;
     while(tc--)
     {
-        ll n,ans=1,g=0,l=1;
-        cin>>n;
-        while(n--)
+        ll n,m,d,sum=0,ans=0;
+        multiset<ll> st;
+        cin>>n>>m>>d;
+        for(ll i=1;i<=n;++i)
         {
-            ll a,b;
-            cin>>a>>b;
-            l=lcm(l,b);
-            g=gcd(g,a*b);
-            if(g%l)
+            ll x;
+            cin>>x;
+            if(x<=0)
             {
-                ans++;
-                g=a*b;
-                l=b;
+                continue;
             }
+            if((ll)st.size()<m) 
+            {
+                sum+=x;
+                st.insert(x);
+            }
+            else
+            {
+                auto it=st.begin();
+                sum-=*it;
+                st.erase(it);
+                sum+=x;
+                st.insert(x);
+            }
+            ans=max(ans,sum-i*d);
         }
         cout<<ans<<'\n';
     }
     return 0;
 }
-
