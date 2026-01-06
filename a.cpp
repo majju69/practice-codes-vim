@@ -7,22 +7,9 @@ using namespace std;
     #define debug(x)
 #endif
 
-bool check(int mid,int w,int f,vector<bool> &dp)
-{
-    int n=dp.size();
-    for(int i=0;i<=(n>>1);++i)
-    {
-        if(!dp[i])
-        {
-            continue;
-        }
-        if(mid*f>=i&&mid*w>=(n-1-i))
-        {
-            return 1;
-        }
-    }
-    return 0;
-}
+const int N=60;
+int degree[N];
+vector<pair<int,int>> edges;
 
 int main()
 {
@@ -33,47 +20,55 @@ int main()
     cin>>tc;
     while(tc--)
     {
-        int w,f,n,s=0,lo=1,hi=0,ans=-1;
-        cin>>w>>f>>n;
-        vector<int> a(n);
-        for(auto &v:a)
+        memset(degree,0,sizeof(degree));
+        edges.clear();
+        int n,m,node=-1;
+        cin>>n>>m;
+        for(int i=0;i<m;++i)
         {
-            cin>>v;
-            s+=v;
+            int u,v;
+            cin>>u>>v;
+            u--;
+            v--;
+            edges.push_back({u,v});
+            degree[u]++;
+            degree[v]++;
         }
-        if(w<f)
-        {
-            swap(w,f);
-        }
-        hi=(s+w-1)/w;
-        vector<bool> dp(s+1,0),ndp;
-        dp[0]=1;
         for(int i=0;i<n;++i)
         {
-            ndp=dp;
-            for(int j=0;j<=s;++j)
+            if(degree[i]!=n-1)
             {
-                if(j-a[i]>=0)
+                node=i;
+                break;
+            }
+        }
+        if(node!=-1)
+        {
+            cout<<2<<'\n';
+            for(auto &edge:edges)
+            {
+                cout<<(edge.first==node||edge.second==node)+1<<' ';
+            }
+            cout<<'\n';
+        }
+        else
+        {
+            int cur=1;
+            cout<<3<<'\n';
+            for(auto &edge:edges)
+            {
+                if(edge.first==0||edge.second==0)
                 {
-                    ndp[j]=(ndp[j]||dp[j-a[i]]);
+                    cout<<cur<<' ';
+                    cur=3-cur;
+                }
+                else
+                {
+                    cout<<3<<' ';
                 }
             }
-            dp=ndp;
+            cout<<'\n';
         }
-        while(lo<=hi)
-        {
-            int mid=lo+(hi-lo)/2;
-            if(check(mid,w,f,dp))
-            {
-                ans=mid;
-                hi=mid-1;
-            }
-            else
-            {
-                lo=mid+1;
-            }
-        }
-        cout<<ans<<'\n';
     }
     return 0;
 }
