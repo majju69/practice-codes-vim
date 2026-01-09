@@ -2,73 +2,61 @@
 using namespace std;
 
 #ifdef LOCAL
-    #include"debug.h"
+	#include"debug.h"
 #else
-    #define debug(x)
+	#define debug(x)
 #endif
 
-const int N=60;
-int degree[N];
-vector<pair<int,int>> edges;
+const int N1=2e3+10,N2=5e3+10;
+int a[N1],suf_freq[N2];
+
+inline long long get(int n)
+{
+	return 1ll*n*n*n;
+}
 
 int main()
 {
-    ios_base::sync_with_stdio(false);
-    cin.tie(NULL);
-    cout.tie(NULL);
-    int tc;
-    cin>>tc;
-    while(tc--)
-    {
-        memset(degree,0,sizeof(degree));
-        edges.clear();
-        int n,m,node=-1;
-        cin>>n>>m;
-        for(int i=0;i<m;++i)
-        {
-            int u,v;
-            cin>>u>>v;
-            u--;
-            v--;
-            edges.push_back({u,v});
-            degree[u]++;
-            degree[v]++;
-        }
-        for(int i=0;i<n;++i)
-        {
-            if(degree[i]!=n-1)
-            {
-                node=i;
-                break;
-            }
-        }
-        if(node!=-1)
-        {
-            cout<<2<<'\n';
-            for(auto &edge:edges)
-            {
-                cout<<(edge.first==node||edge.second==node)+1<<' ';
-            }
-            cout<<'\n';
-        }
-        else
-        {
-            int cur=1;
-            cout<<3<<'\n';
-            for(auto &edge:edges)
-            {
-                if(edge.first==0||edge.second==0)
-                {
-                    cout<<cur<<' ';
-                    cur=3-cur;
-                }
-                else
-                {
-                    cout<<3<<' ';
-                }
-            }
-            cout<<'\n';
-        }
-    }
-    return 0;
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+	int n;
+	long long cnt=0;
+	cin>>n;
+	for(int i=0;i<n;++i)
+	{
+		cin>>a[i];
+	}
+	for(int i=0;i<n-1;++i)
+	{
+		for(int j=i+1;j<n;++j)
+		{
+			suf_freq[abs(a[i]-a[j])]++;
+		}
+	}
+	for(int i=N2-2;i>=0;--i)
+	{
+		suf_freq[i]+=suf_freq[i+1];
+	}
+	for(int d1=1;d1<N2;++d1)
+	{
+		for(int d2=1;d2<N2-d1;++d2)
+		{
+			if(d1+d2+1>=N2)
+			{
+				continue;
+			}
+			int c1=suf_freq[d1]-((d1+1<N2)?suf_freq[d1+1]:0),c2=suf_freq[d2]-((d2+1<N2)?suf_freq[d2+1]:0);
+			cnt+=1ll*c1*c2*suf_freq[d1+d2+1];
+		}
+	}
+	cout<<fixed<<setprecision(10)<<(long double)cnt/get(n*(n-1)/2)<<'\n';
+	return 0;
 }
+
+/*
+
+|d1|+|d2|<|d3|
+
+
+*/
