@@ -2,61 +2,75 @@
 using namespace std;
 
 #ifdef LOCAL
-	#include"debug.h"
+    #include"debug.h"
 #else
-	#define debug(x)
+    #define debug(x)
 #endif
 
-const int N1=2e3+10,N2=5e3+10;
-int a[N1],suf_freq[N2];
+typedef long long ll;
 
-inline long long get(int n)
+const ll mod=1e9+7;
+
+inline ll add(const ll a,const ll b)
 {
-	return 1ll*n*n*n;
+    return ((a%mod)+(b%mod))%mod;
+}
+
+inline ll mul(const ll a,const ll b)
+{
+    return ((a%mod)*(b%mod))%mod;
 }
 
 int main()
 {
-	ios_base::sync_with_stdio(false);
-	cin.tie(NULL);
-	cout.tie(NULL);
-	int n;
-	long long cnt=0;
-	cin>>n;
-	for(int i=0;i<n;++i)
-	{
-		cin>>a[i];
-	}
-	for(int i=0;i<n-1;++i)
-	{
-		for(int j=i+1;j<n;++j)
-		{
-			suf_freq[abs(a[i]-a[j])]++;
-		}
-	}
-	for(int i=N2-2;i>=0;--i)
-	{
-		suf_freq[i]+=suf_freq[i+1];
-	}
-	for(int d1=1;d1<N2;++d1)
-	{
-		for(int d2=1;d2<N2-d1;++d2)
-		{
-			if(d1+d2+1>=N2)
-			{
-				continue;
-			}
-			int c1=suf_freq[d1]-((d1+1<N2)?suf_freq[d1+1]:0),c2=suf_freq[d2]-((d2+1<N2)?suf_freq[d2+1]:0);
-			cnt+=1ll*c1*c2*suf_freq[d1+d2+1];
-		}
-	}
-	cout<<fixed<<setprecision(10)<<(long double)cnt/get(n*(n-1)/2)<<'\n';
-	return 0;
-}
-
-/*
-
-|d1|+|d2|<|d3|
-
-
-*/
+    ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+    cout.tie(NULL);
+    ll tc;
+    cin>>tc;
+    while(tc--)
+    {
+        ll n=0,_s=0,ans=0;
+        vector<ll> pre;
+        map<ll,vector<ll>> mp,mp_suf;
+        string s;
+        cin>>s;
+        n=s.size();
+        for(ll i=0;i<n;++i)
+        {
+            _s+=((s[i]=='1')?1:-1);
+            pre.push_back(_s);
+            mp[_s].push_back(i);
+        }
+        for(auto &v:mp)
+        {
+            ll x=v.first,cur=0;
+            vector<ll> &vec=v.second,suf;
+            reverse(vec.begin(),vec.end());
+            for(auto &v1:vec)
+            {
+                cur+=(n-v1);
+                suf.push_back(cur);
+            }
+            reverse(vec.begin(),vec.end());
+            reverse(suf.begin(),suf.end());
+            mp_suf[x]=suf;
+        }
+        for(ll i=0;i<n;++i)
+        {
+            // a[i]+...+a[r]=0 => pre[r]-pre[i-1]=0 => pre[r]=pre[i-1]
+            ll req=((i==0)?0:pre[i-1]);
+            if(mp.count(req))
+            {
+                const vector<ll> &vec=mp[req];
+                ll idx=lower_bound(vec.begin(),vec.end(),i)-vec.begin();
+                if(idx<(ll)vec.size())
+                {
+                    ans=add(ans,mul(i+1,mp_suf[req][idx]));
+                }
+            }
+        }
+        cout<<ans<<'\n';
+    }
+    return 0;
+} 
