@@ -9,9 +9,28 @@ using namespace std;
 
 typedef long long ll;
 
-ll gcd(ll a,ll b)
+inline ll get(ll a,ll i)
 {
-    return ((b==0)?a:gcd(b,a%b));
+    return a>>i&1;
+}
+
+bool check(vector<ll> &a,ll k,ll bit)
+{
+    for(auto &v:a)
+    {
+        if(get(v,bit))
+        {
+            continue;
+        }
+        ll x=(v&((1ll<<(bit))-1));
+        ll dec=(1ll<<bit)-x;
+        k-=dec;
+        if(k<0)
+        {
+            return 0;
+        }
+    }
+    return 1;
 }
 
 int main()
@@ -19,26 +38,44 @@ int main()
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    ll n,g=0,ans=0;
-    cin>>n;
-    vector<ll> a(n),pre(n),suf(n);
-    for(ll i=0;i<n;++i)
+    ll n,q;
+    cin>>n>>q;
+    vector<ll> a(n);
+    for(auto &v:a)
     {
-        cin>>a[i];
-        g=gcd(g,a[i]);
-        pre[i]=g;
+        cin>>v;
     }
-    ans=g;
-    g=0;
-    for(ll i=n-1;i>=0;--i)
+    const vector<ll> _a=a;
+    while(q--)
     {
-        g=gcd(g,a[i]);
-        suf[i]=g;
+        ll k,ans=(1ll<<62)-1;
+        cin>>k;
+        for(ll bit=60;bit>=0;--bit)
+        {
+            if(check(a,k,bit))
+            {
+                for(auto &v:a)
+                {
+                    if(get(v,bit))
+                    {
+                        continue;
+                    }
+                    ll new_v=(v^(1ll<<bit));
+                    if(bit>0)
+                    {
+                        new_v&=(((1ll<<62)-1)-((1ll<<bit)-1));
+                    }
+                    k-=(new_v-v);
+                    v=new_v;
+                }
+            }
+        }
+        for(auto &v:a)
+        {
+            ans&=v;
+        }
+        a=_a;
+        cout<<ans<<'\n';
     }
-    for(ll i=1;i<n-1;++i)
-    {
-        ans+=min(pre[i],suf[i]);
-    }
-    cout<<ans<<'\n';
     return 0;
-}
+} 
