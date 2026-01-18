@@ -7,30 +7,61 @@ using namespace std;
     #define debug(x)
 #endif
 
-typedef long long ll;
+const int N=(1<<18)+10;
+int a[N],seg[N<<2];
 
-inline ll get(ll a,ll i)
+void build(int ind,int lo,int hi)
 {
-    return a>>i&1;
+    if(lo==hi)
+    {
+        seg[ind]=a[lo];
+        return;
+    }
+    int mid=lo+((hi-lo)>>1);
+    build(2*ind+1,lo,mid);
+    build(2*ind+2,mid+1,hi);
+    seg[ind]=(seg[2*ind+1]^seg[2*ind+2]);
 }
 
-bool check(vector<ll> &a,ll k,ll bit)
+void update(int ind,int lo,int hi,int i,int val)
 {
-    for(auto &v:a)
+    if(lo==hi)
     {
-        if(get(v,bit))
-        {
-            continue;
-        }
-        ll x=(v&((1ll<<(bit))-1));
-        ll dec=(1ll<<bit)-x;
-        k-=dec;
-        if(k<0)
-        {
-            return 0;
-        }
+        seg[ind]=val;
+        return;
     }
-    return 1;
+    int mid=lo+((hi-lo)>>1);
+    if(i<=mid)
+    {
+        update(2*ind+1,lo,mid,i,val);
+    }
+    else
+    {
+        update(2*ind+2,mid+1,hi,i,val);
+    }
+    seg[ind]=(seg[2*ind+1]^seg[2*ind+2]);
+}
+
+int get(int ind,int lo,int hi,int i)
+{
+    if(lo==hi)
+    {
+        return 0;
+    }
+    int mid=lo+((hi-lo)>>1),left=seg[2*ind+1],right=seg[2*ind+2];
+    if(i<=mid)
+    {
+        if(right>left)
+        {
+            return hi-mid+get(2*ind+1,lo,mid,i);
+        }
+        return get(2*ind+1,lo,mid,i);
+    }
+    if(right>left)
+    {
+        return get(2*ind+2,mid+1,hi,i);
+    }
+    return mid-lo+1+get(2*ind+2,mid+1,hi,i);
 }
 
 int main()
@@ -38,44 +69,27 @@ int main()
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    ll n,q;
-    cin>>n>>q;
-    vector<ll> a(n);
-    for(auto &v:a)
+    int tc;
+    cin>>tc;
+    while(tc--)
     {
-        cin>>v;
-    }
-    const vector<ll> _a=a;
-    while(q--)
-    {
-        ll k,ans=(1ll<<62)-1;
-        cin>>k;
-        for(ll bit=60;bit>=0;--bit)
+        int n,q;
+        cin>>n>>q;
+        n=(1<<n);
+        for(int i=0;i<n;++i)
         {
-            if(check(a,k,bit))
-            {
-                for(auto &v:a)
-                {
-                    if(get(v,bit))
-                    {
-                        continue;
-                    }
-                    ll new_v=(v^(1ll<<bit));
-                    if(bit>0)
-                    {
-                        new_v&=(((1ll<<62)-1)-((1ll<<bit)-1));
-                    }
-                    k-=(new_v-v);
-                    v=new_v;
-                }
-            }
+            cin>>a[i];
         }
-        for(auto &v:a)
+        build(0,0,n-1);
+        while(q--)
         {
-            ans&=v;
+            int i,x;
+            cin>>i>>x;
+            i--;
+            update(0,0,n-1,i,x);
+            cout<<get(0,0,n-1,i)<<'\n';
+            update(0,0,n-1,i,a[i]);
         }
-        a=_a;
-        cout<<ans<<'\n';
     }
     return 0;
-} 
+}
