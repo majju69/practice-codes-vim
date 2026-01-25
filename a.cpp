@@ -7,7 +7,7 @@ using namespace std;
     #define debug(x)
 #endif
 
-const int N=(1<<18)+10;
+const int N=2e5+10;
 int a[N],seg[N<<2];
 
 void build(int ind,int lo,int hi)
@@ -20,48 +20,21 @@ void build(int ind,int lo,int hi)
     int mid=lo+((hi-lo)>>1);
     build(2*ind+1,lo,mid);
     build(2*ind+2,mid+1,hi);
-    seg[ind]=(seg[2*ind+1]^seg[2*ind+2]);
+    seg[ind]=min(seg[2*ind+1],seg[2*ind+2]);
 }
 
-void update(int ind,int lo,int hi,int i,int val)
+int query(int ind,int lo,int hi,int l,int r)
 {
-    if(lo==hi)
+    if(l>hi||lo>r)
     {
-        seg[ind]=val;
-        return;
+        return 1e9;
+    }
+    if(l<=lo&&hi<=r)
+    {
+        return seg[ind];
     }
     int mid=lo+((hi-lo)>>1);
-    if(i<=mid)
-    {
-        update(2*ind+1,lo,mid,i,val);
-    }
-    else
-    {
-        update(2*ind+2,mid+1,hi,i,val);
-    }
-    seg[ind]=(seg[2*ind+1]^seg[2*ind+2]);
-}
-
-int get(int ind,int lo,int hi,int i)
-{
-    if(lo==hi)
-    {
-        return 0;
-    }
-    int mid=lo+((hi-lo)>>1),left=seg[2*ind+1],right=seg[2*ind+2];
-    if(i<=mid)
-    {
-        if(right>left)
-        {
-            return hi-mid+get(2*ind+1,lo,mid,i);
-        }
-        return get(2*ind+1,lo,mid,i);
-    }
-    if(right>left)
-    {
-        return get(2*ind+2,mid+1,hi,i);
-    }
-    return mid-lo+1+get(2*ind+2,mid+1,hi,i);
+    return min(query(2*ind+1,lo,mid,l,r),query(2*ind+2,mid+1,hi,l,r));
 }
 
 int main()
@@ -69,26 +42,36 @@ int main()
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    int tc;
-    cin>>tc;
-    while(tc--)
+    int n,m,q;
+    cin>>n>>m;
+    for(int i=0;i<m;++i)
     {
-        int n,q;
-        cin>>n>>q;
-        n=(1<<n);
-        for(int i=0;i<n;++i)
+        cin>>a[i];
+        a[i]=n-a[i];
+    }
+    build(0,0,m-1);
+    cin>>q;
+    while(q--)
+    {
+        int xs,ys,xf,yf,k;
+        cin>>xs>>ys>>xf>>yf>>k;
+        ys--;
+        yf--;
+        xs=n-xs+1;
+        xf=n-xf+1;
+        if(abs(xs-xf)%k||abs(ys-yf)%k)
         {
-            cin>>a[i];
+            cout<<"NO\n";
         }
-        build(0,0,n-1);
-        while(q--)
+        else
         {
-            int i,x;
-            cin>>i>>x;
-            i--;
-            update(0,0,n-1,i,x);
-            cout<<get(0,0,n-1,i)<<'\n';
-            update(0,0,n-1,i,a[i]);
+            xs%=k;
+            if(xs==0)
+            {
+                xs=k;
+            }
+            int mn=query(0,0,m-1,min(ys,yf),max(ys,yf));
+            cout<<((mn>=xs)?"YES":"NO")<<'\n';
         }
     }
     return 0;
