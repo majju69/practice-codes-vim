@@ -9,53 +9,28 @@ using namespace std;
 
 typedef long long ll;
 
-ll gcd(ll a,ll b)
+void dfs(ll node,ll val,vector<ll> &pos,vector<pair<ll,ll>> adj[],bool &ok)
 {
-    return ((b==0)?a:gcd(b,a%b));
-}
-
-class SegmentTree
-{
-
-private:
-
-    vector<ll> seg;
-
-public:
-
-    SegmentTree(ll n)
+    if(pos[node]==1e18)
     {
-        seg.resize(4*n+1);
+        pos[node]=val;
     }
-
-    void build(ll ind,ll lo,ll hi,vector<ll> &a)
+    else
     {
-        if(lo==hi)
+        if(pos[node]!=val)
         {
-            seg[ind]=a[lo];
+            ok=0;
             return;
         }
-        ll mid=lo+(hi-lo)/2;
-        build(2*ind+1,lo,mid,a);
-        build(2*ind+2,mid+1,hi,a);
-        seg[ind]=gcd(seg[2*ind+1],seg[2*ind+2]);
     }
-
-    ll query(ll ind,ll lo,ll hi,ll l,ll r)
+    for(auto &v:adj[node])
     {
-        if(l>hi||lo>r)
+        if(pos[v.first]!=val+v.second)
         {
-            return 0;
+            dfs(v.first,val+v.second,pos,adj,ok);
         }
-        if(l<=lo&&hi<=r)
-        {
-            return seg[ind];
-        }
-        ll mid=lo+(hi-lo)/2;
-        return gcd(query(2*ind+1,lo,mid,l,r),query(2*ind+2,mid+1,hi,l,r));
     }
-
-};
+}
 
 int main()
 {
@@ -66,46 +41,34 @@ int main()
     cin>>tc;
     while(tc--)
     {
-        ll n,q;
-        cin>>n>>q;
-        vector<ll> a(n);
-        for(auto &v:a)
+        ll n,m;
+        bool ok=1;
+        cin>>n>>m;
+        vector<pair<ll,ll>> adj[n];
+        vector<ll> pos(n,1e18);
+        for(ll i=0;i<m;++i)
         {
-            cin>>v;
+            ll u,v,w;
+            cin>>u>>v>>w;
+            u--;
+            v--;
+            adj[u].push_back({v,w});
+            adj[v].push_back({u,-w});
         }
-        if(n>1)
+        for(ll i=0;i<n;++i)
         {
-            vector<ll> diff(n-1);
-            for(ll i=0;i<n-1;++i)
+            if(pos[i]==1e18)
             {
-                diff[i]=abs(a[i]-a[i+1]);
+                dfs(i,0,pos,adj,ok);
             }
-            SegmentTree st(n-1);
-            st.build(0,0,n-2,diff);
-            while(q--)
-            {
-                ll l,r;
-                cin>>l>>r;
-                if(l==r)
-                {
-                    cout<<0<<' ';
-                    continue;
-                }
-                l--;
-                r-=2;
-                cout<<st.query(0,0,n-2,l,r)<<' ';
-            }
-            cout<<'\n';
+        }
+        if(ok)
+        {
+            cout<<"YES\n";
         }
         else
         {
-            while(q--)
-            {
-                ll l,r;
-                cin>>l>>r;
-                cout<<0<<' ';
-            }
-            cout<<'\n';
+            cout<<"NO\n";
         }
     }
     return 0;
