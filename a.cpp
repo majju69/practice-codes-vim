@@ -7,71 +7,105 @@ using namespace std;
     #define debug(x)
 #endif
 
-const int N=2e5+10;
-int a[N],seg[N<<2];
+typedef long long ll;
 
-void build(int ind,int lo,int hi)
+ll gcd(ll a,ll b)
 {
-    if(lo==hi)
-    {
-        seg[ind]=a[lo];
-        return;
-    }
-    int mid=lo+((hi-lo)>>1);
-    build(2*ind+1,lo,mid);
-    build(2*ind+2,mid+1,hi);
-    seg[ind]=min(seg[2*ind+1],seg[2*ind+2]);
+    return ((b==0)?a:gcd(b,a%b));
 }
 
-int query(int ind,int lo,int hi,int l,int r)
+class SegmentTree
 {
-    if(l>hi||lo>r)
+
+private:
+
+    vector<ll> seg;
+
+public:
+
+    SegmentTree(ll n)
     {
-        return 1e9;
+        seg.resize(4*n+1);
     }
-    if(l<=lo&&hi<=r)
+
+    void build(ll ind,ll lo,ll hi,vector<ll> &a)
     {
-        return seg[ind];
+        if(lo==hi)
+        {
+            seg[ind]=a[lo];
+            return;
+        }
+        ll mid=lo+(hi-lo)/2;
+        build(2*ind+1,lo,mid,a);
+        build(2*ind+2,mid+1,hi,a);
+        seg[ind]=gcd(seg[2*ind+1],seg[2*ind+2]);
     }
-    int mid=lo+((hi-lo)>>1);
-    return min(query(2*ind+1,lo,mid,l,r),query(2*ind+2,mid+1,hi,l,r));
-}
+
+    ll query(ll ind,ll lo,ll hi,ll l,ll r)
+    {
+        if(l>hi||lo>r)
+        {
+            return 0;
+        }
+        if(l<=lo&&hi<=r)
+        {
+            return seg[ind];
+        }
+        ll mid=lo+(hi-lo)/2;
+        return gcd(query(2*ind+1,lo,mid,l,r),query(2*ind+2,mid+1,hi,l,r));
+    }
+
+};
 
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    int n,m,q;
-    cin>>n>>m;
-    for(int i=0;i<m;++i)
+    ll tc;
+    cin>>tc;
+    while(tc--)
     {
-        cin>>a[i];
-        a[i]=n-a[i];
-    }
-    build(0,0,m-1);
-    cin>>q;
-    while(q--)
-    {
-        int xs,ys,xf,yf,k;
-        cin>>xs>>ys>>xf>>yf>>k;
-        ys--;
-        yf--;
-        xs=n-xs+1;
-        xf=n-xf+1;
-        if(abs(xs-xf)%k||abs(ys-yf)%k)
+        ll n,q;
+        cin>>n>>q;
+        vector<ll> a(n);
+        for(auto &v:a)
         {
-            cout<<"NO\n";
+            cin>>v;
+        }
+        if(n>1)
+        {
+            vector<ll> diff(n-1);
+            for(ll i=0;i<n-1;++i)
+            {
+                diff[i]=abs(a[i]-a[i+1]);
+            }
+            SegmentTree st(n-1);
+            st.build(0,0,n-2,diff);
+            while(q--)
+            {
+                ll l,r;
+                cin>>l>>r;
+                if(l==r)
+                {
+                    cout<<0<<' ';
+                    continue;
+                }
+                l--;
+                r-=2;
+                cout<<st.query(0,0,n-2,l,r)<<' ';
+            }
+            cout<<'\n';
         }
         else
         {
-            xs%=k;
-            if(xs==0)
+            while(q--)
             {
-                xs=k;
+                ll l,r;
+                cin>>l>>r;
+                cout<<0<<' ';
             }
-            int mn=query(0,0,m-1,min(ys,yf),max(ys,yf));
-            cout<<((mn>=xs)?"YES":"NO")<<'\n';
+            cout<<'\n';
         }
     }
     return 0;
