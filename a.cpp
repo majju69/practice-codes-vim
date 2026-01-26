@@ -7,69 +7,58 @@ using namespace std;
     #define debug(x)
 #endif
 
-typedef long long ll;
-
-void dfs(ll node,ll val,vector<ll> &pos,vector<pair<ll,ll>> adj[],bool &ok)
-{
-    if(pos[node]==1e18)
-    {
-        pos[node]=val;
-    }
-    else
-    {
-        if(pos[node]!=val)
-        {
-            ok=0;
-            return;
-        }
-    }
-    for(auto &v:adj[node])
-    {
-        if(pos[v.first]!=val+v.second)
-        {
-            dfs(v.first,val+v.second,pos,adj,ok);
-        }
-    }
-}
-
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    ll tc;
+    int tc;
     cin>>tc;
     while(tc--)
     {
-        ll n,m;
-        bool ok=1;
-        cin>>n>>m;
-        vector<pair<ll,ll>> adj[n];
-        vector<ll> pos(n,1e18);
-        for(ll i=0;i<m;++i)
+        int n,tar=0,s=0,ans=1e9;
+        map<int,int> mp;
+        cin>>n;
+        vector<vector<int>> a(2,vector<int>(n));
+        for(auto &v:a[0])
         {
-            ll u,v,w;
-            cin>>u>>v>>w;
-            u--;
-            v--;
-            adj[u].push_back({v,w});
-            adj[v].push_back({u,-w});
+            cin>>v;
+            tar+=(v==1);
+            tar-=(v==2);
         }
-        for(ll i=0;i<n;++i)
+        for(auto &v:a[1])
         {
-            if(pos[i]==1e18)
+            cin>>v;
+            tar+=(v==1);
+            tar-=(v==2);
+        }
+        mp[0]=-1;
+        reverse(a[0].begin(),a[0].end());
+        for(int i=0;i<n;++i)
+        {
+            s+=(a[0][i]==1);
+            s-=(a[0][i]==2);
+            if(!mp.count(s))
             {
-                dfs(i,0,pos,adj,ok);
+                mp[s]=i;
             }
         }
-        if(ok)
+        s=0;
+        if(mp.count(tar))
         {
-            cout<<"YES\n";
+            ans=mp[tar]+1;
         }
-        else
+        for(int i=0;i<n;++i)
         {
-            cout<<"NO\n";
+            s+=(a[1][i]==1);
+            s-=(a[1][i]==2);
+            int req=tar-s;
+            if(mp.count(req))
+            {
+                ans=min(ans,i+mp[req]+2);
+            }
         }
+        cout<<ans<<'\n';
     }
     return 0;
 }
