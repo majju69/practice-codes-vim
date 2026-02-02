@@ -16,49 +16,48 @@ int main()
     cin>>tc;
     while(tc--)
     {
-        int n,tar=0,s=0,ans=1e9;
-        map<int,int> mp;
-        cin>>n;
-        vector<vector<int>> a(2,vector<int>(n));
-        for(auto &v:a[0])
+        int n,ax,ay,bx,by,ans=0;
+        long long dp[]={0,0},ndp[]={-1,-1};
+        cin>>n>>ax>>ay>>bx>>by;
+        map<int,pair<int,int>> mp;
+        mp[ax]={ay,ay};
+        mp[bx]={by,by};
+        vector<int> x(n),y(n);
+        vector<pair<int,int>> a;
+        for(auto &v:x)
         {
             cin>>v;
-            tar+=(v==1);
-            tar-=(v==2);
         }
-        for(auto &v:a[1])
+        for(auto &v:y)
         {
             cin>>v;
-            tar+=(v==1);
-            tar-=(v==2);
-        }
-        mp[0]=-1;
-        reverse(a[0].begin(),a[0].end());
-        for(int i=0;i<n;++i)
-        {
-            s+=(a[0][i]==1);
-            s-=(a[0][i]==2);
-            if(!mp.count(s))
-            {
-                mp[s]=i;
-            }
-        }
-        s=0;
-        if(mp.count(tar))
-        {
-            ans=mp[tar]+1;
         }
         for(int i=0;i<n;++i)
         {
-            s+=(a[1][i]==1);
-            s-=(a[1][i]==2);
-            int req=tar-s;
-            if(mp.count(req))
+            if(!mp.count(x[i]))
             {
-                ans=min(ans,i+mp[req]+2);
+                mp[x[i]]={y[i],y[i]};
+            }
+            else
+            {
+                mp[x[i]].first=min(mp[x[i]].first,y[i]);
+                mp[x[i]].second=max(mp[x[i]].second,y[i]);
             }
         }
-        cout<<ans<<'\n';
+        ans=bx-ax;
+        for(auto &v:mp)
+        {
+            a.push_back(v.second);
+        }
+        n=a.size();
+        for(int i=1;i<n;++i)
+        {
+            ndp[0]=min(dp[0]+abs(a[i-1].first-a[i].second),dp[1]+abs(a[i-1].second-a[i].second))+(a[i].second-a[i].first);
+            ndp[1]=min(dp[0]+abs(a[i-1].first-a[i].first),dp[1]+abs(a[i-1].second-a[i].first))+(a[i].second-a[i].first);
+            dp[0]=ndp[0];
+            dp[1]=ndp[1];
+        }
+        cout<<ans+min(dp[0],dp[1])<<'\n';
     }
     return 0;
 }
