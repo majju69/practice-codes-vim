@@ -7,11 +7,21 @@ using namespace std;
     #define debug(x)
 #endif
 
-const long long mod=1e9+7;
+const int mod=998244353;
 
-long long power(long long a,long long b)        // Use when mod is of order 10^9 or less
+inline int add(int a,int b)
 {
-    long long ans=1;
+    return ((a%mod)+(b%mod))%mod;
+}
+
+inline int mul(int a,int b)
+{
+    return (1ll*(a%mod)*(b%mod))%mod;
+}
+
+int power(int a,int b)        // Use when mod is of order 10^9 or less
+{
+    int ans=1;
     a=a%mod;
     while(b)
     {
@@ -25,18 +35,40 @@ long long power(long long a,long long b)        // Use when mod is of order 10^9
     return ans%mod;
 }
 
-inline long long get(const long long a,const long long b)
-{
-    return power(power(2,a),b);
-}
-
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    long long n,m,k;
-    cin>>n>>m>>k;
-    cout<<((k==-1&&(abs(n-m)&1))?0:get(n-1,m-1));
+    int n,m,s=0,ans=0;
+    string a,b;
+    cin>>n>>m>>a>>b;
+    reverse(a.begin(),a.end());
+    reverse(b.begin(),b.end());
+    while(n<m)
+    {
+        a.push_back('0');
+        n++;
+    }
+    while(m<n)
+    {
+        b.push_back('0');
+        m++;
+    }
+    assert(n==m);
+    vector<int> suf(n);
+    for(int i=n-1;i>=0;--i)
+    {
+        s+=(b[i]-'0');
+        suf[i]=s;
+    }
+    for(int i=0;i<n;++i)
+    {
+        if(a[i]=='1')
+        {
+            ans=add(ans,mul(suf[i],power(2,i)));
+        }
+    }
+    cout<<ans<<'\n';
     return 0;
 }
