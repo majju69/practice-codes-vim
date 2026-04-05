@@ -7,67 +7,73 @@ using namespace std;
     #define debug(x)
 #endif
 
-const int mod=998244353;
-
-inline int add(int a,int b)
-{
-    return ((a%mod)+(b%mod))%mod;
-}
-
-inline int mul(int a,int b)
-{
-    return (1ll*(a%mod)*(b%mod))%mod;
-}
-
-int power(int a,int b)        // Use when mod is of order 10^9 or less
-{
-    int ans=1;
-    a=a%mod;
-    while(b)
-    {
-        if(b&1)
-        {
-            ans=(1ll*(ans%mod)*(a%mod))%mod;
-        }
-        a=(1ll*(a%mod)*(a%mod))%mod;       
-        b>>=1;
-    }
-    return ans%mod;
-}
-
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    int n,m,s=0,ans=0;
-    string a,b;
-    cin>>n>>m>>a>>b;
-    reverse(a.begin(),a.end());
-    reverse(b.begin(),b.end());
-    while(n<m)
+    int n,m,dx[]={0,0,-1,1},dy[]={-1,1,0,0},sx=-1,sy=-1,tx=-1,ty=-1,ans=1e9;
+    queue<pair<pair<int,int>,pair<int,int>>> q;
+    cin>>n>>m;
+    vector<string> a(n);
+    for(auto &v:a)
     {
-        a.push_back('0');
-        n++;
+        cin>>v;
     }
-    while(m<n)
-    {
-        b.push_back('0');
-        m++;
-    }
-    assert(n==m);
-    vector<int> suf(n);
-    for(int i=n-1;i>=0;--i)
-    {
-        s+=(b[i]-'0');
-        suf[i]=s;
-    }
+    vector<vector<vector<vector<int>>>> dist(n,vector<vector<vector<int>>>(m,vector<vector<int>>(5,vector<int>(4,1e9))));
     for(int i=0;i<n;++i)
     {
-        if(a[i]=='1')
+        for(int j=0;j<m;++j)
         {
-            ans=add(ans,mul(suf[i],power(2,i)));
+            if(a[i][j]=='S')
+            {
+                sx=i;
+                sy=j;
+            }
+            if(a[i][j]=='T')
+            {
+                tx=i;
+                ty=j;
+            }
         }
+    }
+    q.push({{sx,sy},{0,0}});
+    dist[sx][sy][0][0]=0;
+    while(q.size())
+    {
+        int x=q.front().first.first,y=q.front().first.second,dir=q.front().second.first,steps=q.front().second.second;
+        q.pop();
+        for(int i=0;i<4;++i)
+        {
+            int r=x+dx[i],c=y+dy[i];
+            if(i+1==dir)
+            {
+                if(r>=0&&r<n&&c>=0&&c<m&&a[r][c]!='#'&&steps<3&&dist[r][c][i+1][1+steps]>1+dist[x][y][dir][steps])
+                {
+                    dist[r][c][i+1][1+steps]=1+dist[x][y][dir][steps];
+                    q.push({{r,c},{i+1,1+steps}});
+                }
+            }
+            else
+            {
+                if(r>=0&&r<n&&c>=0&&c<m&&a[r][c]!='#'&&dist[r][c][i+1][1]>1+dist[x][y][dir][steps])
+                {
+                    dist[r][c][i+1][1]=1+dist[x][y][dir][steps];
+                    q.push({{r,c},{i+1,1}});
+                }
+            }
+        }
+    }
+    for(int i=0;i<5;++i)
+    {
+        for(int j=0;j<4;++j)
+        {
+            ans=min(ans,dist[tx][ty][i][j]);
+        }
+    }
+    if(ans==(int)1e9)
+    {
+        ans=-1;
     }
     cout<<ans<<'\n';
     return 0;
