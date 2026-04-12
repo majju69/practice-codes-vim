@@ -7,74 +7,95 @@ using namespace std;
     #define debug(x)
 #endif
 
+inline char get(int n)
+{
+    return (char)(n+'0');
+}
+
+int dp[32][62][3][3];
+
+int solve(int i,int k,int tight,int put,string &s)
+{
+    if(i>=(int)s.size())
+    {
+        return 1;      // maybe return 1 also works
+    }
+    if(dp[i][k][tight][put]!=-1)
+    {
+        return dp[i][k][tight][put];
+    }
+    int ans=0,till=(tight?(s[i]-'0'):1);
+    for(int j=0;j<=till;++j)
+    {
+        if(!put)
+        {
+            if(j==0)
+            {
+                ans+=solve(i+1,k,(tight&&j==till),0,s);
+            }
+            else
+            {
+                if(k>=2)
+                {
+                    ans+=solve(i+1,k-2,(tight&&j==till),1,s);
+                }
+            }
+        }
+        else
+        {
+            if(j==0)
+            {
+                if(k>=1)
+                {
+                    ans+=solve(i+1,k-1,(tight&&j==till),1,s);
+                }
+            }
+            else
+            {
+                if(k>=2)
+                {
+                    ans+=solve(i+1,k-2,(tight&&j==till),1,s);
+                }
+            }
+        }
+    }
+    return dp[i][k][tight][put]=ans;
+}
+
+int get(int k,string &s)
+{
+    memset(dp,-1,sizeof(dp));
+    return solve(0,k,1,0,s);
+}
+
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    int n,m,dx[]={0,0,-1,1},dy[]={-1,1,0,0},sx=-1,sy=-1,tx=-1,ty=-1,ans=1e9;
-    queue<pair<pair<int,int>,pair<int,int>>> q;
-    cin>>n>>m;
-    vector<string> a(n);
-    for(auto &v:a)
+    int tc;
+    cin>>tc;
+    while(tc--)
     {
-        cin>>v;
-    }
-    vector<vector<vector<vector<int>>>> dist(n,vector<vector<vector<int>>>(m,vector<vector<int>>(5,vector<int>(4,1e9))));
-    for(int i=0;i<n;++i)
-    {
-        for(int j=0;j<m;++j)
+        int n,k;
+        cin>>n>>k;
+        if(k>=60)
         {
-            if(a[i][j]=='S')
+            cout<<0<<'\n';
+        }
+        else
+        {
+            int _n=n,x=-1;
+            string s;
+            while(_n>0)
             {
-                sx=i;
-                sy=j;
+                s.push_back(get(_n&1));
+                _n>>=1;
             }
-            if(a[i][j]=='T')
-            {
-                tx=i;
-                ty=j;
-            }
+            reverse(s.begin(),s.end());
+            x=get(k+1,s);
+            cout<<n-x+1<<'\n';
         }
     }
-    q.push({{sx,sy},{0,0}});
-    dist[sx][sy][0][0]=0;
-    while(q.size())
-    {
-        int x=q.front().first.first,y=q.front().first.second,dir=q.front().second.first,steps=q.front().second.second;
-        q.pop();
-        for(int i=0;i<4;++i)
-        {
-            int r=x+dx[i],c=y+dy[i];
-            if(i+1==dir)
-            {
-                if(r>=0&&r<n&&c>=0&&c<m&&a[r][c]!='#'&&steps<3&&dist[r][c][i+1][1+steps]>1+dist[x][y][dir][steps])
-                {
-                    dist[r][c][i+1][1+steps]=1+dist[x][y][dir][steps];
-                    q.push({{r,c},{i+1,1+steps}});
-                }
-            }
-            else
-            {
-                if(r>=0&&r<n&&c>=0&&c<m&&a[r][c]!='#'&&dist[r][c][i+1][1]>1+dist[x][y][dir][steps])
-                {
-                    dist[r][c][i+1][1]=1+dist[x][y][dir][steps];
-                    q.push({{r,c},{i+1,1}});
-                }
-            }
-        }
-    }
-    for(int i=0;i<5;++i)
-    {
-        for(int j=0;j<4;++j)
-        {
-            ans=min(ans,dist[tx][ty][i][j]);
-        }
-    }
-    if(ans==(int)1e9)
-    {
-        ans=-1;
-    }
-    cout<<ans<<'\n';
     return 0;
-}
+} 
