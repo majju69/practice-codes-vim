@@ -7,84 +7,63 @@ using namespace std;
     #define debug(x)
 #endif
 
-typedef long long ll;
-
-const ll dx[]={0,0,-1,1},dy[]={-1,1,0,0};
-
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    ll n,m,w,ans=1e18,mn=1e18;
-    queue<pair<pair<ll,ll>,ll>> q;
-    cin>>n>>m>>w;
-    vector<vector<ll>> a(n,vector<ll>(m)),dist(n,vector<ll>(m,1e18));
-    for(auto &vec:a)
+    int n;
+    queue<pair<int,int>> q;
+    cin>>n;
+    vector<int> a(n),dist(n,1e9),adj[n];
+    for(auto &v:a)
     {
-        for(auto &v:vec)
-        {
-            cin>>v;
-        }
-    }
-    q.push({{n-1,m-1},0});
-    dist[n-1][m-1]=0;
-    while(!q.empty())
-    {
-        ll x=q.front().first.first,y=q.front().first.second,dis=q.front().second;
-        q.pop();
-        for(ll i=0;i<4;++i)
-        {
-            ll r=x+dx[i],c=y+dy[i];
-            if(r>=0&&r<n&&c>=0&&c<m&&a[r][c]!=-1&&dist[r][c]>w+dis)
-            {
-                dist[r][c]=w+dis;
-                q.push({{r,c},w+dis});
-            }
-        }
+        cin>>v;
     }
     for(int i=0;i<n;++i)
     {
-        for(int j=0;j<m;++j)
+        if(i+a[i]<n)
         {
-            if(dist[i][j]<(ll)1e16)
+            if((a[i]&1)==(a[i+a[i]]&1))
             {
-                if(a[i][j]>0)
-                {
-                    mn=min(mn,a[i][j]+dist[i][j]);
-                }
+                adj[i+a[i]].push_back(i);
+            }
+            else
+            {
+                q.push({i,1});
+                dist[i]=1;
+            }
+        }
+        if(i-a[i]>=0)
+        {
+            if((a[i]&1)==(a[i-a[i]]&1))
+            {
+                adj[i-a[i]].push_back(i);
+            }
+            else
+            {
+                q.push({i,1});
+                dist[i]=1;
             }
         }
     }
-    dist=vector<vector<ll>>(n,vector<ll>(m,1e18));
-    q.push({{0,0},0});
-    dist[0][0]=0;
-    while(!q.empty())
+    while(q.size())
     {
-        ll x=q.front().first.first,y=q.front().first.second,dis=q.front().second;
-        if(a[x][y]>0)
-        {
-            ans=min(ans,dis+a[x][y]+mn);
-        }
-        if(x==n-1&&y==m-1)
-        {
-            ans=min(ans,dis);
-        }
+        int node=q.front().first,dis=q.front().second;
         q.pop();
-        for(ll i=0;i<4;++i)
+        for(auto &v:adj[node])
         {
-            ll r=x+dx[i],c=y+dy[i];
-            if(r>=0&&r<n&&c>=0&&c<m&&a[r][c]!=-1&&dist[r][c]>w+dis)
+            if(dist[v]>1+dis)
             {
-                dist[r][c]=w+dis;
-                q.push({{r,c},w+dis});
+                dist[v]=1+dis;
+                q.push({v,dist[v]});
             }
         }
     }
-    if(ans>(ll)1e16)
+    for(auto &v:dist)
     {
-        ans=-1;
+        cout<<((v>(int)1e8)?-1:v)<<' ';
     }
-    cout<<ans<<'\n';
+    cout<<'\n';
     return 0;
 }
