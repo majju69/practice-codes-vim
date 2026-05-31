@@ -7,63 +7,36 @@ using namespace std;
     #define debug(x)
 #endif
 
+typedef long long ll;
+
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    int n;
-    queue<pair<int,int>> q;
-    cin>>n;
-    vector<int> a(n),dist(n,1e9),adj[n];
+    ll n,t,mn=1e18,ans=0;
+    cin>>n>>t;
+    vector<ll> a(n);
     for(auto &v:a)
     {
         cin>>v;
+        mn=min(mn,v);
     }
-    for(int i=0;i<n;++i)
+    while(t>=mn)
     {
-        if(i+a[i]<n)
+        ll cur=t,sum=0,cnt=0;
+        for(auto &v:a)
         {
-            if((a[i]&1)==(a[i+a[i]]&1))
+            if(v<=cur)
             {
-                adj[i+a[i]].push_back(i);
-            }
-            else
-            {
-                q.push({i,1});
-                dist[i]=1;
+                cur-=v;
+                sum+=v;
+                cnt++;
             }
         }
-        if(i-a[i]>=0)
-        {
-            if((a[i]&1)==(a[i-a[i]]&1))
-            {
-                adj[i-a[i]].push_back(i);
-            }
-            else
-            {
-                q.push({i,1});
-                dist[i]=1;
-            }
-        }
+        ans+=(t/sum)*cnt;
+        t%=sum;
     }
-    while(q.size())
-    {
-        int node=q.front().first,dis=q.front().second;
-        q.pop();
-        for(auto &v:adj[node])
-        {
-            if(dist[v]>1+dis)
-            {
-                dist[v]=1+dis;
-                q.push({v,dist[v]});
-            }
-        }
-    }
-    for(auto &v:dist)
-    {
-        cout<<((v>(int)1e8)?-1:v)<<' ';
-    }
-    cout<<'\n';
+    cout<<ans<<'\n';
     return 0;
 }
