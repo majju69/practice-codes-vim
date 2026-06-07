@@ -7,85 +7,66 @@ using namespace std;
     #define debug(x)
 #endif
 
-const int dx[]={-1,1,0,0},dy[]={0,0,-1,1};
+typedef long long ll;
+
+const ll N=2e5+10;
+ll a[N],sub[N],cost[N],dist[N];
+vector<ll> adj[N];
+
+void dfs(ll node,ll p)
+{
+    sub[node]=a[node];
+    for(auto &v:adj[node])
+    {
+        if(v!=p)
+        {
+            dist[v]=dist[node]+1;
+            dfs(v,node);
+            sub[node]+=sub[v];
+        }
+    }
+}
+
+void dfs(ll node,ll p,ll sum)
+{
+    for(auto &v:adj[node])
+    {
+        if(v!=p)
+        {
+            ll s=sub[v];
+            cost[v]=cost[node]+sum-(s<<1);
+            dfs(v,node,sum);
+        }
+    }
+}
 
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    int tc;
-    cin>>tc;
-    while(tc--)
+    ll n,sum=0;
+    cin>>n;
+    for(ll i=0;i<n;++i)
     {
-        int n,m;
-        bool ok=1;
-        queue<pair<int,int>> q;
-        cin>>n>>m;
-        vector<string> a(n);
-        vector<vector<bool>> vis(n,vector<bool>(m,0));
-        for(auto &v:a)
-        {
-            cin>>v;
-        }
-        for(int x=0;x<n;++x)
-        {
-            for(int y=0;y<m;++y)
-            {
-                if(a[x][y]=='.')
-                {
-                    bool mark=0;
-                    for(int i=0;i<4;++i)
-                    {
-                        int r=x+dx[i],c=y+dy[i];
-                        if(r>=0&&r<n&&c>=0&&c<m&&a[r][c]=='B')
-                        {
-                            mark=1;
-                            break;
-                        }
-                    }
-                    if(mark)
-                    {
-                        a[x][y]='#';
-                    }
-                }
-            }
-        }
-        if(a[n-1][m-1]!='#')
-        {
-            q.push({n-1,m-1});
-            vis[n-1][m-1]=1;
-            while(!q.empty())
-            {
-                int x=q.front().first,y=q.front().second;
-                q.pop();
-                for(int i=0;i<4;++i)
-                {
-                    int r=x+dx[i],c=y+dy[i];
-                    if(r>=0&&r<n&&c>=0&&c<m&&!vis[r][c]&&a[r][c]!='#')
-                    {
-                        q.push({r,c});
-                        vis[r][c]=1;
-                    }
-                }
-            }
-        }
-        for(int i=0;i<n;++i)
-        {
-            if(!ok)
-            {
-                break;
-            }
-            for(int j=0;j<m;++j)
-            {
-                if((a[i][j]=='G'&&!vis[i][j])||(a[i][j]=='B'&&vis[i][j]))
-                {
-                    ok=0;
-                    break;
-                }
-            }
-        }
-        cout<<(ok?"Yes":"No")<<'\n';
+        cin>>a[i];
+        sum+=a[i];
     }
+    for(ll i=1;i<n;++i)
+    {
+        int u,v;
+        cin>>u>>v;
+        u--;
+        v--;
+        adj[u].push_back(v);
+        adj[v].push_back(u);
+    }
+    dfs(0,-1);
+    for(ll i=1;i<n;++i)
+    {
+        cost[0]+=a[i]*dist[i];
+    }
+    dfs(0,-1,sum);
+    cout<<(*max_element(cost,cost+n))<<'\n';
     return 0;
 }
