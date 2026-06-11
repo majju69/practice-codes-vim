@@ -1,3 +1,4 @@
+// Same code as Monster Game I
 #include <bits/stdc++.h>
 using namespace std;
 
