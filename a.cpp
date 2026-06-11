@@ -9,60 +9,101 @@ using namespace std;
 
 typedef long long ll;
 
+// https://github.com/kth-competitive-programming/kactl/blob/main/content/data-structures/LineContainer.h
+
+struct Line
+{
+    mutable long long k,m,p;
+    bool operator<(const Line &o) const
+    {
+        return k<o.k;
+    }
+    bool operator<(long long x) const
+    {
+        return p<x;
+    }
+};
+
+// LineContainer<true> or LineContainer<> : query maximum value at x
+// LineContainer<false>                   : query minimum value at x
+template<bool MAX=true>
+struct LineContainer:multiset<Line,less<>>
+{
+    // Use doubles when slopes are non-integer (e.g. dp[i]/i in the recurrence).
+    // Change: long long -> double, inf = 1/.0, div(a,b) = a/b, p -> double.
+    // Integer mode is exact; doubles risk epsilon errors but handle fractional slopes.
+    static const long long inf=LLONG_MAX;
+    long long div(long long a,long long b) // floored division
+    {
+        return a/b-((a^b)<0&&a%b);
+    }
+    bool isect(iterator x,iterator y)
+    {
+        if(y==end())
+        {
+            return x->p=inf,0;
+        }
+        if(x->k==y->k)
+        {
+            x->p=x->m>y->m?inf:-inf;
+        }
+        else
+        {
+            x->p=div(y->m-x->m,x->k-y->k);
+        }
+        return x->p>=y->p;
+    }
+    void add(long long k,long long m)
+    {
+        if(!MAX)
+        {
+            k=-k;
+            m=-m;
+        }
+        auto z=insert({k,m,0}),y=z++,x=y;
+        while(isect(y,z))
+        {
+            z=erase(z);
+        }
+        if(x!=begin()&&isect(--x,y))
+        {
+            isect(x,y=erase(y));
+        }
+        while((y=x)!=begin()&&(--x)->p>=y->p)
+        {
+            isect(x,erase(y));
+        }
+    }
+    long long query(long long x)
+    {
+        assert(!empty());
+        auto l=*lower_bound(x);
+        return MAX?l.k*x+l.m:-(l.k*x+l.m);
+    }
+};
+
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    ll n,h,ans=-1e18;
-    vector<ll> cost,value;
-    cin>>n>>h;
-    vector<pair<ll,ll>> a(n);
+    ll n,ans=-1e18;
+    LineContainer lc;
+    cin>>n;
+    vector<array<ll,3>> a(n);
     for(auto &v:a)
     {
-        cin>>v.first>>v.second;
+        cin>>v[0]>>v[1]>>v[2];
     }
-    for(ll i=0;i<n;++i)
+    sort(a.begin(),a.end());
+    ans=a[0][0]*a[0][1]-a[0][2];
+    lc.add(-a[0][0],ans);
+    for(ll i=1;i<n;++i)
     {
-        if(i>0)
-        {
-            cost.push_back(a[i].first-a[i-1].second);
-            value.push_back(a[i].first-a[i-1].second);
-        }
-        cost.push_back(0);
-        value.push_back(a[i].second-a[i].first);
-    }
-    for(ll i=1;i<(ll)cost.size();++i)
-    {
-        cost[i]+=cost[i-1];
-        value[i]+=value[i-1];
-    }
-    for(ll i=0;i<(ll)cost.size();++i)
-    {
-        ll lo=i,hi=(ll)cost.size()-1,idx=-1;
-        while(lo<=hi)
-        {
-            ll mid=lo+((hi-lo)>>1);
-            ll cur=cost[mid]-((i==0)?0:cost[i-1]);
-            if(cur<h)
-            {
-                idx=mid;
-                lo=mid+1;
-            }
-            else
-            {
-                hi=mid-1;
-            }
-        }
-        if(idx==-1)
-        {
-            ans=max(ans,h);
-        }
-        else
-        {
-            ll totCost=cost[idx]-((i==0)?0:cost[i-1]),totValue=value[idx]-((i==0)?0:value[i-1]);
-            ans=max(ans,totValue+(h-totCost));
-        }
+        ll x=lc.query(a[i][1]);
+        ll cur=max(a[i][0]*a[i][1]-a[i][2]+x,a[i][0]*a[i][1]-a[i][2]);
+        ans=max(ans,cur);
+        lc.add(-a[i][0],cur);
     }
     cout<<ans<<'\n';
     return 0;
