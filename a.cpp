@@ -82,32 +82,31 @@ struct LineContainer:multiset<Line,less<>>
     }
 };
 
+
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    ll n,ans=0;
-    LineContainer lc;
-    cin>>n;
-    vector<ll> a(n+1),pre1(n+1),pre2(n+1);
-    for(ll i=1;i<=n;++i)
+    ll n,x,cur=1e18;
+    LineContainer<0> lc;
+    cin>>n>>x;
+    vector<ll> s(n),f(n);
+    for(auto &v:s)
     {
-        cin>>a[i];
-        ans=max(ans,a[i]);
-        pre1[i]=a[i];
-        pre1[i]+=pre1[i-1];
-        pre2[i]=i*a[i];
-        pre2[i]+=pre2[i-1];
+        cin>>v;
     }
-    lc.add(-pre1[n],pre2[n]);
-    for(ll i=n-1;i>=1;--i)
+    for(auto &v:f)
     {
-        ll x=lc.query(i-1);
-        ll cur=-pre2[i-1]+(i-1)*pre1[i-1]+x;
-        ans=max(ans,cur);
-        lc.add(-pre1[i],pre2[i]);
+        cin>>v;
     }
-    cout<<ans<<'\n';
+    cur=x*s[0];
+    lc.add(f[0],cur);
+    for(ll i=1;i<n;++i)
+    {
+        cur=min(x*s[i],lc.query(s[i]));
+        lc.add(f[i],cur);
+    }
+    cout<<cur<<'\n';
     return 0;
 }
