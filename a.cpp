@@ -87,23 +87,26 @@ int main()
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    ll n,ans=-1e18;
+    ll n,ans=0;
     LineContainer lc;
     cin>>n;
-    vector<array<ll,3>> a(n);
-    for(auto &v:a)
+    vector<ll> a(n+1),pre1(n+1),pre2(n+1);
+    for(ll i=1;i<=n;++i)
     {
-        cin>>v[0]>>v[1]>>v[2];
+        cin>>a[i];
+        ans=max(ans,a[i]);
+        pre1[i]=a[i];
+        pre1[i]+=pre1[i-1];
+        pre2[i]=i*a[i];
+        pre2[i]+=pre2[i-1];
     }
-    sort(a.begin(),a.end());
-    ans=a[0][0]*a[0][1]-a[0][2];
-    lc.add(-a[0][0],ans);
-    for(ll i=1;i<n;++i)
+    lc.add(-pre1[n],pre2[n]);
+    for(ll i=n-1;i>=1;--i)
     {
-        ll x=lc.query(a[i][1]);
-        ll cur=max(a[i][0]*a[i][1]-a[i][2]+x,a[i][0]*a[i][1]-a[i][2]);
+        ll x=lc.query(i-1);
+        ll cur=-pre2[i-1]+(i-1)*pre1[i-1]+x;
         ans=max(ans,cur);
-        lc.add(-a[i][0],cur);
+        lc.add(-pre1[i],pre2[i]);
     }
     cout<<ans<<'\n';
     return 0;
