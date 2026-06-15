@@ -101,17 +101,17 @@ struct ConvexHull
 };
 
 typedef long long ll;
-
+ 
 const ll N=1e5+10,P=105;
 ll d[N],a[N],pre[N],dp[N][P];
 ConvexHull<5> ch[P];
-
+ 
 inline ll get(const ll &i,const ll &j)
 {
     return a[j]-((i==0)?0:a[i-1]);
 }
-
-
+ 
+ 
 inline ll get(const ll &i)
 {
     return get(i,i);
