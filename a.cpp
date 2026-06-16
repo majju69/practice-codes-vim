@@ -7,114 +7,99 @@ using namespace std;
     #define debug(x)
 #endif
 
-// Monotone-slope / monotone-query CHT. Both slopes (add) and queries (query) must be monotone.
-// O(1) amortized add and query. MODE bits: [slope inc/dec = &4][x inc/dec = &2][hull min/max = &1]
-// 0:inc,inc,max 1:inc,inc,min 2:inc,dec,max 3:inc,dec,min
-// 4:dec,inc,max 5:dec,inc,min 6:dec,dec,max 7:dec,dec,min
-//
-// For REAL (fractional) slopes/x, switch to long double:
-//   1. struct Line { long long k,m; }      -> struct Line { long double k,m; }
-//   2. val / add / query: long long x, m, k -> long double  (return type of val/query too)
-//   3. bad(): drop the (__int128) casts -> return (b.m-a.m)*(b.k-c.k) >= (c.m-b.m)*(a.k-b.k);
-//      (__int128 was only for integer exactness; not needed/usable with floats)
-//   4. ptr stays int. The MODE sign-flips (-k,-m,-x,-res) are unchanged.
-// Caveats: equality is no longer exact -- H.back().k==k almost never fires (fine), but
-//   near-equal slopes make bad() noisy; if slopes can be very close, treat
-//   fabs(b.k-c.k)<eps as "equal slope" and keep the larger m. Prefer long double over
-//   double for slopes like dp[i]/i. Integer mode is exact; float mode risks epsilon errors.
-template<int MODE=0>
-struct ConvexHull
+typedef long long ll;
+
+class DisjointSet
 {
-    static const bool MN        = MODE&1;   // min hull
-    static const bool SLOPE_DEC = MODE&4;   // slopes added in decreasing order
-    static const bool FLIPX     = MN ^ SLOPE_DEC;          // query internal coord = -x
-    static const bool FWD       = (FLIPX == bool(MODE&2)); // pointer moves forward
- 
-    struct Line
-    { 
-        long long k,m;
-    };
-    vector<Line> H;
-    int ptr=FWD?0:INT_MAX;
- 
-    long long val(int i,long long x) const 
-    { 
-        return H[i].k*x+H[i].m;
-    }
- 
-    // b is redundant: intersection(a,b) >= intersection(b,c), slopes a.k<b.k<c.k
-    bool bad(const Line &a,const Line &b,const Line &c) const
+
+private:
+    
+    vector<long long> ultimateParent,rank,size;
+
+public:
+    
+    DisjointSet(long long n)
     {
-        return (__int128)(b.m-a.m)*(b.k-c.k)>=(__int128)(c.m-b.m)*(a.k-b.k);
+        ultimateParent.resize(n+1);
+        rank.resize(n+1,0);
+        size.resize(n+1,1);
+        for(long long i=0;i<=n;++i)
+        {
+            ultimateParent[i]=i;
+        }
     }
- 
-    void add(long long k, long long m)
+
+    long long findUltimateParent(long long node)
     {
-        if(SLOPE_DEC)
+        if(ultimateParent[node]==node)
         {
-            k=-k;
+            return node;
         }
-        if(MN)
-        {
-            m=-m;
-        }
-        while(!H.empty()&&H.back().k==k)   // same slope: keep larger intercept
-        {
-            if(H.back().m>=m)
-            {
-                return;
-            }
-            H.pop_back();
-        }
-        while(H.size()>=2&&bad(H[H.size()-2],H.back(),{k,m}))
-        {
-            H.pop_back();
-        }
-        H.push_back({k, m});
+        return ultimateParent[node]=findUltimateParent(ultimateParent[node]);
     }
- 
-    long long query(long long x)
+
+    long long getSize(long long node)
     {
-        assert(!H.empty());
-        long long X=FLIPX?-x:x;
-        if(ptr>(int)H.size()-1) 
+        return size[node];
+    }
+
+    long long getRank(long long node)
+    {
+        return rank[node];
+    }
+
+    void unionByRank(long long u,long long v)
+    {
+        long long ultimateParentOfU=findUltimateParent(u),ultimateParentOfV=findUltimateParent(v);
+        if(ultimateParentOfU==ultimateParentOfV)
         {
-            ptr=(int)H.size()-1;   // clamp (pops / backward init)
+            return;
         }
-        if(FWD) 
+        if(rank[ultimateParentOfU]<rank[ultimateParentOfV])
         {
-            while(ptr+1<(int)H.size()&&val(ptr+1,X)>=val(ptr,X))
-            {
-                ++ptr;
-            }
+            ultimateParent[ultimateParentOfU]=ultimateParentOfV;
+        }
+        else if(rank[ultimateParentOfU]>rank[ultimateParentOfV])
+        {
+            ultimateParent[ultimateParentOfV]=ultimateParentOfU;
         }
         else
         {
-            while(ptr>0&&val(ptr-1,X)>=val(ptr,X))
-            {
-                --ptr;
-            }
+            ultimateParent[ultimateParentOfV]=ultimateParentOfU;
+            rank[ultimateParentOfU]++;
         }
-        long long res=val(ptr,X);
-        return MN ? -res : res;
     }
+
+    void unionBySize(long long u,long long v)
+    {
+        long long ultimateParentOfU=findUltimateParent(u),ultimateParentOfV=findUltimateParent(v);
+        if(ultimateParentOfU==ultimateParentOfV)
+        {
+            return;
+        }
+        if(size[ultimateParentOfU]<size[ultimateParentOfV])
+        {
+            ultimateParent[ultimateParentOfU]=ultimateParentOfV;
+            size[ultimateParentOfV]+=size[ultimateParentOfU];
+        }
+        else
+        {
+            ultimateParent[ultimateParentOfV]=ultimateParentOfU;
+            size[ultimateParentOfU]+=size[ultimateParentOfV];
+        }
+    }
+
 };
 
-typedef long long ll;
- 
-const ll N=1e5+10,P=105;
-ll d[N],a[N],pre[N],dp[N][P];
-ConvexHull<5> ch[P];
- 
-inline ll get(const ll &i,const ll &j)
+void dfs(ll node,vector<ll> adj[],vector<ll> &sub,ll &cnt)
 {
-    return a[j]-((i==0)?0:a[i-1]);
-}
- 
- 
-inline ll get(const ll &i)
-{
-    return get(i,i);
+    sub[node]=1;
+    cnt++;
+    for(auto &v:adj[node])
+    {
+        dfs(v,adj,sub,cnt);
+        sub[node]+=sub[v];
+    }
 }
 
 int main()
@@ -122,61 +107,79 @@ int main()
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    ll n,m,p;
-    set<ll> st;
-    cin>>n>>m>>p;
-    for(ll i=0;i<n-1;++i)
+    ll tc;
+    cin>>tc;
+    while(tc--)
     {
-        cin>>d[i];
-        if(i>=1)
+        ll n,cntGood=0,ans=0,cur=0;
+        cin>>n;
+        vector<ll> a(n),zeroPath;
+        vector<bool> good(n,0),vis(n,0);
+        DisjointSet ds(n);
+        for(auto &v:a)
         {
-            d[i]+=d[i-1];
+            cin>>v;
         }
-    }
-    for(ll i=0;i<m;++i)
-    {
-        ll hi,ti;
-        cin>>hi>>ti;
-        if(hi==1)
+        for(ll i=0;i<n;++i)
         {
-            a[i]=ti;
+            ll nxt=i+a[i];
+            if(nxt>=0&&nxt<n)
+            {
+                ds.unionBySize(i,nxt);
+            }
+        }
+        for(ll i=0;i<n;++i)
+        {
+            ll nxt=i+a[i];
+            if(nxt>=0&&nxt<n)
+            {
+                continue;
+            }
+            good[ds.findUltimateParent(i)]=1;
+            cntGood+=ds.getSize(ds.findUltimateParent(i));
+        }
+        while(1)
+        {
+            if(cur>=n||cur<0)
+            {
+                break;
+            }
+            if(vis[cur])
+            {
+                break;
+            }
+            zeroPath.push_back(cur);
+            vis[cur]=1;
+            cur+=a[cur];
+        }
+        if(!good[ds.findUltimateParent(0)])
+        {
+            ans+=(ll)zeroPath.size()*(cntGood+n+1);
         }
         else
         {
-            ll cur=d[hi-2];
-            a[i]=ti-cur;
-        }
-    }
-    sort(a,a+m);
-    reverse(a,a+m);
-    for(ll i=1;i<m;++i)
-    {
-        a[i]+=a[i-1];
-    }
-    for(ll i=m-1;i>=0;--i)
-    {
-        st.insert(get(i));
-        for(ll k=1;k<=p;++k)
-        {
-            if(k>=(ll)st.size())
+            ll cnt=0;
+            vector<ll> adj[n],sub(n,0);
+            cntGood-=ds.getSize(ds.findUltimateParent(0));
+            for(ll i=0;i<n;++i)
             {
-                dp[i][k]=0;
-            }
-            else
-            {
-                if(k==1)
+                if(i+a[i]>=n||i+a[i]<0)
                 {
-                    dp[i][k]=(m-i)*get(i)-get(i,m-1);
+                    continue;
                 }
-                else
+                if(ds.findUltimateParent(i)==ds.findUltimateParent(0))
                 {
-                    ll x=ch[k-1].query(get(i));
-                    dp[i][k]=a[i]-get(i)-i*get(i)+x;
+                    adj[i+a[i]].push_back(i);
                 }
             }
-            ch[k].add(i,dp[i][k]-((i==0)?0:a[i-1]));
+            dfs(zeroPath.back(),adj,sub,cnt);
+            for(auto &v:zeroPath)
+            {
+                ans+=cntGood+cnt-sub[v]+n+1;
+            }
+            ans+=((n<<1)+1)*(n-(ll)zeroPath.size());            
         }
+        cout<<ans<<'\n';
     }
-    cout<<dp[0][p]<<'\n';
     return 0;
 }
