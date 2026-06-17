@@ -1,6 +1,4 @@
 #include <bits/stdc++.h>
-#include <deque>
-#include <utility>
 using namespace std;
 
 #ifdef LOCAL
@@ -9,111 +7,96 @@ using namespace std;
     #define debug(x)
 #endif
 
-typedef long long ll;
-
-void compress(deque<ll> &dq)
-{
-    deque<ll> a;
-    for(auto &v:dq)
-    {
-        if(v!=0)
-        {
-            a.push_back(v);
-        }
-    }
-    dq=a;
-    a.clear();
-    if(dq.empty())
-    {
-        return;
-    }
-    ll sum=dq[0],pvs=dq[0];
-    const ll n=dq.size();
-    for(ll i=1;i<n;++i)
-    {
-        if(dq[i]*pvs>0)
-        {
-            sum+=dq[i];
-        }
-        else
-        {
-            a.push_back(sum);
-            sum=dq[i];
-            pvs=dq[i];
-        }
-    }
-    if(sum!=0)
-    {
-        a.push_back(sum);
-    }
-    dq=a;
-}
-
-deque<pair<ll,ll>> operate(deque<ll> &dq)
-{
-    ll sum=0,mn=0;
-    deque<pair<ll,ll>> ans;
-    for(auto &v:dq)
-    {
-        sum+=v;
-        mn=min(mn,sum);
-        if(sum>0)
-        {
-            ans.push_back({mn,sum});
-            mn=0;
-            sum=0;
-        }
-    }
-    return ans;
-}
+const int N=105,M=105,K=15;
+int dp[N][M][K],a[N][M];
 
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    ll x,k,idx=0;
-    priority_queue<array<ll,3>> pq;
-    deque<deque<pair<ll,ll>>> a;
-    cin>>x>>k;
-    while(k--)
+    memset(dp,-1,sizeof(dp));
+    int n,m,k,idx=-1,mx=-1;
+    cin>>n>>m>>k;
+    k++;
+    for(int i=0;i<n;++i)
     {
-        ll l;
-        deque<ll> dq;
-        deque<pair<ll,ll>> ans;
-        cin>>l;
-        while(l--)
+        string s;
+        cin>>s;
+        for(int j=0;j<m;++j)
         {
-            ll cur;
-            cin>>cur;
-            dq.push_back(cur);
-        }
-        compress(dq);
-        ans=operate(dq);
-        if(!ans.empty())
-        {
-            a.push_back(ans);
-            pq.push({ans[0].first,ans[0].second,idx++});
+            a[i][j]=(s[j]-'0');
         }
     }
-    while(!pq.empty())
+    for(int i=n-1;i>=0;--i)
     {
-        array<ll,3> cur=pq.top();
-        pq.pop();
-        if(x+cur[0]>=0)
+        if(i==n-1)
         {
-            x+=cur[1];
-            a[cur[2]].pop_front();
-            if(!a[cur[2]].empty())
+            for(int j=0;j<m;++j)
             {
-                pq.push({a[cur[2]][0].first,a[cur[2]][0].second,cur[2]});
+                dp[i][j][a[i][j]%k]=a[i][j];
             }
         }
         else
         {
-            break;
+            for(int j=0;j<m;++j)
+            {
+                if(j+1<m)
+                {
+                    for(int rem=0;rem<k;++rem)
+                    {
+                        if(dp[i+1][j+1][(rem-(a[i][j]%k)+k)%k]!=-1)
+                        {
+                            dp[i][j][rem]=max(dp[i][j][rem],dp[i+1][j+1][(rem-(a[i][j]%k)+k)%k]+a[i][j]);
+                        }
+                    }
+                }
+                if(j-1>=0)
+                {
+                    for(int rem=0;rem<k;++rem)
+                    {
+                        if(dp[i+1][j-1][(rem-(a[i][j]%k)+k)%k]!=-1)
+                        {
+                            dp[i][j][rem]=max(dp[i][j][rem],dp[i+1][j-1][(rem-(a[i][j]%k)+k)%k]+a[i][j]);
+                        }
+                    }
+
+                }
+            }
         }
     }
-    cout<<x<<'\n';
+    for(int j=0;j<m;++j)
+    {
+        if(dp[0][j][0]>mx)
+        {
+            mx=dp[0][j][0];
+            idx=j;
+        }
+    }
+    if(mx==-1)
+    {
+        cout<<-1<<'\n';
+    }
+    else
+    {
+        cout<<mx<<'\n';
+        int cur_idx=idx,cur_rem=0;
+        string ans;
+        for(int i=1;i<n;++i)
+        {
+            if(cur_idx+1<m&&dp[i][cur_idx+1][(cur_rem-(a[i-1][cur_idx])%k+k)%k]==dp[i-1][cur_idx][cur_rem]-a[i-1][cur_idx])
+            {
+                ans.push_back('L');
+                cur_rem=(cur_rem-(a[i-1][cur_idx])%k+k)%k;
+                cur_idx++;
+                continue;
+            }
+            ans.push_back('R');
+            cur_rem=(cur_rem-(a[i-1][cur_idx])%k+k)%k;
+            cur_idx--;
+        }
+        reverse(ans.begin(),ans.end());
+        cout<<cur_idx+1<<'\n'<<ans<<'\n';
+    }
     return 0;
 }
