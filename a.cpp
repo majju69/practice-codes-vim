@@ -1,4 +1,6 @@
 #include <bits/stdc++.h>
+#include <deque>
+#include <utility>
 using namespace std;
 
 #ifdef LOCAL
@@ -9,97 +11,60 @@ using namespace std;
 
 typedef long long ll;
 
-class DisjointSet
+void compress(deque<ll> &dq)
 {
-
-private:
-    
-    vector<long long> ultimateParent,rank,size;
-
-public:
-    
-    DisjointSet(long long n)
+    deque<ll> a;
+    for(auto &v:dq)
     {
-        ultimateParent.resize(n+1);
-        rank.resize(n+1,0);
-        size.resize(n+1,1);
-        for(long long i=0;i<=n;++i)
+        if(v!=0)
         {
-            ultimateParent[i]=i;
+            a.push_back(v);
         }
     }
-
-    long long findUltimateParent(long long node)
+    dq=a;
+    a.clear();
+    if(dq.empty())
     {
-        if(ultimateParent[node]==node)
-        {
-            return node;
-        }
-        return ultimateParent[node]=findUltimateParent(ultimateParent[node]);
+        return;
     }
-
-    long long getSize(long long node)
+    ll sum=dq[0],pvs=dq[0];
+    const ll n=dq.size();
+    for(ll i=1;i<n;++i)
     {
-        return size[node];
-    }
-
-    long long getRank(long long node)
-    {
-        return rank[node];
-    }
-
-    void unionByRank(long long u,long long v)
-    {
-        long long ultimateParentOfU=findUltimateParent(u),ultimateParentOfV=findUltimateParent(v);
-        if(ultimateParentOfU==ultimateParentOfV)
+        if(dq[i]*pvs>0)
         {
-            return;
-        }
-        if(rank[ultimateParentOfU]<rank[ultimateParentOfV])
-        {
-            ultimateParent[ultimateParentOfU]=ultimateParentOfV;
-        }
-        else if(rank[ultimateParentOfU]>rank[ultimateParentOfV])
-        {
-            ultimateParent[ultimateParentOfV]=ultimateParentOfU;
+            sum+=dq[i];
         }
         else
         {
-            ultimateParent[ultimateParentOfV]=ultimateParentOfU;
-            rank[ultimateParentOfU]++;
+            a.push_back(sum);
+            sum=dq[i];
+            pvs=dq[i];
         }
     }
-
-    void unionBySize(long long u,long long v)
+    if(sum!=0)
     {
-        long long ultimateParentOfU=findUltimateParent(u),ultimateParentOfV=findUltimateParent(v);
-        if(ultimateParentOfU==ultimateParentOfV)
-        {
-            return;
-        }
-        if(size[ultimateParentOfU]<size[ultimateParentOfV])
-        {
-            ultimateParent[ultimateParentOfU]=ultimateParentOfV;
-            size[ultimateParentOfV]+=size[ultimateParentOfU];
-        }
-        else
-        {
-            ultimateParent[ultimateParentOfV]=ultimateParentOfU;
-            size[ultimateParentOfU]+=size[ultimateParentOfV];
-        }
+        a.push_back(sum);
     }
+    dq=a;
+}
 
-};
-
-void dfs(ll node,vector<ll> adj[],vector<ll> &sub,ll &cnt)
+deque<pair<ll,ll>> operate(deque<ll> &dq)
 {
-    sub[node]=1;
-    cnt++;
-    for(auto &v:adj[node])
+    ll sum=0,mn=0;
+    deque<pair<ll,ll>> ans;
+    for(auto &v:dq)
     {
-        dfs(v,adj,sub,cnt);
-        sub[node]+=sub[v];
+        sum+=v;
+        mn=min(mn,sum);
+        if(sum>0)
+        {
+            ans.push_back({mn,sum});
+            mn=0;
+            sum=0;
+        }
     }
+    return ans;
 }
 
 int main()
@@ -107,79 +72,48 @@ int main()
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    ll tc;
-    cin>>tc;
-    while(tc--)
+    ll x,k,idx=0;
+    priority_queue<array<ll,3>> pq;
+    deque<deque<pair<ll,ll>>> a;
+    cin>>x>>k;
+    while(k--)
     {
-        ll n,cntGood=0,ans=0,cur=0;
-        cin>>n;
-        vector<ll> a(n),zeroPath;
-        vector<bool> good(n,0),vis(n,0);
-        DisjointSet ds(n);
-        for(auto &v:a)
+        ll l;
+        deque<ll> dq;
+        deque<pair<ll,ll>> ans;
+        cin>>l;
+        while(l--)
         {
-            cin>>v;
+            ll cur;
+            cin>>cur;
+            dq.push_back(cur);
         }
-        for(ll i=0;i<n;++i)
+        compress(dq);
+        ans=operate(dq);
+        if(!ans.empty())
         {
-            ll nxt=i+a[i];
-            if(nxt>=0&&nxt<n)
-            {
-                ds.unionBySize(i,nxt);
-            }
+            a.push_back(ans);
+            pq.push({ans[0].first,ans[0].second,idx++});
         }
-        for(ll i=0;i<n;++i)
+    }
+    while(!pq.empty())
+    {
+        array<ll,3> cur=pq.top();
+        pq.pop();
+        if(x+cur[0]>=0)
         {
-            ll nxt=i+a[i];
-            if(nxt>=0&&nxt<n)
+            x+=cur[1];
+            a[cur[2]].pop_front();
+            if(!a[cur[2]].empty())
             {
-                continue;
+                pq.push({a[cur[2]][0].first,a[cur[2]][0].second,cur[2]});
             }
-            good[ds.findUltimateParent(i)]=1;
-            cntGood+=ds.getSize(ds.findUltimateParent(i));
-        }
-        while(1)
-        {
-            if(cur>=n||cur<0)
-            {
-                break;
-            }
-            if(vis[cur])
-            {
-                break;
-            }
-            zeroPath.push_back(cur);
-            vis[cur]=1;
-            cur+=a[cur];
-        }
-        if(!good[ds.findUltimateParent(0)])
-        {
-            ans+=(ll)zeroPath.size()*(cntGood+n+1);
         }
         else
         {
-            ll cnt=0;
-            vector<ll> adj[n],sub(n,0);
-            cntGood-=ds.getSize(ds.findUltimateParent(0));
-            for(ll i=0;i<n;++i)
-            {
-                if(i+a[i]>=n||i+a[i]<0)
-                {
-                    continue;
-                }
-                if(ds.findUltimateParent(i)==ds.findUltimateParent(0))
-                {
-                    adj[i+a[i]].push_back(i);
-                }
-            }
-            dfs(zeroPath.back(),adj,sub,cnt);
-            for(auto &v:zeroPath)
-            {
-                ans+=cntGood+cnt-sub[v]+n+1;
-            }
-            ans+=((n<<1)+1)*(n-(ll)zeroPath.size());            
+            break;
         }
-        cout<<ans<<'\n';
     }
+    cout<<x<<'\n';
     return 0;
 }
