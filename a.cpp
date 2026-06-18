@@ -1,5 +1,4 @@
 #include <bits/stdc++.h>
-#include <cstring>
 using namespace std;
 
 #ifdef LOCAL
@@ -8,9 +7,8 @@ using namespace std;
     #define debug(x)
 #endif
 
-const int sz=19;
-const int MASK=(1<<sz),mod=1e9+7,primes[]={2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67};
-int freq[MASK],dp[MASK],ndp[MASK];
+const int mod=998244353,N=2e5+10;
+int p[N];
 
 int add(const int &a,const int &b)
 {
@@ -43,66 +41,28 @@ int power(int a,int b)        // Use when mod is of order 10^9 or less
     return ans%mod;
 }
 
+int divide(const int &a,const int &b)
+{
+    return mul(a,power(b,mod-2));
+}
+
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    int n;
+    int n,c1=0,c2=0;
     cin>>n;
-    vector<int> present;
-    vector<pair<int,int>> a;
     for(int i=0;i<n;++i)
     {
-        int x,mask=0;
-        cin>>x;
-        for(int j=0;j<sz;++j)
-        {
-            const int p=primes[j];
-            int cnt=0;
-            while(x%p==0)
-            {
-                cnt=1-cnt;
-                x/=p;
-            }
-            if(cnt==1)
-            {
-                mask^=(1<<j);
-            }
-        }
-        if(mask==0)
-        {
-            freq[0]++;
-            continue;
-        }
-        if(freq[mask]==0)
-        {
-            present.push_back(mask);
-        }
-        freq[mask]++;
+        cin>>p[i];
+        p[i]=divide(p[i],100);
     }
-    for(auto &v:present)
+    for(int i=n-1;i>=1;--i)
     {
-        a.push_back({v,freq[v]});
+        c1=add(1,mul(p[i],c1));
+        c2=add(mul(p[i],c2),sub(1,p[i]));
     }
-    if(!a.empty())
-    {
-        dp[a[0].first]=power(2,a[0].second-1);
-        dp[0]=sub(power(2,a[0].second-1),1);
-        for(int i=1;i<(int)a.size();++i)
-        {
-            memset(ndp,0,sizeof(ndp));
-            const int ways_odd=power(2,a[i].second-1),mask_odd=a[0].first,ways_even=sub(power(2,a[i].second-1),1),cur_mask=a[i].first;
-            ndp[cur_mask]=ways_odd;
-            ndp[0]=ways_even;
-            for(int mask=0;mask<MASK;++mask)
-            {
-                ndp[mask]=add(ndp[mask],add(dp[mask],mul(dp[mask],ways_even)));
-                ndp[mask]=add(ndp[mask],mul(dp[mask^a[i].first],ways_odd));
-            }
-            memcpy(dp,ndp,sizeof(dp));
-        }
-    }
-    cout<<sub(mul(add(1,dp[0]),power(2,freq[0])),1)<<'\n';    
+    cout<<divide(add(1,mul(p[0],c1)),sub(p[0],mul(p[0],c2)))<<'\n';
     return 0;
 }
