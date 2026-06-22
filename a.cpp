@@ -7,40 +7,99 @@ using namespace std;
     #define debug(x)
 #endif
 
-typedef long double ld;
+typedef long long ll;
 
-const ld eps=1e-10;
-ld a[101];
+bool cmp(const pair<ll,ll> &a,const pair<ll,ll> &b)
+{
+    return a.second<b.second;
+}
 
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    int n;
-    ld mx=0.0l;
-    cin>>n;
-    for(int i=0;i<n;++i)
+    ll n,m,src,ans=0;
+    set<pair<ll,ll>> st;
+    map<pair<ll,ll>,pair<ll,ll>> mp;
+    cin>>n>>m;
+    vector<ll> dist(n,1e18),par(n,-1),edges;
+    vector<pair<ll,ll>> adj[n];
+    for(ll i=0;i<m;++i)
     {
-        cin>>a[i];
-        if(abs(a[i]-1.0l)<=eps)
+        ll u,v,w;
+        cin>>u>>v>>w;
+        u--;
+        v--;
+        if(u>v)
         {
-            mx=1.0l;
+            swap(u,v);
+        }
+        adj[u].push_back({v,w});
+        adj[v].push_back({u,w});
+        mp[{u,v}]={i+1,w};
+    }
+    cin>>src;
+    src--;
+    dist[src]=0;
+    st.insert({dist[src],src});
+    while(!st.empty())
+    {
+        auto it=st.begin();
+        ll node=it->second,dis=it->first;
+        st.erase(*it);
+        for(auto &v:adj[node])
+        {
+            ll curNode=v.first,curDist=v.second;
+            if(dist[curNode]>dis+curDist)
+            {
+                if(dist[curNode]!=(ll)1e18)
+                {
+                    st.erase({dist[curNode],curNode});
+                }
+                dist[curNode]=dis+curDist;
+                st.insert({dist[curNode],curNode});
+                par[curNode]=node;
+            }
+            else
+            {
+                if(dist[curNode]==dis+curDist)
+                {
+                    ll u=curNode,v=par[curNode];
+                    if(v!=-1)
+                    {
+                        if(u>v)
+                        {
+                            swap(u,v);
+                        }
+                        if(curDist<mp[{u,v}].second)
+                        {
+                            par[curNode]=node;
+                        }
+                    }
+                }
+            }
         }
     }
-    if(abs(mx-1.0l)>eps)
+    for(ll i=0;i<n;++i)
     {
-        ld sum=0.0l,pro=1.0l;
-        sort(a,a+n);
-        reverse(a,a+n);
-        for(int i=0;i<n;++i)
+        if(par[i]!=-1)
         {
-            mx=max(mx,sum*pro);
-            sum+=a[i]/(1.0l-a[i]);
-            pro*=(1.0l-a[i]);
-            mx=max(mx,sum*pro);
+            ll u=i,v=par[i];
+            if(u>v)
+            {
+                swap(u,v);
+            }
+            pair<ll,ll> p=mp[{u,v}];
+            edges.push_back(p.first);
+            ans+=p.second;
         }
     }
-    cout<<fixed<<setprecision(10)<<mx<<'\n';
+    cout<<ans<<'\n';
+    for(auto &v:edges)
+    {
+        cout<<v<<' ';
+    }
+    cout<<'\n';
     return 0;
 }
