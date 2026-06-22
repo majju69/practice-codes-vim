@@ -7,99 +7,46 @@ using namespace std;
     #define debug(x)
 #endif
 
-typedef long long ll;
-
-bool cmp(const pair<ll,ll> &a,const pair<ll,ll> &b)
-{
-    return a.second<b.second;
-}
-
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    ll n,m,src,ans=0;
-    set<pair<ll,ll>> st;
-    map<pair<ll,ll>,pair<ll,ll>> mp;
+    int n,m,ind=0;
+    map<int,int> mp;
+    vector<array<int,3>> edges;
     cin>>n>>m;
-    vector<ll> dist(n,1e18),par(n,-1),edges;
-    vector<pair<ll,ll>> adj[n];
-    for(ll i=0;i<m;++i)
+    vector<int> dp(n,0),ndp(n,0);
+    for(int i=0;i<m;++i)
     {
-        ll u,v,w;
+        int u,v,w;
         cin>>u>>v>>w;
         u--;
         v--;
-        if(u>v)
-        {
-            swap(u,v);
-        }
-        adj[u].push_back({v,w});
-        adj[v].push_back({u,w});
-        mp[{u,v}]={i+1,w};
+        edges.push_back({u,v,w});
+        mp[w]=0;
     }
-    cin>>src;
-    src--;
-    dist[src]=0;
-    st.insert({dist[src],src});
-    while(!st.empty())
+    for(auto &v:mp)
     {
-        auto it=st.begin();
-        ll node=it->second,dis=it->first;
-        st.erase(*it);
-        for(auto &v:adj[node])
+        v.second=ind++;
+    }
+    vector<vector<pair<int,int>>> comp(ind);
+    for(auto &edge:edges)
+    {
+        comp[mp[edge[2]]].push_back({edge[0],edge[1]});
+    }
+    for(auto &vec:comp)
+    {
+        assert(!vec.empty());
+        for(auto &edge:vec)
         {
-            ll curNode=v.first,curDist=v.second;
-            if(dist[curNode]>dis+curDist)
-            {
-                if(dist[curNode]!=(ll)1e18)
-                {
-                    st.erase({dist[curNode],curNode});
-                }
-                dist[curNode]=dis+curDist;
-                st.insert({dist[curNode],curNode});
-                par[curNode]=node;
-            }
-            else
-            {
-                if(dist[curNode]==dis+curDist)
-                {
-                    ll u=curNode,v=par[curNode];
-                    if(v!=-1)
-                    {
-                        if(u>v)
-                        {
-                            swap(u,v);
-                        }
-                        if(curDist<mp[{u,v}].second)
-                        {
-                            par[curNode]=node;
-                        }
-                    }
-                }
-            }
+            ndp[edge.second]=max(ndp[edge.second],dp[edge.first]+1);
+        }
+        for(auto &edge:vec)
+        {
+            dp[edge.second]=max(dp[edge.second],ndp[edge.second]);
         }
     }
-    for(ll i=0;i<n;++i)
-    {
-        if(par[i]!=-1)
-        {
-            ll u=i,v=par[i];
-            if(u>v)
-            {
-                swap(u,v);
-            }
-            pair<ll,ll> p=mp[{u,v}];
-            edges.push_back(p.first);
-            ans+=p.second;
-        }
-    }
-    cout<<ans<<'\n';
-    for(auto &v:edges)
-    {
-        cout<<v<<' ';
-    }
-    cout<<'\n';
+    cout<<(*max_element(dp.begin(),dp.end()))<<'\n';
     return 0;
 }
