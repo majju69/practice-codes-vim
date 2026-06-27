@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <bits/stdc++.h>
 using namespace std;
 
@@ -7,46 +8,78 @@ using namespace std;
     #define debug(x)
 #endif
 
+const int N=2010;
+int umbrella[N],dp[N][N];
+bool isRain[N];
+
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    int n,m,ind=0;
-    map<int,int> mp;
-    vector<array<int,3>> edges;
-    cin>>n>>m;
-    vector<int> dp(n,0),ndp(n,0);
+    memset(umbrella,-1,sizeof(umbrella));
+    memset(dp,0x3f,sizeof(dp));
+    int a,n,m,mn=1e9+10,ans=-1;
+    cin>>a>>n>>m;
+    for(int i=0;i<n;++i)
+    {
+        int l,r;
+        cin>>l>>r;
+        for(int j=l;j<r;++j)
+        {
+            isRain[j]=1;
+        }
+    }
     for(int i=0;i<m;++i)
     {
-        int u,v,w;
-        cin>>u>>v>>w;
-        u--;
-        v--;
-        edges.push_back({u,v,w});
-        mp[w]=0;
-    }
-    for(auto &v:mp)
-    {
-        v.second=ind++;
-    }
-    vector<vector<pair<int,int>>> comp(ind);
-    for(auto &edge:edges)
-    {
-        comp[mp[edge[2]]].push_back({edge[0],edge[1]});
-    }
-    for(auto &vec:comp)
-    {
-        assert(!vec.empty());
-        for(auto &edge:vec)
+        int x,p;
+        cin>>x>>p;
+        if(umbrella[x+1]==-1)
         {
-            ndp[edge.second]=max(ndp[edge.second],dp[edge.first]+1);
+            umbrella[x+1]=p;
         }
-        for(auto &edge:vec)
+        else
         {
-            dp[edge.second]=max(dp[edge.second],ndp[edge.second]);
+            umbrella[x+1]=min(umbrella[x+1],p);
         }
     }
-    cout<<(*max_element(dp.begin(),dp.end()))<<'\n';
+    if(!isRain[0])
+    {
+        dp[0][0]=0;
+        mn=0;
+    }
+    if(umbrella[1]!=-1)
+    {
+        dp[0][1]=umbrella[1];
+        mn=min(mn,umbrella[1]);
+    }
+    for(int i=1;i<a;++i)
+    {
+        if(!isRain[i])
+        {
+            dp[i][0]=min(mn,dp[i-1][0]);
+        }
+        if(umbrella[i+1]!=-1)
+        {
+            dp[i][i+1]=mn+umbrella[i+1];
+        }
+        mn=1e9+10;
+        for(int j=1;j<=i;++j)
+        {
+            if(dp[i-1][j]<(int)1e9&&umbrella[j]!=-1)
+            {
+                dp[i][j]=min(dp[i][j],dp[i-1][j]+umbrella[j]);
+                mn=min(mn,dp[i][j]);
+            }
+        }
+        mn=min(mn,dp[i][i+1]);
+        mn=min(mn,dp[i][0]);
+    }
+    ans=(*min_element(dp[a-1],dp[a-1]+a+5));
+    if(ans>(int)2e8+10)
+    {
+        ans=-1;
+    }
+    cout<<ans<<'\n';
     return 0;
 }
