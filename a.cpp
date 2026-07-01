@@ -7,27 +7,57 @@ using namespace std;
     #define debug(x)
 #endif
 
-typedef long long ll;
+const int N=2e5+10;
+int sub[N],par[N];
+array<int,3> dp[N];
+vector<int> adj[N];
 
-const ll N=1e5+10;
-ll a[N],par[N],subSum[N],subSize[N];
-vector<ll> adj[N];
-multiset<array<ll,3>> st[N];
-
-void dfs(ll node,ll p)
+array<int,3> get(const vector<array<int,3>> &children)
 {
-    subSize[node]=1;
-    subSum[node]=a[node];
+    const int n=children.size();
+    array<int,3> dp=children[0],ndp;
+    for(int i=1;i<n;++i)
+    {
+        ndp[0]=max({dp[0]+children[i][0],dp[1]+children[i][2],dp[2]+children[i][1]});
+        ndp[1]=max({dp[0]+children[i][1],dp[1]+children[i][0],dp[2]+children[i][2]});
+        ndp[2]=max({dp[1]+children[i][1],dp[0]+children[i][2],dp[2]+children[i][0]});
+        dp=ndp;
+    }
+    return dp;
+}
+
+void dfs(int node,int p)
+{
+    sub[node]=((node!=0)&&((int)adj[node].size()==1));
     for(auto &v:adj[node])
     {
         if(v!=p)
         {
             par[v]=node;
             dfs(v,node);
-            subSize[node]+=subSize[v];
-            subSum[node]+=subSum[v];
+            sub[node]+=sub[v];
         }
     }
+}
+
+void dfs(int node)
+{
+    if(node!=0&&(int)adj[node].size()==1)
+    {
+        dp[node]={0,1,0};
+        return;
+    }
+    vector<array<int,3>> children;
+    for(auto &v:adj[node])
+    {
+        if(v!=par[node])
+        {
+            dfs(v);
+            children.push_back(dp[v]);
+        }
+    }
+    dp[node]=get(children);
+    dp[node][1]=sub[node];
 }
 
 int main()
@@ -35,55 +65,31 @@ int main()
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    ll n,m;
-    cin>>n>>m;
-    for(ll i=0;i<n;++i)
+    int tc;
+    cin>>tc;
+    while(tc--)
     {
-        cin>>a[i];
-    }
-    for(int i=1;i<n;++i)
-    {
-        int u,v;
-        cin>>u>>v;
-        u--;
-        v--;
-        adj[u].push_back(v);
-        adj[v].push_back(u);
-    }
-    dfs(0,-1);
-    for(ll i=1;i<n;++i)
-    {
-        st[par[i]].insert({-subSize[i],i,subSum[i]});
-    }
-    while(m--)
-    {
-        ll t,x;
-        cin>>t>>x;
-        x--;
-        if(t==1)
+        int n;
+        cin>>n;
+        for(int i=1;i<n;++i)
         {
-            cout<<subSum[x]<<'\n';
+            int u,v;
+            cin>>u>>v;
+            u--;
+            v--;
+            adj[u].push_back(v);
+            adj[v].push_back(u);
         }
-        else
+        dfs(0,-1);
+        dfs(0);
+        cout<<((dp[0][0]==sub[0])?"YES":"NO")<<'\n';
+        for(int i=0;i<n;++i)
         {
-            if(!st[x].empty())
-            {
-                auto it=st[x].begin();
-                array<ll,3> son=*it;
-                st[x].erase(it);
-                ll f=par[x],s=son[1];
-                st[f].erase(st[f].find({-subSize[x],x,subSum[x]}));
-                st[f].insert({-subSize[x],s,subSum[x]});
-                par[s]=f;
-                par[x]=s;
-                ll old_x_sz=subSize[x],old_x_sum=subSum[x],old_s_sz=subSize[s],old_s_sum=subSum[s];
-                subSize[x]-=old_s_sz;
-                subSum[x]-=old_s_sum;
-                subSum[s]+=subSum[x];
-                subSize[s]+=subSize[x];
-                st[s].insert({-subSize[x],x,subSum[x]});
-            }
+            adj[i].clear();
+            dp[i][0]=dp[i][1]=dp[i][2]=0;
+            sub[i]=0;
+            par[i]=0;
         }
     }
     return 0;
-}
+}   
