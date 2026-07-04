@@ -7,57 +7,90 @@ using namespace std;
     #define debug(x)
 #endif
 
-const int N=2e5+10;
-int sub[N],par[N];
-array<int,3> dp[N];
-vector<int> adj[N];
+typedef long long ll;
+const ll mod=998244353,mult[]={1,10,100,1000,10000,100000,1000000,10000000,100000000,1000000000,10000000000,100000000000,1000000000000,10000000000000,100000000000000,1000000000000000,10000000000000000,100000000000000000};
+ll cnt[20][2][2][1024],dp[20][2][2][1024];
 
-array<int,3> get(const vector<array<int,3>> &children)
+ll add(const ll &a,const ll &b)
 {
-    const int n=children.size();
-    array<int,3> dp=children[0],ndp;
-    for(int i=1;i<n;++i)
-    {
-        ndp[0]=max({dp[0]+children[i][0],dp[1]+children[i][2],dp[2]+children[i][1]});
-        ndp[1]=max({dp[0]+children[i][1],dp[1]+children[i][0],dp[2]+children[i][2]});
-        ndp[2]=max({dp[1]+children[i][1],dp[0]+children[i][2],dp[2]+children[i][0]});
-        dp=ndp;
-    }
-    return dp;
+    return ((a%mod)+(b%mod))%mod;
 }
 
-void dfs(int node,int p)
+ll mul(const ll &a,const ll &b)
 {
-    sub[node]=((node!=0)&&((int)adj[node].size()==1));
-    for(auto &v:adj[node])
-    {
-        if(v!=p)
-        {
-            par[v]=node;
-            dfs(v,node);
-            sub[node]+=sub[v];
-        }
-    }
+    return ((a%mod)*(b%mod))%mod;
 }
 
-void dfs(int node)
+ll sub(const ll &a,const ll &b)
 {
-    if(node!=0&&(int)adj[node].size()==1)
+    return ((a%mod)-(b%mod)+mod)%mod;
+}
+
+ll get(ll i,bool put,bool tight,ll mask,const ll &k,const string &s)
+{
+    if(i>=(ll)s.size())
     {
-        dp[node]={0,1,0};
-        return;
+        return __builtin_popcountll(mask)<=k;
     }
-    vector<array<int,3>> children;
-    for(auto &v:adj[node])
+    if(cnt[i][put][tight][mask]!=-1)
     {
-        if(v!=par[node])
+        return cnt[i][put][tight][mask];
+    }
+    ll ans=0,till=(tight?(s[i]-'0'):9);
+    for(ll j=0;j<=till;++j)
+    {
+        if(j==0&&!put)
         {
-            dfs(v);
-            children.push_back(dp[v]);
+            ans+=get(i+1,0,(tight&&(j==till)),mask,k,s);
+        }
+        else
+        {
+            ans+=get(i+1,1,(tight&&(j==till)),(mask|(1ll<<j)),k,s);
         }
     }
-    dp[node]=get(children);
-    dp[node][1]=sub[node];
+    return cnt[i][put][tight][mask]=ans;
+}
+
+ll solve(ll i,bool put,bool tight,ll mask,const ll &k,const string &s)
+{
+    if(i>=(ll)s.size())
+    {
+        return 0;
+    }
+    if(dp[i][put][tight][mask]!=-1)
+    {
+        return dp[i][put][tight][mask];
+    }
+    ll ans=0,till=(tight?(s[i]-'0'):9),placeValue=(ll)s.size()-1-i;
+    for(ll j=0;j<=till;++j)
+    {
+        if(j==0&&!put)
+        {
+            ans=add(ans,solve(i+1,0,(tight&&(j==till)),mask,k,s));
+        }
+        else
+        {
+            ll nmask=(mask|(1ll<<j));
+            if(__builtin_popcountll(nmask)<=k)
+            {
+                ans=add(ans,add(mul(mul(mult[placeValue],j),get(i+1,1,(tight&&(j==till)),nmask,k,s)),solve(i+1,1,(tight&&(j==till)),nmask,k,s)));
+            }
+        }
+    }
+    return dp[i][put][tight][mask]=ans;
+}
+
+ll get(const ll &n,const ll &k)
+{
+    memset(dp,-1,sizeof(dp));
+    memset(cnt,-1,sizeof(cnt));
+    string s=to_string(n);
+    return solve(0,0,1,0,k,s);
+}
+
+ll get(const ll &l,const ll &r,const ll &k)
+{
+    return sub(get(r,k),get(l-1,k));
 }
 
 int main()
@@ -65,31 +98,8 @@ int main()
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    int tc;
-    cin>>tc;
-    while(tc--)
-    {
-        int n;
-        cin>>n;
-        for(int i=1;i<n;++i)
-        {
-            int u,v;
-            cin>>u>>v;
-            u--;
-            v--;
-            adj[u].push_back(v);
-            adj[v].push_back(u);
-        }
-        dfs(0,-1);
-        dfs(0);
-        cout<<((dp[0][0]==sub[0])?"YES":"NO")<<'\n';
-        for(int i=0;i<n;++i)
-        {
-            adj[i].clear();
-            dp[i][0]=dp[i][1]=dp[i][2]=0;
-            sub[i]=0;
-            par[i]=0;
-        }
-    }
+    ll l,r,k;
+    cin>>l>>r>>k;
+    cout<<get(l,r,k)<<'\n';
     return 0;
-}   
+}
