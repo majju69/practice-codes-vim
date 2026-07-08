@@ -7,90 +7,17 @@ using namespace std;
     #define debug(x)
 #endif
 
-typedef long long ll;
-const ll mod=998244353,mult[]={1,10,100,1000,10000,100000,1000000,10000000,100000000,1000000000,10000000000,100000000000,1000000000000,10000000000000,100000000000000,1000000000000000,10000000000000000,100000000000000000};
-ll cnt[20][2][2][1024],dp[20][2][2][1024];
+const int mod=1e9+7,N=105,SZ=27;
+int dp[N][N*SZ];
 
-ll add(const ll &a,const ll &b)
+int add(const int &a,const int &b)
 {
     return ((a%mod)+(b%mod))%mod;
 }
 
-ll mul(const ll &a,const ll &b)
+int sub(const int &a)
 {
-    return ((a%mod)*(b%mod))%mod;
-}
-
-ll sub(const ll &a,const ll &b)
-{
-    return ((a%mod)-(b%mod)+mod)%mod;
-}
-
-ll get(ll i,bool put,bool tight,ll mask,const ll &k,const string &s)
-{
-    if(i>=(ll)s.size())
-    {
-        return __builtin_popcountll(mask)<=k;
-    }
-    if(cnt[i][put][tight][mask]!=-1)
-    {
-        return cnt[i][put][tight][mask];
-    }
-    ll ans=0,till=(tight?(s[i]-'0'):9);
-    for(ll j=0;j<=till;++j)
-    {
-        if(j==0&&!put)
-        {
-            ans+=get(i+1,0,(tight&&(j==till)),mask,k,s);
-        }
-        else
-        {
-            ans+=get(i+1,1,(tight&&(j==till)),(mask|(1ll<<j)),k,s);
-        }
-    }
-    return cnt[i][put][tight][mask]=ans;
-}
-
-ll solve(ll i,bool put,bool tight,ll mask,const ll &k,const string &s)
-{
-    if(i>=(ll)s.size())
-    {
-        return 0;
-    }
-    if(dp[i][put][tight][mask]!=-1)
-    {
-        return dp[i][put][tight][mask];
-    }
-    ll ans=0,till=(tight?(s[i]-'0'):9),placeValue=(ll)s.size()-1-i;
-    for(ll j=0;j<=till;++j)
-    {
-        if(j==0&&!put)
-        {
-            ans=add(ans,solve(i+1,0,(tight&&(j==till)),mask,k,s));
-        }
-        else
-        {
-            ll nmask=(mask|(1ll<<j));
-            if(__builtin_popcountll(nmask)<=k)
-            {
-                ans=add(ans,add(mul(mul(mult[placeValue],j),get(i+1,1,(tight&&(j==till)),nmask,k,s)),solve(i+1,1,(tight&&(j==till)),nmask,k,s)));
-            }
-        }
-    }
-    return dp[i][put][tight][mask]=ans;
-}
-
-ll get(const ll &n,const ll &k)
-{
-    memset(dp,-1,sizeof(dp));
-    memset(cnt,-1,sizeof(cnt));
-    string s=to_string(n);
-    return solve(0,0,1,0,k,s);
-}
-
-ll get(const ll &l,const ll &r,const ll &k)
-{
-    return sub(get(r,k),get(l-1,k));
+    return ((a%mod)-1+mod)%mod;
 }
 
 int main()
@@ -98,8 +25,34 @@ int main()
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    ll l,r,k;
-    cin>>l>>r>>k;
-    cout<<get(l,r,k)<<'\n';
+    dp[0][0]=1;
+    for(int i=1;i<N;++i)
+    {
+        for(int c=1;c<SZ;++c)
+        {
+            for(int s=0;s<N*SZ;++s)
+            {
+                if(s<c)
+                {
+                    continue;
+                }
+                dp[i][s]=add(dp[i][s],dp[i-1][s-c]);
+            }
+        }
+    }
+    int tc;
+    cin>>tc;
+    while(tc--)
+    {
+        string s;
+        cin>>s;
+        const int n=s.size();
+        int tar=0;
+        for(auto &v:s)
+        {
+            tar+=((v-'a')+1);
+        }
+        cout<<sub(dp[n][tar])<<'\n';
+    }
     return 0;
 }
