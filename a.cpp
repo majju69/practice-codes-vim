@@ -7,52 +7,41 @@ using namespace std;
     #define debug(x)
 #endif
 
-const int mod=1e9+7,N=105,SZ=27;
-int dp[N][N*SZ];
-
-int add(const int &a,const int &b)
-{
-    return ((a%mod)+(b%mod))%mod;
-}
-
-int sub(const int &a)
-{
-    return ((a%mod)-1+mod)%mod;
-}
-
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    dp[0][0]=1;
-    for(int i=1;i<N;++i)
+    int n,m,k,ans=0;
+    string s,t;
+    cin>>n>>m>>k>>s>>t;
+    int dp[n+1][m+1][k+1][2];
+    memset(dp,0xc0,sizeof(dp));
+    for(int i=0;i<=n;++i)
     {
-        for(int c=1;c<SZ;++c)
+        for(int j=0;j<=m;++j)
         {
-            for(int s=0;s<N*SZ;++s)
+            dp[i][j][0][0]=0;
+        }
+    }
+    for(int i1=1;i1<=n;++i1)
+    {
+        for(int i2=1;i2<=m;++i2)
+        {
+            for(int i3=1;i3<=k;++i3)
             {
-                if(s<c)
+                dp[i1][i2][i3][0]=max({dp[i1][i2][i3][0],dp[i1-1][i2][i3][0],dp[i1-1][i2][i3][1],dp[i1][i2-1][i3][0],dp[i1][i2-1][i3][1]});
+                if(s[i1-1]==t[i2-1])
                 {
-                    continue;
+                    dp[i1][i2][i3][1]=max({dp[i1][i2][i3][1],dp[i1-1][i2-1][i3-1][0]+1,dp[i1-1][i2-1][i3-1][1]+1,dp[i1-1][i2-1][i3][1]+1});
                 }
-                dp[i][s]=add(dp[i][s],dp[i-1][s-c]);
+                if(i3==k)
+                {
+                    ans=max({ans,dp[i1][i2][i3][0],dp[i1][i2][i3][1]});
+                }
             }
         }
     }
-    int tc;
-    cin>>tc;
-    while(tc--)
-    {
-        string s;
-        cin>>s;
-        const int n=s.size();
-        int tar=0;
-        for(auto &v:s)
-        {
-            tar+=((v-'a')+1);
-        }
-        cout<<sub(dp[n][tar])<<'\n';
-    }
+    cout<<ans<<'\n';
     return 0;
 }
