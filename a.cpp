@@ -7,41 +7,64 @@ using namespace std;
     #define debug(x)
 #endif
 
+typedef long long ll;
+
+bool cmp(const pair<ll,ll> &a,const pair<ll,ll> &b)
+{
+    if(a.first==b.first)
+    {
+        return a.second>b.second;
+    }
+    return a.first<b.first;
+}
+
+ll get(const pair<ll,ll> &a,pair<ll,ll> &b)
+{
+    return abs(a.first-b.first)+abs(a.second-b.second);
+}
+
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    int n,m,k,ans=0;
-    string s,t;
-    cin>>n>>m>>k>>s>>t;
-    int dp[n+1][m+1][k+1][2];
-    memset(dp,0xc0,sizeof(dp));
-    for(int i=0;i<=n;++i)
+    ll n;
+    array<ll,2> dp={0,0},ndp={(ll)1e18,(ll)1e18};     // ended last at [0/1]
+    map<ll,vector<pair<ll,ll>>> mp;
+    vector<array<pair<ll,ll>,2>> a={{make_pair(0ll,0ll),make_pair(0ll,0ll)}};
+    cin>>n;
+    while(n--)
     {
-        for(int j=0;j<=m;++j)
-        {
-            dp[i][j][0][0]=0;
-        }
+        ll x,y;
+        cin>>x>>y;
+        mp[max(x,y)].push_back({x,y});
     }
-    for(int i1=1;i1<=n;++i1)
+    for(auto &v:mp)
     {
-        for(int i2=1;i2<=m;++i2)
-        {
-            for(int i3=1;i3<=k;++i3)
-            {
-                dp[i1][i2][i3][0]=max({dp[i1][i2][i3][0],dp[i1-1][i2][i3][0],dp[i1-1][i2][i3][1],dp[i1][i2-1][i3][0],dp[i1][i2-1][i3][1]});
-                if(s[i1-1]==t[i2-1])
-                {
-                    dp[i1][i2][i3][1]=max({dp[i1][i2][i3][1],dp[i1-1][i2-1][i3-1][0]+1,dp[i1-1][i2-1][i3-1][1]+1,dp[i1-1][i2-1][i3][1]+1});
-                }
-                if(i3==k)
-                {
-                    ans=max({ans,dp[i1][i2][i3][0],dp[i1][i2][i3][1]});
-                }
-            }
-        }
+        sort(v.second.begin(),v.second.end(),cmp);
+        a.push_back({v.second[0],v.second.back()});
     }
-    cout<<ans<<'\n';
+    const ll len=a.size();
+    for(ll i=1;i<len;++i)
+    {
+        ll cost=get(a[i][0],a[i][1]);
+        ndp[0]=cost+min(dp[0]+get(a[i-1][0],a[i][1]),dp[1]+get(a[i-1][1],a[i][1]));
+        ndp[1]=cost+min(dp[0]+get(a[i-1][0],a[i][0]),dp[1]+get(a[i-1][1],a[i][0]));
+        dp=ndp;
+    }
+    cout<<min(dp[0],dp[1])<<'\n';
     return 0;
 }
+
+/*
+
+
+
+
+1,mx 2,mx .... mx,mx mx,mx-1 mx,mx-2 ... mx,1
+
+
+
+
+
+*/
