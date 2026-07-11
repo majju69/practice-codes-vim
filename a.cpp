@@ -9,62 +9,100 @@ using namespace std;
 
 typedef long long ll;
 
-bool cmp(const pair<ll,ll> &a,const pair<ll,ll> &b)
-{
-    if(a.first==b.first)
-    {
-        return a.second>b.second;
-    }
-    return a.first<b.first;
-}
-
-ll get(const pair<ll,ll> &a,pair<ll,ll> &b)
-{
-    return abs(a.first-b.first)+abs(a.second-b.second);
-}
+const ll N=55,D=105;
+ll dp[N][N][D];     // ith taken which is the jth one and a[i]+k hw given
+array<ll,3> par[N][N][D];      
+array<ll,4> a[N];
 
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    ll n;
-    array<ll,2> dp={0,0},ndp={(ll)1e18,(ll)1e18};     // ended last at [0/1]
-    map<ll,vector<pair<ll,ll>>> mp;
-    vector<array<pair<ll,ll>,2>> a={{make_pair(0ll,0ll),make_pair(0ll,0ll)}};
-    cin>>n;
-    while(n--)
+    ll n,m,k,idx=-1,cnt=-1,diff=-1,mx=-1e18;
+    cin>>n>>m>>k;
+    for(ll i=0;i<m;++i)
     {
-        ll x,y;
-        cin>>x>>y;
-        mp[max(x,y)].push_back({x,y});
+        cin>>a[i][1]>>a[i][2]>>a[i][0];
+        a[i][3]=i;
     }
-    for(auto &v:mp)
+    sort(a,a+m);
+    memset(dp,0xc0,sizeof(dp));
+    for(ll i=0;i<m;++i)
     {
-        sort(v.second.begin(),v.second.end(),cmp);
-        a.push_back({v.second[0],v.second.back()});
+        for(ll j=1;j<=n;++j)
+        {
+            for(ll d=0;d<=a[i][2]-a[i][1];++d)
+            {
+                if(j==1)
+                {
+                    dp[i][j][d]=a[i][1]+d;
+                    par[i][j][d]={-1,-1,-1};
+                }
+                else
+                {
+                    for(ll pvs=0;pvs<i;++pvs)
+                    {
+                        if(a[pvs][0]<a[i][0])
+                        {
+                            const ll cur_hw=a[i][1]+d;
+                            if(cur_hw%k==0&&a[pvs][1]<=cur_hw/k&&cur_hw/k<=a[pvs][2]&&dp[pvs][j-1][cur_hw/k-a[pvs][1]]>0)
+                            {
+                                if(dp[pvs][j-1][cur_hw/k-a[pvs][1]]+cur_hw>dp[i][j][d])
+                                {
+                                    dp[i][j][d]=dp[pvs][j-1][cur_hw/k-a[pvs][1]]+cur_hw;
+                                    par[i][j][d]={pvs,j-1,cur_hw/k-a[pvs][1]};
+                                }
+                            }
+                            if(a[pvs][1]<=cur_hw-k&&cur_hw-k<=a[pvs][2]&&dp[pvs][j-1][cur_hw-k-a[pvs][1]]>0)
+                            {
+                                if(dp[pvs][j-1][cur_hw-k-a[pvs][1]]+cur_hw>dp[i][j][d])
+                                {
+                                    dp[i][j][d]=dp[pvs][j-1][cur_hw-k-a[pvs][1]]+cur_hw;
+                                    par[i][j][d]={pvs,j-1,cur_hw-k-a[pvs][1]};
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
-    const ll len=a.size();
-    for(ll i=1;i<len;++i)
+    for(ll i=0;i<m;++i)
     {
-        ll cost=get(a[i][0],a[i][1]);
-        ndp[0]=cost+min(dp[0]+get(a[i-1][0],a[i][1]),dp[1]+get(a[i-1][1],a[i][1]));
-        ndp[1]=cost+min(dp[0]+get(a[i-1][0],a[i][0]),dp[1]+get(a[i-1][1],a[i][0]));
-        dp=ndp;
+        for(ll d=0;d<=a[i][2]-a[i][1];++d)
+        {
+            if(dp[i][n][d]>0&&dp[i][n][d]>mx)
+            {
+                mx=dp[i][n][d];
+                idx=i;
+                cnt=n;
+                diff=d;
+            }
+        }
     }
-    cout<<min(dp[0],dp[1])<<'\n';
+    if(idx==-1)
+    {
+        cout<<"NO\n";
+    }
+    else
+    {
+        cout<<"YES\n";
+        ll cur_idx=idx,cur_cnt=cnt,cur_diff=diff;
+        vector<pair<ll,ll>> ans;
+        while(cur_idx>=0)
+        {
+            ans.push_back({a[cur_idx][3]+1,a[cur_idx][1]+cur_diff});
+            const array<ll,3> p=par[cur_idx][cur_cnt][cur_diff];
+            cur_idx=p[0];
+            cur_cnt=p[1];
+            cur_diff=p[2];
+        }
+        reverse(ans.begin(),ans.end());
+        for(auto &v:ans)
+        {
+            cout<<v.first<<' '<<v.second<<'\n';
+        }
+    }
     return 0;
 }
-
-/*
-
-
-
-
-1,mx 2,mx .... mx,mx mx,mx-1 mx,mx-2 ... mx,1
-
-
-
-
-
-*/
