@@ -7,101 +7,84 @@ using namespace std;
     #define debug(x)
 #endif
 
-typedef long long ll;
+const int mod=1e9+7;
+const int N=2e5+10,M=1024;
+int a[N],p[N];
+array<int,M> dp,ndp;
 
-const ll N=55,D=105;
-ll dp[N][N][D];     // ith taken which is the jth one and a[i]+k hw given
-array<ll,3> par[N][N][D];      
-array<ll,4> a[N];
+int power(int a,int b)        // Use when mod is of order 10^9 or less
+{
+    int ans=1;
+    a=a%mod;
+    while(b)
+    {
+        if(b&1)
+        {
+            ans=(1ll*(ans%mod)*(a%mod))%mod;
+        }
+        a=(1ll*(a%mod)*(a%mod))%mod;
+        b>>=1;
+    }
+    return ans%mod;
+}
+
+int add(const int &a,const int &b)
+{
+    return ((a%mod)+(b%mod))%mod;
+}
+
+int sub(const int &a,const int &b)
+{
+    return ((a%mod)-(b%mod)+mod)%mod;
+}
+
+int mul(const int &a,const int &b)
+{
+    return (1ll*(a%mod)*(b%mod))%mod;
+}
+
+int divide(const int &a,const int &b)
+{
+    return mul(a,power(b,mod-2));
+}
 
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    ll n,m,k,idx=-1,cnt=-1,diff=-1,mx=-1e18;
-    cin>>n>>m>>k;
-    for(ll i=0;i<m;++i)
+    int tc;
+    cin>>tc;
+    while(tc--)
     {
-        cin>>a[i][1]>>a[i][2]>>a[i][0];
-        a[i][3]=i;
-    }
-    sort(a,a+m);
-    memset(dp,0xc0,sizeof(dp));
-    for(ll i=0;i<m;++i)
-    {
-        for(ll j=1;j<=n;++j)
+        int n,ans=0;
+        cin>>n;
+        for(int i=0;i<n;++i)
         {
-            for(ll d=0;d<=a[i][2]-a[i][1];++d)
+            cin>>a[i];
+        }
+        for(int i=0;i<n;++i)
+        {
+            cin>>p[i];
+            p[i]=divide(p[i],10000);
+        }
+        dp[0]=1;
+        for(int i=0;i<n;++i)
+        {
+            for(int j=0;j<M;++j)
             {
-                if(j==1)
-                {
-                    dp[i][j][d]=a[i][1]+d;
-                    par[i][j][d]={-1,-1,-1};
-                }
-                else
-                {
-                    for(ll pvs=0;pvs<i;++pvs)
-                    {
-                        if(a[pvs][0]<a[i][0])
-                        {
-                            const ll cur_hw=a[i][1]+d;
-                            if(cur_hw%k==0&&a[pvs][1]<=cur_hw/k&&cur_hw/k<=a[pvs][2]&&dp[pvs][j-1][cur_hw/k-a[pvs][1]]>0)
-                            {
-                                if(dp[pvs][j-1][cur_hw/k-a[pvs][1]]+cur_hw>dp[i][j][d])
-                                {
-                                    dp[i][j][d]=dp[pvs][j-1][cur_hw/k-a[pvs][1]]+cur_hw;
-                                    par[i][j][d]={pvs,j-1,cur_hw/k-a[pvs][1]};
-                                }
-                            }
-                            if(a[pvs][1]<=cur_hw-k&&cur_hw-k<=a[pvs][2]&&dp[pvs][j-1][cur_hw-k-a[pvs][1]]>0)
-                            {
-                                if(dp[pvs][j-1][cur_hw-k-a[pvs][1]]+cur_hw>dp[i][j][d])
-                                {
-                                    dp[i][j][d]=dp[pvs][j-1][cur_hw-k-a[pvs][1]]+cur_hw;
-                                    par[i][j][d]={pvs,j-1,cur_hw-k-a[pvs][1]};
-                                }
-                            }
-                        }
-                    }
-                }
+                ndp[j]=add(mul(sub(1,p[i]),dp[j]),mul(p[i],dp[j^a[i]]));
             }
+            dp=ndp;
         }
-    }
-    for(ll i=0;i<m;++i)
-    {
-        for(ll d=0;d<=a[i][2]-a[i][1];++d)
+        for(int i=1;i<M;++i)
         {
-            if(dp[i][n][d]>0&&dp[i][n][d]>mx)
-            {
-                mx=dp[i][n][d];
-                idx=i;
-                cnt=n;
-                diff=d;
-            }
+            ans=add(ans,mul(dp[i],mul(i,i)));
         }
-    }
-    if(idx==-1)
-    {
-        cout<<"NO\n";
-    }
-    else
-    {
-        cout<<"YES\n";
-        ll cur_idx=idx,cur_cnt=cnt,cur_diff=diff;
-        vector<pair<ll,ll>> ans;
-        while(cur_idx>=0)
+        cout<<ans<<'\n';
+        for(int i=0;i<M;++i)
         {
-            ans.push_back({a[cur_idx][3]+1,a[cur_idx][1]+cur_diff});
-            const array<ll,3> p=par[cur_idx][cur_cnt][cur_diff];
-            cur_idx=p[0];
-            cur_cnt=p[1];
-            cur_diff=p[2];
-        }
-        reverse(ans.begin(),ans.end());
-        for(auto &v:ans)
-        {
-            cout<<v.first<<' '<<v.second<<'\n';
+            dp[i]=ndp[i]=0;
         }
     }
     return 0;
