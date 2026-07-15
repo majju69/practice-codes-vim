@@ -7,45 +7,85 @@ using namespace std;
     #define debug(x)
 #endif
 
-const int mod=1e9+7;
-const int N=2e5+10,M=1024;
-int a[N],p[N];
-array<int,M> dp,ndp;
+const int N=2e5+10;
+int p[N],a[N],mn[N],mx[N];
+bool ok[N];
+vector<int> adj[N];
 
-int power(int a,int b)        // Use when mod is of order 10^9 or less
+bool checkCircularSorted(vector<int> &a)
 {
-    int ans=1;
-    a=a%mod;
-    while(b)
+    const int n=a.size();
+    int cnt=0;
+    for(int i=1;i<n;++i)
     {
-        if(b&1)
+        if(a[i-1]>a[i])
         {
-            ans=(1ll*(ans%mod)*(a%mod))%mod;
+            cnt++;
+            if(cnt>1)
+            {
+                return 0;
+            }
         }
-        a=(1ll*(a%mod)*(a%mod))%mod;
-        b>>=1;
     }
-    return ans%mod;
+    if(cnt==1)
+    {
+        return (a[0]>a[n-1]);
+    }
+    return 1;
 }
 
-int add(const int &a,const int &b)
+bool check(const vector<pair<int,int>> &a)
 {
-    return ((a%mod)+(b%mod))%mod;
+    const int n=a.size();
+    int ind=0;
+    vector<pair<int,int>> tmp=a;
+    vector<int> perm;
+    sort(tmp.begin(),tmp.end());
+    for(int i=1;i<n;++i)
+    {
+        if(tmp[i].first<tmp[i-1].second)
+        {
+            return 0;
+        }
+    }
+    for(auto &v:a)
+    {
+        perm.push_back(v.first);
+    }
+    return checkCircularSorted(perm);
 }
 
-int sub(const int &a,const int &b)
+void dfs(int node)
 {
-    return ((a%mod)-(b%mod)+mod)%mod;
-}
-
-int mul(const int &a,const int &b)
-{
-    return (1ll*(a%mod)*(b%mod))%mod;
-}
-
-int divide(const int &a,const int &b)
-{
-    return mul(a,power(b,mod-2));
+    if(a[node]==-1)
+    {
+        mn[node]=1e9;
+        mx[node]=-1e9;
+    }
+    else
+    {
+        ok[node]=1;
+        mn[node]=a[node];
+        mx[node]=a[node];
+    }
+    bool node_ok=1;
+    vector<pair<int,int>> a; 
+    for(auto &v:adj[node])
+    {
+        if(v!=p[node])
+        {
+            dfs(v);
+            mn[node]=min(mn[node],mn[v]);
+            mx[node]=max(mx[node],mx[v]);
+            node_ok=(node_ok&&ok[v]);
+            a.push_back({mn[v],mx[v]});
+        }
+    }
+    if(node_ok)
+    {
+        node_ok=check(a);
+    }
+    ok[node]=node_ok;
 }
 
 int main()
@@ -57,34 +97,29 @@ int main()
     cin>>tc;
     while(tc--)
     {
-        int n,ans=0;
+        int n;
         cin>>n;
+        for(int i=1;i<n;++i)
+        {
+            int x;
+            cin>>x;
+            x--;
+            adj[i].push_back(x);
+            adj[x].push_back(i);
+            p[i]=x;
+        }
         for(int i=0;i<n;++i)
         {
             cin>>a[i];
+            a[i]--;
         }
+        dfs(0);
+        cout<<(ok[0]?"YES":"NO")<<'\n';
         for(int i=0;i<n;++i)
         {
-            cin>>p[i];
-            p[i]=divide(p[i],10000);
-        }
-        dp[0]=1;
-        for(int i=0;i<n;++i)
-        {
-            for(int j=0;j<M;++j)
-            {
-                ndp[j]=add(mul(sub(1,p[i]),dp[j]),mul(p[i],dp[j^a[i]]));
-            }
-            dp=ndp;
-        }
-        for(int i=1;i<M;++i)
-        {
-            ans=add(ans,mul(dp[i],mul(i,i)));
-        }
-        cout<<ans<<'\n';
-        for(int i=0;i<M;++i)
-        {
-            dp[i]=ndp[i]=0;
+            p[i]=a[i]=mn[i]=mx[i]=0;
+            ok[i]=0;
+            adj[i].clear();
         }
     }
     return 0;
