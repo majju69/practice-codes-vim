@@ -7,72 +7,47 @@ using namespace std;
     #define debug(x)
 #endif
 
-vector<int> lpf(500001,0);
-vector<int> primes;
-
-void leastPrimeFactor()
-{
-    int n=lpf.size();
-    for(int i=2;i<n;++i)
-    {
-        if(lpf[i]==0)
-        {
-            lpf[i]=i;
-            primes.push_back(i);
-        }
-        for(int j=0;i*primes[j]<n;++j)
-        {
-            lpf[i*primes[j]]=primes[j];
-            if(primes[j]==lpf[i])
-            {
-                break;
-            }
-        }
-    }
-}
-
-const int mod=1e9+7;
-
-int mul(const int &a,const int &b)
-{
-    return (1ll*(a%mod)*(b%mod))%mod;
-}
+typedef long long ll;
 
 int main()
 {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
-    leastPrimeFactor();
-    int tc;
+    ll tc;
     cin>>tc;
     while(tc--)
     {
-        int n,x,ans=1;
-        map<int,int> mp;
-        cin>>n>>x;
-        assert(x==1);
-        while(n--)
+        ll n,k,x,ans=0;
+        cin>>n>>k>>x;
+        ll dp[k+1],ndp[k+1];
+        memset(dp,0xc0,sizeof(dp));
+        dp[0]=0;
+        for(ll i=0;i<n;++i)
         {
-            int cur;
+            ll cur;
             cin>>cur;
-            while(cur>1)
+            ndp[0]=max(dp[0]+cur-x,cur-x);
+            for(ll j=1;j<=k;++j)
             {
-                const int p=lpf[cur];
-                if(!mp.count(p))
+                ndp[j]=max(dp[j]+cur-x,dp[j-1]+cur+x);
+                if(dp[j]>=(ll)-2e14)
                 {
-                    mp[p]=1;
+                    ndp[j]=max(ndp[j],cur-x);
                 }
-                while(cur%p==0)
+                if(dp[j-1]>=(ll)-2e14)
                 {
-                    mp[p]++;
-                    cur/=p;
+                    ndp[j]=max(ndp[j],cur+x);
                 }
             }
-        }
-        for(auto &v:mp)
-        {
-            ans=mul(ans,v.second);
+            memcpy(dp,ndp,sizeof(dp));
+            for(ll j=0;j<=k;++j)
+            {
+                if(j+n-i-1>=k)
+                {
+                    ans=max(ans,dp[j]);
+                }
+            }
         }
         cout<<ans<<'\n';
     }
