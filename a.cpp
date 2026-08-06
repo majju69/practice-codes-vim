@@ -7,76 +7,42 @@ using namespace std;
     #define debug(x)
 #endif
 
-typedef long long ll;
-
-/*
-
-0->2
-1->3
-.
-.
-.
-7->9
-
-
-*/
-
-const ll mult[]={1,10,100,1000,10000,100000,1000000,10000000,100000000,1000000000,10000000000,100000000000,1000000000000,10000000000000,100000000000000,1000000000000000,10000000000000000,100000000000000000,1000000000000000000};
-
-ll dp[20][2][2][7][8][9][256];
-
-bool bit(const int &a,const int &i)
+int main()
 {
-    return a>>i&1;
-}
-
-int mul(const ll &a,const ll &b,const int mod)
-{
-    return (1ll*(a%mod)*(b%mod))%mod;
-}
-
-int add(const ll &a,const ll &b,const int mod)
-{
-    return ((a%mod)+(b%mod))%mod;
-}
-
-
-ll solve(int i,bool last,bool l50,int r7,int r8,int r9,int mask,const string &s)
-{
-    if(i>=(int)s.size())
+    ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+    cout.tie(NULL);
+    int r,n;
+    cin>>r>>n;
+    array<int,3> a[n];
+    int dp[n],pre[n];
+    memset(dp,0xc0,sizeof(dp));
+    for(int i=0;i<n;++i)
     {
-        if(bit(mask,0)&&(r8&1))
+        cin>>a[i][0]>>a[i][1]>>a[i][2];
+        int mx=-1e9;
+        if(i>=2*r)
         {
-            return 0;
+            mx=max(mx,pre[i-2*r]);
         }
-        if(bit(mask,1)&&(r9%3!=0))
+        for(int j=max(0,i-2*r+1);j<i;++j)
         {
-            return 0;
+            if(a[i][0]-a[j][0]>=abs(a[i][1]-a[j][1])+abs(a[i][2]-a[j][2]))
+            {
+                mx=max(mx,dp[j]);
+            }
         }
-        if(bit(mask,2)&&(r8&3))
+        dp[i]=mx+1;
+        if(a[i][0]>=a[i][1]+a[i][2]-2)
         {
-            return 0;
+            dp[i]=max(dp[i],1);
         }
-        if(bit(mask,3)&&!l50)
+        pre[i]=dp[i];
+        if(i>0)
         {
-            return 0;
+            pre[i]=max(pre[i],pre[i-1]);
         }
-        if(bit(mask,4)&&((r8&1)||(r9%3)))
-        {
-            return 0;
-        }
-        if(bit(mask,5)&&r7)
-        {
-            return 0;
-        }
-        if(bit(mask,6)&&r8)
-        {
-            return 0;
-        }
-        if(bit(mask,7)&&r9)
-        {
-            return 0;
-        }
-        return 1;
     }
-    illp[i][last][l50][r7][r8][r9][mask]!=-1)
+    cout<<max(pre[n-1],0)<<'\n';
+    return 0;
+}
